@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>How to Control the UC512 Valve Status via BACnet · 技术文档中心</title>
+<style>
+:root { --accent:#2563eb; --accent-soft:#eff6ff; --text:#1f2937; --muted:#6b7280;
+        --border:#e5e7eb; --bg:#f8fafc; --card:#ffffff; }
+* { box-sizing: border-box; }
+body { margin:0; font-family: "Segoe UI", "Microsoft YaHei", "PingFang SC", sans-serif;
+       background:var(--bg); color:var(--text); line-height:1.75; }
+a { color:var(--accent); text-decoration:none; }
+a:hover { text-decoration:underline; }
+.container { max-width:960px; margin:0 auto; padding:24px 20px 64px; }
+header.site-header { background:linear-gradient(135deg,#1e3a8a,#2563eb); color:#fff; padding:36px 20px; }
+header.site-header .container { padding-top:0; padding-bottom:0; }
+header.site-header h1 { margin:0 0 6px; font-size:26px; }
+header.site-header p { margin:0; opacity:.85; font-size:14px; }
+.search-box { margin:24px 0 8px; }
+.search-box input { width:100%; padding:12px 16px; font-size:15px; border:1px solid var(--border);
+                    border-radius:10px; outline:none; background:#fff; }
+.search-box input:focus { border-color:var(--accent); box-shadow:0 0 0 3px var(--accent-soft); }
+.category { margin-top:28px; }
+.category h2 { font-size:19px; display:flex; align-items:center; gap:10px; margin:0 0 12px; }
+.badge { font-size:12px; font-weight:600; padding:2px 10px; border-radius:999px; }
+.badge-howto { background:#dcfce7; color:#15803d; }
+.badge-troubleshooting { background:#fee2e2; color:#b91c1c; }
+.count { color:var(--muted); font-size:13px; font-weight:400; }
+ul.article-list { list-style:none; margin:0; padding:0; display:grid; gap:10px; }
+ul.article-list li { background:var(--card); border:1px solid var(--border); border-radius:10px;
+                     padding:14px 18px; transition:box-shadow .15s ease; }
+ul.article-list li:hover { box-shadow:0 4px 14px rgba(0,0,0,.06); }
+ul.article-list .title { font-size:16px; font-weight:600; }
+ul.article-list .meta { font-size:12.5px; color:var(--muted); margin-top:4px; }
+.empty { color:var(--muted); font-size:14px; padding:12px 4px; }
+/* 文章页 */
+.article-nav { margin:18px 0 0; font-size:14px; }
+article.article-body { background:var(--card); border:1px solid var(--border); border-radius:12px;
+                       padding:32px 40px; margin-top:16px; }
+article.article-body img { max-width:100%; height:auto; border:1px solid var(--border);
+                           border-radius:8px; margin:8px 0; }
+article.article-body h1 { font-size:24px; margin-top:0; }
+article.article-body h2 { font-size:20px; border-bottom:1px solid var(--border); padding-bottom:6px; }
+article.article-body h3 { font-size:17px; }
+article.article-body pre { background:#f1f5f9; padding:14px; border-radius:8px; overflow-x:auto; }
+article.article-body code { background:#f1f5f9; padding:2px 6px; border-radius:4px; font-size:.92em; }
+article.article-body pre code { background:none; padding:0; }
+article.article-body table { border-collapse:collapse; width:100%; }
+article.article-body th, article.article-body td { border:1px solid var(--border); padding:8px 12px; }
+article.article-body th { background:var(--accent-soft); }
+article.article-body blockquote { border-left:4px solid var(--accent); margin-left:0;
+                                  padding:4px 16px; color:var(--muted); background:var(--accent-soft); }
+footer.site-footer { text-align:center; color:var(--muted); font-size:12.5px; margin-top:48px; }
+@media (max-width:640px) { article.article-body { padding:20px 18px; } }
+</style>
+</head>
+<body>
+<div class="container">
+<div class="article-nav"><a href="../index.html">← 返回首页</a> · <span class="badge badge-howto">How to</span></div>
+<article class="article-body">
+<p><strong>How to Control the UC512 Valve Status via BACnet</strong></p>
+<p><img src="../assets/howto/How-to-Control-the-UC512-Valve-Status-via-BACnet/media/image1.jpeg" style="width:5.75in;height:8.125in" /></p>
+<p>How to Control the UC512 Valve Status via BACnet</p>
+<table style="width:89%;">
+<colgroup>
+<col style="width: 12%" />
+<col style="width: 17%" />
+<col style="width: 38%" />
+<col style="width: 20%" />
+</colgroup>
+<tbody>
+<tr>
+<td style="text-align: left;"><strong>Version</strong></td>
+<td style="text-align: left;"><strong>Update Time</strong></td>
+<td style="text-align: left;"><strong>Description</strong></td>
+<td style="text-align: left;"><strong>Author</strong></td>
+</tr>
+<tr>
+<td style="text-align: left;">1.0</td>
+<td style="text-align: left;">Jun. 13, 2026</td>
+<td style="text-align: left;">Initial version</td>
+<td style="text-align: left;">Luis</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Description</strong></p>
+<p>To control the UC512 valve, it is necessary to write to multiple BACnet Objects within one minute; only after all required Objects are successfully written will the combined command take effect and be sent downstream.</p>
+<p>Which BACnet Objects Need to be Written:</p>
+<p>Specify the list of BACnet Objects that must be written to in order to generate the combined downstream command for valve control.</p>
+<p>Verifying Write Success via Gateway Backend:</p>
+<p>Log in to the gateway backend to check whether the BACnet Object writes have been successful.</p>
+<p><strong>Requirement</strong></p>
+<p>Milesight Gateway: UG65</p>
+<p>Sensor: UC512-DI</p>
+<p><strong>Configuration</strong></p>
+<p><strong>Step 1: Make sure the UC512-DI is “Activated” and the BACnet Objects are already added.</strong></p>
+<p>The UC512-DI status checking on the toolbox</p>
+<p><img src="../assets/howto/How-to-Control-the-UC512-Valve-Status-via-BACnet/media/image2.png" style="width:4.23958in;height:8.34375in" /></p>
+<p>Add the UC512-DI with the latest codec</p>
+<p><img src="../assets/howto/How-to-Control-the-UC512-Valve-Status-via-BACnet/media/image3.png" style="width:5.75in;height:6.35417in" /></p>
+<p>Add the Objects on the gateway</p>
+<p><img src="../assets/howto/How-to-Control-the-UC512-Valve-Status-via-BACnet/media/image4.png" style="width:5.75in;height:2.79167in" /></p>
+<p><strong>Step 2: write the value of the BACnet objects on BACnet client</strong></p>
+<p>All objects need to be sent within 60 seconds.</p>
+<p>Normal task:</p>
+<p>First, send the common objects: "sequence_id", "valve_index", "valve_status", and "duration".</p>
+<p>Then, send the normal task object values as needed: "pulse_rule_enable", "time_rule_enable", and "valve_pulse".</p>
+<p><img src="../assets/howto/How-to-Control-the-UC512-Valve-Status-via-BACnet/media/image5.png" style="width:5.75in;height:3.30208in" /></p>
+<p>Valve control command for rain special control</p>
+<p>First, send the common objects: "sequence_id", "valve_index", "valve_status", and "duration".</p>
+<p>Then, send the normal task object values as needed: "Start_time", "rain_stop_plan"</p>
+<p><img src="../assets/howto/How-to-Control-the-UC512-Valve-Status-via-BACnet/media/image6.png" style="width:5.75in;height:2.78125in" /></p>
+<p><strong>Tips</strong></p>
+<p>When the configuration to be modified has historical values on the gateway side, according to the codec’s association rules, it is possible to complete a BACnet task delivery by modifying only the value of a single object. However, it is still recommended to use a BACnet tool that supports batch multi-object delivery in production environments(Yabe).</p>
+<p>For example, when all six associated objects of valve_pulse—"sequence_id", "valve_index", "valve_status", "duration", "pulse_rule_enable", and "time_rule_enable"—have historical values in the gateway, and these seven objects can be combined into a complete IPSO:</p>
+<p>If you need to issue a task where only the valve_pulse parameter changes and the other values remain the same, you can simply modify the value of the valve_pulse object and send it as a single-object delivery. The gateway will automatically match the current values of the associated objects and perform IPSO translation and delivery.</p>
+<p><img src="../assets/howto/How-to-Control-the-UC512-Valve-Status-via-BACnet/media/image7.png" style="width:5.75in;height:2.96875in" /></p>
+<p><img src="../assets/howto/How-to-Control-the-UC512-Valve-Status-via-BACnet/media/image8.png" style="width:5.75in;height:2.73958in" /></p>
+<p><a href="https://resource.milesight.com/milesight/iot/document/uc51x-series-user-guide-en.pdf">UC51X User Guide</a></p>
+<p><strong>-------END-----</strong></p>
+
+</article>
+<footer class="site-footer">技术文档中心</footer>
+</div>
+</body>
+</html>

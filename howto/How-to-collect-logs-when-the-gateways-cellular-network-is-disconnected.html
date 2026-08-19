@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>How to collect logs when the gateway&#x27;s cellular network is disconnected · 技术文档中心</title>
+<style>
+:root { --accent:#2563eb; --accent-soft:#eff6ff; --text:#1f2937; --muted:#6b7280;
+        --border:#e5e7eb; --bg:#f8fafc; --card:#ffffff; }
+* { box-sizing: border-box; }
+body { margin:0; font-family: "Segoe UI", "Microsoft YaHei", "PingFang SC", sans-serif;
+       background:var(--bg); color:var(--text); line-height:1.75; }
+a { color:var(--accent); text-decoration:none; }
+a:hover { text-decoration:underline; }
+.container { max-width:960px; margin:0 auto; padding:24px 20px 64px; }
+header.site-header { background:linear-gradient(135deg,#1e3a8a,#2563eb); color:#fff; padding:36px 20px; }
+header.site-header .container { padding-top:0; padding-bottom:0; }
+header.site-header h1 { margin:0 0 6px; font-size:26px; }
+header.site-header p { margin:0; opacity:.85; font-size:14px; }
+.search-box { margin:24px 0 8px; }
+.search-box input { width:100%; padding:12px 16px; font-size:15px; border:1px solid var(--border);
+                    border-radius:10px; outline:none; background:#fff; }
+.search-box input:focus { border-color:var(--accent); box-shadow:0 0 0 3px var(--accent-soft); }
+.category { margin-top:28px; }
+.category h2 { font-size:19px; display:flex; align-items:center; gap:10px; margin:0 0 12px; }
+.badge { font-size:12px; font-weight:600; padding:2px 10px; border-radius:999px; }
+.badge-howto { background:#dcfce7; color:#15803d; }
+.badge-troubleshooting { background:#fee2e2; color:#b91c1c; }
+.count { color:var(--muted); font-size:13px; font-weight:400; }
+ul.article-list { list-style:none; margin:0; padding:0; display:grid; gap:10px; }
+ul.article-list li { background:var(--card); border:1px solid var(--border); border-radius:10px;
+                     padding:14px 18px; transition:box-shadow .15s ease; }
+ul.article-list li:hover { box-shadow:0 4px 14px rgba(0,0,0,.06); }
+ul.article-list .title { font-size:16px; font-weight:600; }
+ul.article-list .meta { font-size:12.5px; color:var(--muted); margin-top:4px; }
+.empty { color:var(--muted); font-size:14px; padding:12px 4px; }
+/* 文章页 */
+.article-nav { margin:18px 0 0; font-size:14px; }
+article.article-body { background:var(--card); border:1px solid var(--border); border-radius:12px;
+                       padding:32px 40px; margin-top:16px; }
+article.article-body img { max-width:100%; height:auto; border:1px solid var(--border);
+                           border-radius:8px; margin:8px 0; }
+article.article-body h1 { font-size:24px; margin-top:0; }
+article.article-body h2 { font-size:20px; border-bottom:1px solid var(--border); padding-bottom:6px; }
+article.article-body h3 { font-size:17px; }
+article.article-body pre { background:#f1f5f9; padding:14px; border-radius:8px; overflow-x:auto; }
+article.article-body code { background:#f1f5f9; padding:2px 6px; border-radius:4px; font-size:.92em; }
+article.article-body pre code { background:none; padding:0; }
+article.article-body table { border-collapse:collapse; width:100%; }
+article.article-body th, article.article-body td { border:1px solid var(--border); padding:8px 12px; }
+article.article-body th { background:var(--accent-soft); }
+article.article-body blockquote { border-left:4px solid var(--accent); margin-left:0;
+                                  padding:4px 16px; color:var(--muted); background:var(--accent-soft); }
+footer.site-footer { text-align:center; color:var(--muted); font-size:12.5px; margin-top:48px; }
+@media (max-width:640px) { article.article-body { padding:20px 18px; } }
+</style>
+</head>
+<body>
+<div class="container">
+<div class="article-nav"><a href="../index.html">← 返回首页</a> · <span class="badge badge-howto">How to</span></div>
+<article class="article-body">
+<p><strong>How to collect logs when the gateway's cellular network is disconnected</strong></p>
+<p><img src="../assets/howto/How-to-collect-logs-when-the-gateways-cellular-network-is-disconnected/media/image1.jpeg" style="width:5.75in;height:8.125in" /></p>
+<p>How to collect logs when the gateway's cellular network is disconnected</p>
+<table style="width:89%;">
+<colgroup>
+<col style="width: 12%" />
+<col style="width: 17%" />
+<col style="width: 38%" />
+<col style="width: 20%" />
+</colgroup>
+<tbody>
+<tr>
+<td style="text-align: left;"><strong>Version</strong></td>
+<td style="text-align: left;"><strong>Update Time</strong></td>
+<td style="text-align: left;"><strong>Description</strong></td>
+<td style="text-align: left;"><strong>Author</strong></td>
+</tr>
+<tr>
+<td style="text-align: left;">1.0</td>
+<td style="text-align: left;">Jun. 13, 2026</td>
+<td style="text-align: left;">Initial version</td>
+<td style="text-align: left;">Luis</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Description</strong></p>
+<p>Cellular network issues on the gateway usually require two types of logs for troubleshooting:</p>
+<p>Gateway debug log</p>
+<p>Gateway QXDM log</p>
+<p>The following describes how to collect these logs:</p>
+<p><strong>Configuration</strong></p>
+<p><strong>Step 1: Set the log file mode is “Debug” mode</strong></p>
+<p><img src="../assets/howto/How-to-collect-logs-when-the-gateways-cellular-network-is-disconnected/media/image2.png" style="width:5.75in;height:3.9375in" /></p>
+<p><strong>Step 2: Set the log file mode is “Debug” mode</strong></p>
+<p><img src="../assets/howto/How-to-collect-logs-when-the-gateways-cellular-network-is-disconnected/media/image3.png" style="width:5.75in;height:3.79167in" /></p>
+<p><strong>Step 3: Download the putty or other SSH tool to login the gateway backend</strong></p>
+<p><a href="https://www.chiark.greenend.org.uk/~sgtatham/putty/latest.html">Download PuTTY: latest release (0.84)</a></p>
+<p><img src="../assets/howto/How-to-collect-logs-when-the-gateways-cellular-network-is-disconnected/media/image4.png" style="width:5.75in;height:1.48958in" /></p>
+<p><strong>Step 3: Login the gateway backend</strong></p>
+<p>Enable the SSH/Telnet service and check the servie port number on the web GUI. If you access the gateway via remote network, ensure the remote access options are enabled.</p>
+<p><img src="../assets/howto/How-to-collect-logs-when-the-gateways-cellular-network-is-disconnected/media/image5.png" style="width:5.75in;height:2.38542in" /></p>
+<p> Open Putty.exe software, select corresponding connection type as SSH or Telnet, then type in the device IP address (or domain name) and port, then click Open. If you connect PC to device LAN port or Wi-Fi, the Host Name is 192.168.1.1 by default. </p>
+<p><img src="../assets/howto/How-to-collect-logs-when-the-gateways-cellular-network-is-disconnected/media/image6.png" style="width:5.75in;height:5.125in" /></p>
+<p>Login the gateway with the account root/LoRaWAN@2018, and send the command below(<strong>red background field</strong>):</p>
+<p>root@GATEWAY:~# <strong>vtysh</strong></p>
+<p>*** TERMINFO:/etc/terminfo TERM:xterm *****</p>
+<p>-- model:UG65,sn:6221E2465759,hwver:0130 partnumber:L04EU-868M-EA--</p>
+<p>-------------------------------------------------------------------------</p>
+<p>Product Model : UG65</p>
+<p>Firmware Version : 60.0.0.49</p>
+<p>-------------------------------------------------------------------------</p>
+<p>GATEWAY&gt; <strong>en</strong></p>
+<p>GATEWAY# <strong>conf t</strong></p>
+<p>GATEWAY(config)# <strong>cellular send at at+cgfcont]</strong></p>
+<p>cellular.c:5609 cellular_send_at: Send AT at+cgfcont?</p>
+<p>GATEWAY(config)#</p>
+<p><img src="../assets/howto/How-to-collect-logs-when-the-gateways-cellular-network-is-disconnected/media/image7.png" style="width:5.75in;height:2.375in" /></p>
+<p><strong>Step 4:Download the degbut log and qxdm log after 10 mins</strong></p>
+<p>Debug log</p>
+<p><img src="../assets/howto/How-to-collect-logs-when-the-gateways-cellular-network-is-disconnected/media/image8.png" style="width:5.75in;height:3.57292in" /></p>
+<p>QXDM log</p>
+<p>Stop and download the qxdmlog</p>
+<p><img src="../assets/howto/How-to-collect-logs-when-the-gateways-cellular-network-is-disconnected/media/image9.png" style="width:5.75in;height:3.95833in" /></p>
+<p><img src="../assets/howto/How-to-collect-logs-when-the-gateways-cellular-network-is-disconnected/media/image10.png" style="width:5.75in;height:3.48958in" /></p>
+<p>Please send the debug log and QXDM log to the technical support team for analysis.</p>
+<p><strong>-------END-----</strong></p>
+
+</article>
+<footer class="site-footer">技术文档中心</footer>
+</div>
+</body>
+</html>

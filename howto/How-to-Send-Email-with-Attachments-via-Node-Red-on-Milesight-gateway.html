@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>How to Send Email with Attachments via Node-Red on Milesight gateway · 技术文档中心</title>
+<style>
+:root { --accent:#2563eb; --accent-soft:#eff6ff; --text:#1f2937; --muted:#6b7280;
+        --border:#e5e7eb; --bg:#f8fafc; --card:#ffffff; }
+* { box-sizing: border-box; }
+body { margin:0; font-family: "Segoe UI", "Microsoft YaHei", "PingFang SC", sans-serif;
+       background:var(--bg); color:var(--text); line-height:1.75; }
+a { color:var(--accent); text-decoration:none; }
+a:hover { text-decoration:underline; }
+.container { max-width:960px; margin:0 auto; padding:24px 20px 64px; }
+header.site-header { background:linear-gradient(135deg,#1e3a8a,#2563eb); color:#fff; padding:36px 20px; }
+header.site-header .container { padding-top:0; padding-bottom:0; }
+header.site-header h1 { margin:0 0 6px; font-size:26px; }
+header.site-header p { margin:0; opacity:.85; font-size:14px; }
+.search-box { margin:24px 0 8px; }
+.search-box input { width:100%; padding:12px 16px; font-size:15px; border:1px solid var(--border);
+                    border-radius:10px; outline:none; background:#fff; }
+.search-box input:focus { border-color:var(--accent); box-shadow:0 0 0 3px var(--accent-soft); }
+.category { margin-top:28px; }
+.category h2 { font-size:19px; display:flex; align-items:center; gap:10px; margin:0 0 12px; }
+.badge { font-size:12px; font-weight:600; padding:2px 10px; border-radius:999px; }
+.badge-howto { background:#dcfce7; color:#15803d; }
+.badge-troubleshooting { background:#fee2e2; color:#b91c1c; }
+.count { color:var(--muted); font-size:13px; font-weight:400; }
+ul.article-list { list-style:none; margin:0; padding:0; display:grid; gap:10px; }
+ul.article-list li { background:var(--card); border:1px solid var(--border); border-radius:10px;
+                     padding:14px 18px; transition:box-shadow .15s ease; }
+ul.article-list li:hover { box-shadow:0 4px 14px rgba(0,0,0,.06); }
+ul.article-list .title { font-size:16px; font-weight:600; }
+ul.article-list .meta { font-size:12.5px; color:var(--muted); margin-top:4px; }
+.empty { color:var(--muted); font-size:14px; padding:12px 4px; }
+/* 文章页 */
+.article-nav { margin:18px 0 0; font-size:14px; }
+article.article-body { background:var(--card); border:1px solid var(--border); border-radius:12px;
+                       padding:32px 40px; margin-top:16px; }
+article.article-body img { max-width:100%; height:auto; border:1px solid var(--border);
+                           border-radius:8px; margin:8px 0; }
+article.article-body h1 { font-size:24px; margin-top:0; }
+article.article-body h2 { font-size:20px; border-bottom:1px solid var(--border); padding-bottom:6px; }
+article.article-body h3 { font-size:17px; }
+article.article-body pre { background:#f1f5f9; padding:14px; border-radius:8px; overflow-x:auto; }
+article.article-body code { background:#f1f5f9; padding:2px 6px; border-radius:4px; font-size:.92em; }
+article.article-body pre code { background:none; padding:0; }
+article.article-body table { border-collapse:collapse; width:100%; }
+article.article-body th, article.article-body td { border:1px solid var(--border); padding:8px 12px; }
+article.article-body th { background:var(--accent-soft); }
+article.article-body blockquote { border-left:4px solid var(--accent); margin-left:0;
+                                  padding:4px 16px; color:var(--muted); background:var(--accent-soft); }
+footer.site-footer { text-align:center; color:var(--muted); font-size:12.5px; margin-top:48px; }
+@media (max-width:640px) { article.article-body { padding:20px 18px; } }
+</style>
+</head>
+<body>
+<div class="container">
+<div class="article-nav"><a href="../index.html">← 返回首页</a> · <span class="badge badge-howto">How to</span></div>
+<article class="article-body">
+<p><strong>How to Send Email with Attachments via Node-Red on Milesight gateway</strong></p>
+<p>How to Send Email with Attachments via Node-Red on Milesight gateway</p>
+<p><img src="../assets/howto/How-to-Send-Email-with-Attachments-via-Node-Red-on-Milesight-gateway/media/image1.jpeg" style="width:5.75in;height:8.125in" /></p>
+<table style="width:89%;">
+<colgroup>
+<col style="width: 12%" />
+<col style="width: 17%" />
+<col style="width: 38%" />
+<col style="width: 20%" />
+</colgroup>
+<tbody>
+<tr>
+<td style="text-align: left;"><strong>Version</strong></td>
+<td style="text-align: left;"><strong>Update Time</strong></td>
+<td style="text-align: left;"><strong>Description</strong></td>
+<td style="text-align: left;"><strong>Author</strong></td>
+</tr>
+<tr>
+<td style="text-align: left;">1.0</td>
+<td style="text-align: left;">Feb 27, 2026</td>
+<td style="text-align: left;">Initial version</td>
+<td style="text-align: left;">Charles</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Description</strong></p>
+<p>This article will guide you on how to send emails with attachments using a Node-Red program on a Milesight gateway.</p>
+<p><strong>Requirement</strong></p>
+<p>Milesight Gateway: UG56/UG65/UG67</p>
+<p>SMTP server and email account</p>
+<p><strong>Configuration</strong></p>
+<p><strong>Step 1: Launch Node-RED and Import Flow Example</strong></p>
+<p>Go to <strong>App &gt; Node-RED</strong> page to enable Node-RED program and wait for a while to load the program, click <strong>Launch</strong> button to start Node-RED web GUI.</p>
+<p><img src="../assets/howto/How-to-Send-Email-with-Attachments-via-Node-Red-on-Milesight-gateway/media/image2.png" style="width:5.75in;height:3.73958in" /></p>
+<p>Log in the Node-RED web GUI. The account information is the same as gateway web GUI.</p>
+<p><img src="../assets/howto/How-to-Send-Email-with-Attachments-via-Node-Red-on-Milesight-gateway/media/image3.png" style="width:5.75in;height:2.72917in" /></p>
+<p><strong>Step 2: Node-RED Configuration</strong></p>
+<p><strong>Flow structure:</strong></p>
+<p><img src="../assets/howto/How-to-Send-Email-with-Attachments-via-Node-Red-on-Milesight-gateway/media/image4.png" style="width:5.75in;height:1.30208in" /></p>
+<p><strong>Content:</strong></p>
+<table style="width:88%;">
+<colgroup>
+<col style="width: 88%" />
+</colgroup>
+<tbody>
+<tr>
+<td style="text-align: left;">[{"id":"6f77bead375e3cbe","type":"tab","label":"Flow 1","disabled":false,"info":"","env":[]},{"id":"50ca54fe58eb2a72","type":"function","z":"6f77bead375e3cbe","name":"function 1","func":"msg = {/n // Topic of this email/n topic: /"Test Subject/",/n/n // Email content/n payload: /"This is the body of the email./",/n/n // Fill in the email of sender,/n from: /"noreply@neurocore.cloud/", /n/n // Generate an email attachment named hello.txt with the content: Hello, this is the file content!/n attachments : [/n {/n filename: /"hello.txt/",/n content: /"Hello, this is the file content!/"/n }/n ]/n/n/n/n/n};/nreturn msg;/n/n/n/n","outputs":1,"noerr":0,"initialize":"","finalize":"","libs":[],"x":520,"y":520,"wires":[["b70c9bceb5522f2d"]]},{"id":"7ba4263464331008","type":"inject","z":"6f77bead375e3cbe","name":"","props":[],"repeat":"","crontab":"","once":false,"onceDelay":0.1,"topic":"","x":310,"y":520,"wires":[["50ca54fe58eb2a72"]]},{"id":"b70c9bceb5522f2d","type":"e-mail","z":"6f77bead375e3cbe","server":"your-smtp-server","port":"465","secure":true,"tls":true,"name":"charles.luo@milesight.com","dname":"email","x":730,"y":520,"wires":[]}]</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Function description for nodes in the node-red flow:</strong></p>
+<p>Inject 1: This is a button that is triggered by a right-click to send.</p>
+<p>Function 1: This is a node used to construct the content of the email.</p>
+<p>email: This is a node used to configure SMTP server information and recipient details.</p>
+<p><strong>Step 3: Deploy and Check Result</strong></p>
+<p>Click this icon() to download the email node in Node-RED and then upload the tgz file to your Node-RED program.</p>
+<p><img src="../assets/howto/How-to-Send-Email-with-Attachments-via-Node-Red-on-Milesight-gateway/media/image5.png" style="width:5.75in;height:2.51042in" /></p>
+<p><img src="../assets/howto/How-to-Send-Email-with-Attachments-via-Node-Red-on-Milesight-gateway/media/image6.png" style="width:5.75in;height:2.84375in" /></p>
+<p>Click Import to import the node-red flow example by pasting the content or import the json format file.</p>
+<p><img src="../assets/howto/How-to-Send-Email-with-Attachments-via-Node-Red-on-Milesight-gateway/media/image7.png" style="width:5.75in;height:3.51042in" /></p>
+<p><img src="../assets/howto/How-to-Send-Email-with-Attachments-via-Node-Red-on-Milesight-gateway/media/image8.png" style="width:5.75in;height:4.86458in" /></p>
+<p>Double-click the Function 1 node and modify the content of the function node according to your email content, as shown in the figure below.</p>
+<p><img src="../assets/howto/How-to-Send-Email-with-Attachments-via-Node-Red-on-Milesight-gateway/media/image9.png" style="width:5.75in;height:2.84375in" /></p>
+<p>Double-click the email node, then fill in the corresponding SMTP server information and recipient email address.</p>
+<p><img src="../assets/howto/How-to-Send-Email-with-Attachments-via-Node-Red-on-Milesight-gateway/media/image10.png" style="width:5.75in;height:2.84375in" /></p>
+<p>5.Click Deploy.</p>
+<p><img src="../assets/howto/How-to-Send-Email-with-Attachments-via-Node-Red-on-Milesight-gateway/media/image11.png" style="width:5.4375in;height:2.61458in" /></p>
+<p>Then when you click the inject node, the Node-RED program will send an email with an attachment to the recipient's mailbox</p>
+<p><img src="../assets/howto/How-to-Send-Email-with-Attachments-via-Node-Red-on-Milesight-gateway/media/image12.png" style="width:5.75in;height:2.125in" /></p>
+<p>The following image shows the content of the email received by the recipient.</p>
+<p><img src="../assets/howto/How-to-Send-Email-with-Attachments-via-Node-Red-on-Milesight-gateway/media/image13.png" style="width:5.75in;height:1.63542in" /></p>
+<p><strong>-------END-----</strong></p>
+
+</article>
+<footer class="site-footer">技术文档中心</footer>
+</div>
+</body>
+</html>

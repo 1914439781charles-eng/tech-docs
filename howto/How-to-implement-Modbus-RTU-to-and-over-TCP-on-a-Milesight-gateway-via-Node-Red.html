@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>How to implement Modbus RTU to and over TCP on a Milesight gateway via Node-Red · 技术文档中心</title>
+<style>
+:root { --accent:#2563eb; --accent-soft:#eff6ff; --text:#1f2937; --muted:#6b7280;
+        --border:#e5e7eb; --bg:#f8fafc; --card:#ffffff; }
+* { box-sizing: border-box; }
+body { margin:0; font-family: "Segoe UI", "Microsoft YaHei", "PingFang SC", sans-serif;
+       background:var(--bg); color:var(--text); line-height:1.75; }
+a { color:var(--accent); text-decoration:none; }
+a:hover { text-decoration:underline; }
+.container { max-width:960px; margin:0 auto; padding:24px 20px 64px; }
+header.site-header { background:linear-gradient(135deg,#1e3a8a,#2563eb); color:#fff; padding:36px 20px; }
+header.site-header .container { padding-top:0; padding-bottom:0; }
+header.site-header h1 { margin:0 0 6px; font-size:26px; }
+header.site-header p { margin:0; opacity:.85; font-size:14px; }
+.search-box { margin:24px 0 8px; }
+.search-box input { width:100%; padding:12px 16px; font-size:15px; border:1px solid var(--border);
+                    border-radius:10px; outline:none; background:#fff; }
+.search-box input:focus { border-color:var(--accent); box-shadow:0 0 0 3px var(--accent-soft); }
+.category { margin-top:28px; }
+.category h2 { font-size:19px; display:flex; align-items:center; gap:10px; margin:0 0 12px; }
+.badge { font-size:12px; font-weight:600; padding:2px 10px; border-radius:999px; }
+.badge-howto { background:#dcfce7; color:#15803d; }
+.badge-troubleshooting { background:#fee2e2; color:#b91c1c; }
+.count { color:var(--muted); font-size:13px; font-weight:400; }
+ul.article-list { list-style:none; margin:0; padding:0; display:grid; gap:10px; }
+ul.article-list li { background:var(--card); border:1px solid var(--border); border-radius:10px;
+                     padding:14px 18px; transition:box-shadow .15s ease; }
+ul.article-list li:hover { box-shadow:0 4px 14px rgba(0,0,0,.06); }
+ul.article-list .title { font-size:16px; font-weight:600; }
+ul.article-list .meta { font-size:12.5px; color:var(--muted); margin-top:4px; }
+.empty { color:var(--muted); font-size:14px; padding:12px 4px; }
+/* 文章页 */
+.article-nav { margin:18px 0 0; font-size:14px; }
+article.article-body { background:var(--card); border:1px solid var(--border); border-radius:12px;
+                       padding:32px 40px; margin-top:16px; }
+article.article-body img { max-width:100%; height:auto; border:1px solid var(--border);
+                           border-radius:8px; margin:8px 0; }
+article.article-body h1 { font-size:24px; margin-top:0; }
+article.article-body h2 { font-size:20px; border-bottom:1px solid var(--border); padding-bottom:6px; }
+article.article-body h3 { font-size:17px; }
+article.article-body pre { background:#f1f5f9; padding:14px; border-radius:8px; overflow-x:auto; }
+article.article-body code { background:#f1f5f9; padding:2px 6px; border-radius:4px; font-size:.92em; }
+article.article-body pre code { background:none; padding:0; }
+article.article-body table { border-collapse:collapse; width:100%; }
+article.article-body th, article.article-body td { border:1px solid var(--border); padding:8px 12px; }
+article.article-body th { background:var(--accent-soft); }
+article.article-body blockquote { border-left:4px solid var(--accent); margin-left:0;
+                                  padding:4px 16px; color:var(--muted); background:var(--accent-soft); }
+footer.site-footer { text-align:center; color:var(--muted); font-size:12.5px; margin-top:48px; }
+@media (max-width:640px) { article.article-body { padding:20px 18px; } }
+</style>
+</head>
+<body>
+<div class="container">
+<div class="article-nav"><a href="../index.html">← 返回首页</a> · <span class="badge badge-howto">How to</span></div>
+<article class="article-body">
+<p><strong>How to implement Modbus RTU to and over TCP on a Milesight gateway via Node-Red</strong></p>
+<p>How to implement Modbus RTU to/over TCP on a Milesight gateway via Node-Red</p>
+<p><img src="../assets/howto/How-to-implement-Modbus-RTU-to-and-over-TCP-on-a-Milesight-gateway-via-Node-Red/media/image1.jpeg" style="width:5.75in;height:8.125in" /></p>
+<table style="width:89%;">
+<colgroup>
+<col style="width: 12%" />
+<col style="width: 17%" />
+<col style="width: 38%" />
+<col style="width: 20%" />
+</colgroup>
+<tbody>
+<tr>
+<td style="text-align: left;"><strong>Version</strong></td>
+<td style="text-align: left;"><strong>Update Time</strong></td>
+<td style="text-align: left;"><strong>Description</strong></td>
+<td style="text-align: left;"><strong>Author</strong></td>
+</tr>
+<tr>
+<td style="text-align: left;">1.0</td>
+<td style="text-align: left;">March 28, 2026</td>
+<td style="text-align: left;">Initial version</td>
+<td style="text-align: left;">Charles</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Description</strong></p>
+<p>For third-party LoRaWAN sensors, if the sensor can interact with Modbus devices and has a corresponding port that supports transparent transmission of Modbus RTU commands, then you can implement Modbus RTU over/to TCP on the Milesight gateway via Node-Red.</p>
+<p><strong>Requirement</strong></p>
+<p>Milesight Gateway: UG56/UG65/UG67</p>
+<p>LoRaWAN sensors supporting Modbus passthrough functionality</p>
+<p><strong>Configuration</strong></p>
+<p><strong>Step 1: Launch Node-RED and Import Flow Example</strong></p>
+<p>Go to <strong>App &gt; Node-RED</strong> page to enable Node-RED program and wait for a while to load the program, click <strong>Launch</strong> button to start Node-RED web GUI.</p>
+<p><img src="../assets/howto/How-to-implement-Modbus-RTU-to-and-over-TCP-on-a-Milesight-gateway-via-Node-Red/media/image2.png" style="width:5.75in;height:3.73958in" /></p>
+<p>Log in the Node-RED web GUI. The account information is the same as gateway web GUI.</p>
+<p><img src="../assets/howto/How-to-implement-Modbus-RTU-to-and-over-TCP-on-a-Milesight-gateway-via-Node-Red/media/image3.png" style="width:5.75in;height:2.72917in" /></p>
+<p>Click Import to import the node-red flow example by pasting the content or import the json format file.</p>
+<p><img src="../assets/howto/How-to-implement-Modbus-RTU-to-and-over-TCP-on-a-Milesight-gateway-via-Node-Red/media/image4.png" style="width:5.75in;height:3.51042in" /></p>
+<p><img src="../assets/howto/How-to-implement-Modbus-RTU-to-and-over-TCP-on-a-Milesight-gateway-via-Node-Red/media/image5.png" style="width:5.75in;height:4.86458in" /></p>
+<p><strong>Step 2: Node-RED Configuration</strong></p>
+<p><strong>Flow structure:</strong></p>
+<p>贴上node-red截图</p>
+<p><img src="../assets/howto/How-to-implement-Modbus-RTU-to-and-over-TCP-on-a-Milesight-gateway-via-Node-Red/media/image6.png" style="width:5.75in;height:2.45833in" /></p>
+<p><strong>Content:</strong></p>
+<table style="width:88%;">
+<colgroup>
+<col style="width: 88%" />
+</colgroup>
+<tbody>
+<tr>
+<td style="text-align: left;">[{"id":"1d960e9e2a99b2b4","type":"tab","label":"流程 1","disabled":false,"info":"","env":[]},{"id":"c3308c643a9b6029","type":"tcp in","z":"1d960e9e2a99b2b4","name":"TEST","server":"server","host":"","port":"60","datamode":"stream","datatype":"buffer","newline":"","topic":"TEST","trim":false,"base64":false,"tls":"","x":310,"y":360,"wires":[["198e2dcef8347ace","f737028e6d5aea95"]]},{"id":"198e2dcef8347ace","type":"debug","z":"1d960e9e2a99b2b4","name":"debug 4","active":true,"tosidebar":true,"console":true,"tostatus":false,"complete":"true","targetType":"full","statusVal":"","statusType":"auto","x":630,"y":220,"wires":[]},{"id":"f737028e6d5aea95","type":"function","z":"1d960e9e2a99b2b4","name":"Send downlink commands to the gateway via MQTT API","func":"// 1. Directly convert the incoming Buffer to Base64/nmsg.finalCommand2 = msg.payload.toString('base64');/n/n// 2. Define the MQTT command template/nconst cmd = `mosquitto_pub -h 127.0.0.1 -p 1883 -u loraadm -P URloraadm123456 -t application/1/device/24E124621F170128/tx -m '{/"confirmed/":true, /"fport/":52, /"data/":/"CQEA/w==/"}'`;/n/n// 3. Replace the data value and output the final command/nif (msg.finalCommand2 !== /"/") {/n msg.payload = replaceDataValue(cmd, msg.finalCommand2);/n} else {/n msg.payload = /"/";/n}/n/nfunction replaceDataValue(cmdStr, newData) {/n return cmdStr.replace(/(/"data/":/")([^/"]*)(/")/, '$1' + newData + '$3');/n}/n/nreturn msg;","outputs":1,"noerr":0,"initialize":"","finalize":"","libs":[],"x":770,"y":360,"wires":[["6324660ab04f3b4c","8c09f1dc361f3181"]]},{"id":"6324660ab04f3b4c","type":"exec","z":"1d960e9e2a99b2b4","command":"","addpay":"payload","append":"","useSpawn":"false","timer":"","winHide":false,"oldrc":false,"name":"exec","x":1170,"y":360,"wires":[[],[],[]]},{"id":"8c09f1dc361f3181","type":"debug","z":"1d960e9e2a99b2b4","name":"debug 35","active":true,"tosidebar":true,"console":false,"tostatus":false,"complete":"true","targetType":"full","statusVal":"","statusType":"auto","x":1160,"y":260,"wires":[]},{"id":"755ebccdd953cd8f","type":"comment","z":"1d960e9e2a99b2b4","name":"modbus RTU over tcp ","info":"","x":300,"y":320,"wires":[]},{"id":"667ddb0fd8d27f22","type":"comment","z":"1d960e9e2a99b2b4","name":"modbus RTU to tcp ","info":"","x":310,"y":500,"wires":[]},{"id":"2a12498928836e80","type":"tcp in","z":"1d960e9e2a99b2b4","name":"test","server":"server","host":"","port":"61","datamode":"stream","datatype":"buffer","newline":"","topic":"test","trim":false,"base64":false,"tls":"","x":290,"y":560,"wires":[["d6d0dc69c79aa244"]]},{"id":"d6d0dc69c79aa244","type":"function","z":"1d960e9e2a99b2b4","name":"function 4","func":"// CRC16 Modbus calculation/nfunction crc16(buffer) {/n let crc = 0xFFFF;/n for (let pos = 0; pos &lt; buffer.length; pos++) {/n crc ^= buffer[pos];/n for (let i = 0; i &lt; 8; i++) {/n if ((crc &amp; 0x0001) !== 0) {/n crc &gt;&gt;= 1;/n crc ^= 0xA001;/n } else {/n crc &gt;&gt;= 1;/n }/n }/n }/n // Return the low byte first, followed by the high byte/n return Buffer.from([crc &amp; 0xFF, (crc &gt;&gt; 8) &amp; 0xFF]);/n}/n/n/n/n/**/n * Modbus Convert TCP commands to Modbus RTU commands/n * @param {Buffer} tcpBuffer - TCP packet/n * @returns {Buffer} RTU packet/n *//nfunction tcpToRtu(tcpBuffer) {/n if (!Buffer.isBuffer(tcpBuffer)) throw new Error(/"Input must be Buffer/");/n if (tcpBuffer.length &lt; 8) throw new Error(/"TCP buffer too short/");/n/n // Extract the content following the MBAP header/n // The first 7 bytes of the MBAP：[Transaction ID 2][Protocol ID 2][Length 2][Unit Identifier1]/n // PDU: Function code + data/n const unitIdentifier = tcpBuffer[6]; // address/n const pdu = tcpBuffer.slice(7); // Function code + data/n/n // Assembling an RTU frame (address + function code + data)/n const rtuNoCrc = Buffer.concat([Buffer.from([unitIdentifier]), pdu]);/n/n // Calculate the CRC16 and concatenate/n const crc = crc16(rtuNoCrc);/n/n return Buffer.concat([rtuNoCrc, crc]);/n}/n/n// ====== Example ======/nconst tcpHex = msg.payload.toString('hex');/nconst tcpBuffer = Buffer.from(tcpHex, 'hex');/nconst rtuBuffer = tcpToRtu(tcpBuffer);/n/n// console.log('RTU command:', rtuBuffer.toString('hex')); // 010300000002c40b/n/nconst hexStr = tcpToRtu(tcpBuffer).toString('hex')/n/nmsg.result = hexStr/nreturn msg","outputs":1,"noerr":0,"initialize":"","finalize":"","libs":[],"x":520,"y":560,"wires":[["8d1e08e00fe171ca","85f72662122c1739"]]},{"id":"8d1e08e00fe171ca","type":"debug","z":"1d960e9e2a99b2b4","name":"debug 37","active":true,"tosidebar":true,"console":false,"tostatus":false,"complete":"true","targetType":"full","statusVal":"","statusType":"auto","x":660,"y":480,"wires":[]},{"id":"85f72662122c1739","type":"function","z":"1d960e9e2a99b2b4","name":"Send downlink commands to the gateway via MQTT API","func":"/n/nmsg.finalCommand2 = hexToBase64(msg.result)/n/nconst cmd = `mosquitto_pub -h 127.0.0.1 -p 1883 -u loraadm -P URloraadm123456 -t application/1/device/24E124621F170128/tx -m '{/"confirmed/":true, /"fport/":52, /"data/":/"CQEA/w==/"}'`;/n/nif (msg.finalCommand2 != /"/") {/n msg.payload = replaceDataValue(cmd, msg.finalCommand2);/n}/nelse {/n msg.payload = /"/";/n}/n/n/n/n/nfunction hexToBase64(hexStr) {/n if (hexStr == /"/")/n {/n return 1;/n }/n else{/n let bytes = [];/n for (let i = 0; i &lt; hexStr.length; i += 2) {/n bytes.push(parseInt(hexStr.substr(i, 2), 16));/n }/n/n let binary = String.fromCharCode(...bytes);/n/n return btoa(binary);}/n}/n/nfunction btoa(str) {/n return Buffer.from(str, 'binary').toString('base64');/n}/n/nfunction replaceDataValue(cmdStr, newData) {/n/n return cmdStr.replace(/(/"data/":/")([^/"]*)(/")/, `//$1${newData}//$3`);/n}/n/nreturn msg","outputs":1,"noerr":0,"initialize":"","finalize":"","libs":[],"x":870,"y":560,"wires":[["29ccd6958f7130ee"]]},{"id":"29ccd6958f7130ee","type":"exec","z":"1d960e9e2a99b2b4","command":"","addpay":"payload","append":"","useSpawn":"false","timer":"","winHide":false,"oldrc":false,"name":"exec","x":1190,"y":560,"wires":[[],[],[]]}]</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Step 3:</strong> Please refer to this article(https://support.milesight-iot.com/a/solutions/articles/73000514280) for instructions on connecting your sensor that supports Modbus transparent transmission to the built-in Network Server (NS) of the Milesight gateway.</p>
+<p><strong>Step 4:</strong> You can double-click each of these two nodes to configure the ports for Modbus RTU over TCP and Modbus RTU to TCP separately, but please do not use the same port for both.</p>
+<p><img src="../assets/howto/How-to-implement-Modbus-RTU-to-and-over-TCP-on-a-Milesight-gateway-via-Node-Red/media/image7.png" style="width:5.75in;height:3.17708in" /></p>
+<p><strong>Step 5:</strong> Double-click the Function node, replace the device EUI in the Topic field with the device EUI of your LoRaWAN device, and set the fport to the Modbus passthrough port used by your LoRaWAN sensor.</p>
+<p><img src="../assets/howto/How-to-implement-Modbus-RTU-to-and-over-TCP-on-a-Milesight-gateway-via-Node-Red/media/image8.png" style="width:5.75in;height:3.14583in" /></p>
+<p><strong>Step 6: Deploy and Check Result</strong></p>
+<p><img src="../assets/howto/How-to-implement-Modbus-RTU-to-and-over-TCP-on-a-Milesight-gateway-via-Node-Red/media/image9.png" style="width:5.4375in;height:2.61458in" /></p>
+<p><strong>Step 7: Test</strong></p>
+<p>①Modbus RTU over TCP</p>
+<p>I launched a TCP client tool on a computer that is on the same local network as the UG65 gateway. Since I set the Modbus RTU over TCP port to 60, I used the TCP client tool to connect to port 60 of the UG65 gateway. Using this tool, I was able to successfully send a Modbus RTU command to the Modbus passthrough port of the LoRaWAN sensor.</p>
+<p><img src="../assets/howto/How-to-implement-Modbus-RTU-to-and-over-TCP-on-a-Milesight-gateway-via-Node-Red/media/image10.png" style="width:5.75in;height:4.94792in" /></p>
+<p><img src="../assets/howto/How-to-implement-Modbus-RTU-to-and-over-TCP-on-a-Milesight-gateway-via-Node-Red/media/image11.png" style="width:5.75in;height:2.82292in" /></p>
+<p>②Modbus RTU to TCP</p>
+<p>I launched a TCP client tool on a computer that is on the same local network as the UG65 gateway. Since I set the Modbus RTU over TCP port to 61, I used the TCP client tool to connect to port 61 of the UG65 gateway. Using this tool, I successfully sent a Modbus TCP command, which was automatically converted into a Modbus RTU command and forwarded to the passthrough port of the LoRaWAN sensor.</p>
+<p><img src="../assets/howto/How-to-implement-Modbus-RTU-to-and-over-TCP-on-a-Milesight-gateway-via-Node-Red/media/image12.png" style="width:5.75in;height:4.94792in" /></p>
+<p><img src="../assets/howto/How-to-implement-Modbus-RTU-to-and-over-TCP-on-a-Milesight-gateway-via-Node-Red/media/image13.png" style="width:5.75in;height:2.82292in" /></p>
+<p><strong>-------END-----</strong></p>
+
+</article>
+<footer class="site-footer">技术文档中心</footer>
+</div>
+</body>
+</html>

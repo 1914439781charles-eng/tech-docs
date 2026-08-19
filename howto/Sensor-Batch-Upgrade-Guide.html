@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Sensor Batch Upgrade Guide · 技术文档中心</title>
+<style>
+:root { --accent:#2563eb; --accent-soft:#eff6ff; --text:#1f2937; --muted:#6b7280;
+        --border:#e5e7eb; --bg:#f8fafc; --card:#ffffff; }
+* { box-sizing: border-box; }
+body { margin:0; font-family: "Segoe UI", "Microsoft YaHei", "PingFang SC", sans-serif;
+       background:var(--bg); color:var(--text); line-height:1.75; }
+a { color:var(--accent); text-decoration:none; }
+a:hover { text-decoration:underline; }
+.container { max-width:960px; margin:0 auto; padding:24px 20px 64px; }
+header.site-header { background:linear-gradient(135deg,#1e3a8a,#2563eb); color:#fff; padding:36px 20px; }
+header.site-header .container { padding-top:0; padding-bottom:0; }
+header.site-header h1 { margin:0 0 6px; font-size:26px; }
+header.site-header p { margin:0; opacity:.85; font-size:14px; }
+.search-box { margin:24px 0 8px; }
+.search-box input { width:100%; padding:12px 16px; font-size:15px; border:1px solid var(--border);
+                    border-radius:10px; outline:none; background:#fff; }
+.search-box input:focus { border-color:var(--accent); box-shadow:0 0 0 3px var(--accent-soft); }
+.category { margin-top:28px; }
+.category h2 { font-size:19px; display:flex; align-items:center; gap:10px; margin:0 0 12px; }
+.badge { font-size:12px; font-weight:600; padding:2px 10px; border-radius:999px; }
+.badge-howto { background:#dcfce7; color:#15803d; }
+.badge-troubleshooting { background:#fee2e2; color:#b91c1c; }
+.count { color:var(--muted); font-size:13px; font-weight:400; }
+ul.article-list { list-style:none; margin:0; padding:0; display:grid; gap:10px; }
+ul.article-list li { background:var(--card); border:1px solid var(--border); border-radius:10px;
+                     padding:14px 18px; transition:box-shadow .15s ease; }
+ul.article-list li:hover { box-shadow:0 4px 14px rgba(0,0,0,.06); }
+ul.article-list .title { font-size:16px; font-weight:600; }
+ul.article-list .meta { font-size:12.5px; color:var(--muted); margin-top:4px; }
+.empty { color:var(--muted); font-size:14px; padding:12px 4px; }
+/* 文章页 */
+.article-nav { margin:18px 0 0; font-size:14px; }
+article.article-body { background:var(--card); border:1px solid var(--border); border-radius:12px;
+                       padding:32px 40px; margin-top:16px; }
+article.article-body img { max-width:100%; height:auto; border:1px solid var(--border);
+                           border-radius:8px; margin:8px 0; }
+article.article-body h1 { font-size:24px; margin-top:0; }
+article.article-body h2 { font-size:20px; border-bottom:1px solid var(--border); padding-bottom:6px; }
+article.article-body h3 { font-size:17px; }
+article.article-body pre { background:#f1f5f9; padding:14px; border-radius:8px; overflow-x:auto; }
+article.article-body code { background:#f1f5f9; padding:2px 6px; border-radius:4px; font-size:.92em; }
+article.article-body pre code { background:none; padding:0; }
+article.article-body table { border-collapse:collapse; width:100%; }
+article.article-body th, article.article-body td { border:1px solid var(--border); padding:8px 12px; }
+article.article-body th { background:var(--accent-soft); }
+article.article-body blockquote { border-left:4px solid var(--accent); margin-left:0;
+                                  padding:4px 16px; color:var(--muted); background:var(--accent-soft); }
+footer.site-footer { text-align:center; color:var(--muted); font-size:12.5px; margin-top:48px; }
+@media (max-width:640px) { article.article-body { padding:20px 18px; } }
+</style>
+</head>
+<body>
+<div class="container">
+<div class="article-nav"><a href="../index.html">← 返回首页</a> · <span class="badge badge-howto">How to</span></div>
+<article class="article-body">
+<p><strong>Sensor Batch Upgrade Guide</strong></p>
+<p>This article will use two TS302 V2 devices with firmware version v1.1 as an example to guide you on how to use the upgrading tool to perform a batch firmware upgrade, updating both sensors to standard firmware version v1.2</p>
+<p>Two Required Software：</p>
+<p>① port_and_path_tool_v3.1.exe</p>
+<p><img src="../assets/howto/Sensor-Batch-Upgrade-Guide/media/image1.png" style="width:5.75in;height:2.26042in" /></p>
+<p>② iot_sensor_stock_dev_upg_tool_v3.1.1-nodb-a9.exe</p>
+<p><img src="../assets/howto/Sensor-Batch-Upgrade-Guide/media/image2.png" style="width:5.75in;height:2.15625in" /></p>
+<p><img src="../assets/howto/Sensor-Batch-Upgrade-Guide/media/image3.png" style="width:5.75in;height:4.89583in" /></p>
+<p>Step 1: Please place the TS30x V2 devices that are scheduled for bulk firmware upgrade on the desktop.</p>
+<p><img src="../assets/howto/Sensor-Batch-Upgrade-Guide/media/image4.jpeg" style="width:5.75in;height:8.79167in" /></p>
+<p>Step 2: Connect the 10-port USB hub with DC power supply to your computer.</p>
+<p><img src="../assets/howto/Sensor-Batch-Upgrade-Guide/media/image5.jpeg" style="width:5.75in;height:7.66667in" /></p>
+<p>Connect each of the two NFC panels with a separate USB-C cable. To fix the NFC panels onto the NFC module area of the TS30x V2, you may apply double-sided tape to the panels.</p>
+<p><img src="../assets/howto/Sensor-Batch-Upgrade-Guide/media/image6.jpeg" style="width:5.75in;height:8.79167in" /></p>
+<p>The following image shows the NFC area of the TS30x V2. Please affix the NFC panel, which has double-sided tape applied, to the NFC area of the TS30x V2 as illustrated below.</p>
+<p><img src="../assets/howto/Sensor-Batch-Upgrade-Guide/media/image7.png" style="width:5.75in;height:4.875in" /></p>
+<p><img src="../assets/howto/Sensor-Batch-Upgrade-Guide/media/image8.jpeg" style="width:5.75in;height:7.66667in" /></p>
+<p>Step 3: Open the port_and_path_tool_v3.1.exe program. Then, insert each USB cable connected to an NFC daughter board into your USB hub one by one. Each time you insert a USB cable into the USB hub, you will receive a COM port value.</p>
+<p>As shown below, when I insert these two USB cables into my USB hub, I get two COM port values. If you insert 10 USB cables (each connected to an NFC board) into your USB hub, you will get 10 COM port values.</p>
+<p><img src="../assets/howto/Sensor-Batch-Upgrade-Guide/media/image9.png" style="width:5.75in;height:4.20833in" /></p>
+<p><img src="../assets/howto/Sensor-Batch-Upgrade-Guide/media/image10.png" style="width:5.75in;height:6.09375in" /></p>
+<p>Step 4: Launch the iot_sensor_stock_dev_upg_tool_v3.1.1-nodb-a9.exe program. Click the "port mapping" button, fill in the two COM port values obtained in Step 3, and then click "save" to store the configuration, as illustrated below.</p>
+<p><img src="../assets/howto/Sensor-Batch-Upgrade-Guide/media/image11.png" style="width:5.75in;height:3.35417in" /></p>
+<p><img src="../assets/howto/Sensor-Batch-Upgrade-Guide/media/image12.png" style="width:5.75in;height:3.35417in" /></p>
+<p>Step 5: Click "Select File" to upload the firmware you want to use for the upgrade. In this test, I uploaded the v1.2 firmware of TS30x V2, as shown below.</p>
+<p><img src="../assets/howto/Sensor-Batch-Upgrade-Guide/media/image13.png" style="width:5.75in;height:3.35417in" /></p>
+<p>Step 6: Click the "Upgrade All" button to upgrade the firmware of all TS30x V2 devices currently connected to the USB hub simultaneously. All devices will be upgraded to the v1.2 firmware.</p>
+<p><img src="../assets/howto/Sensor-Batch-Upgrade-Guide/media/image14.png" style="width:5.75in;height:3.35417in" /></p>
+<p>Step 7: After you click "Upgrade All," all TS30x V2 devices will enter the "Upgrading" status, as shown below.</p>
+<p><img src="../assets/howto/Sensor-Batch-Upgrade-Guide/media/image15.png" style="width:5.75in;height:3.35417in" /></p>
+<p>If the devices are in the process of upgrading, you will see the progress bar changing, as shown below. If any device does not enter the "Upgrading" status and its status shows an error message, it means that the upgrade for that device has failed. For devices that failed to upgrade, you need to wait until all other devices have finished upgrading before attempting to upgrade them again. Once the TS30x V2 enters the upgrading state, please do not interrupt the process; otherwise, your device may encounter issues.</p>
+<p><img src="../assets/howto/Sensor-Batch-Upgrade-Guide/media/image16.png" style="width:5.75in;height:3.35417in" /></p>
+<p>When the firmware upgrade is completed, you will see the device status as "Upgrade success," as shown below. This indicates that both of my TS30x V2 devices have been successfully upgraded to the target firmware (v1.2).</p>
+<p><img src="../assets/howto/Sensor-Batch-Upgrade-Guide/media/image17.png" style="width:5.75in;height:3.35417in" /></p>
+<p>You can use the mobile version of ToolBox or directly use the NFC function of the PC version of ToolBox to check whether the device has actually been upgraded to v1.2.<br />
+To read the device information of the TS30x V2 using the PC version of ToolBox, simply select "NFC" as the reading type when launching the software, and make sure that the selected COM port corresponds to the one connected to the TS30x V2. As shown in the figure below.</p>
+<p><img src="../assets/howto/Sensor-Batch-Upgrade-Guide/media/image18.png" style="width:5.75in;height:3.90625in" /></p>
+
+</article>
+<footer class="site-footer">技术文档中心</footer>
+</div>
+</body>
+</html>

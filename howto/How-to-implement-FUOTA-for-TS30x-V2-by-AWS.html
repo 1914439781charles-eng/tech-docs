@@ -1,0 +1,368 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>How to implement FUOTA for TS30x V2 by AWS · 技术文档中心</title>
+<style>
+:root { --accent:#2563eb; --accent-soft:#eff6ff; --text:#1f2937; --muted:#6b7280;
+        --border:#e5e7eb; --bg:#f8fafc; --card:#ffffff; }
+* { box-sizing: border-box; }
+body { margin:0; font-family: "Segoe UI", "Microsoft YaHei", "PingFang SC", sans-serif;
+       background:var(--bg); color:var(--text); line-height:1.75; }
+a { color:var(--accent); text-decoration:none; }
+a:hover { text-decoration:underline; }
+.container { max-width:960px; margin:0 auto; padding:24px 20px 64px; }
+header.site-header { background:linear-gradient(135deg,#1e3a8a,#2563eb); color:#fff; padding:36px 20px; }
+header.site-header .container { padding-top:0; padding-bottom:0; }
+header.site-header h1 { margin:0 0 6px; font-size:26px; }
+header.site-header p { margin:0; opacity:.85; font-size:14px; }
+.search-box { margin:24px 0 8px; }
+.search-box input { width:100%; padding:12px 16px; font-size:15px; border:1px solid var(--border);
+                    border-radius:10px; outline:none; background:#fff; }
+.search-box input:focus { border-color:var(--accent); box-shadow:0 0 0 3px var(--accent-soft); }
+.category { margin-top:28px; }
+.category h2 { font-size:19px; display:flex; align-items:center; gap:10px; margin:0 0 12px; }
+.badge { font-size:12px; font-weight:600; padding:2px 10px; border-radius:999px; }
+.badge-howto { background:#dcfce7; color:#15803d; }
+.badge-troubleshooting { background:#fee2e2; color:#b91c1c; }
+.count { color:var(--muted); font-size:13px; font-weight:400; }
+ul.article-list { list-style:none; margin:0; padding:0; display:grid; gap:10px; }
+ul.article-list li { background:var(--card); border:1px solid var(--border); border-radius:10px;
+                     padding:14px 18px; transition:box-shadow .15s ease; }
+ul.article-list li:hover { box-shadow:0 4px 14px rgba(0,0,0,.06); }
+ul.article-list .title { font-size:16px; font-weight:600; }
+ul.article-list .meta { font-size:12.5px; color:var(--muted); margin-top:4px; }
+.empty { color:var(--muted); font-size:14px; padding:12px 4px; }
+/* 文章页 */
+.article-nav { margin:18px 0 0; font-size:14px; }
+article.article-body { background:var(--card); border:1px solid var(--border); border-radius:12px;
+                       padding:32px 40px; margin-top:16px; }
+article.article-body img { max-width:100%; height:auto; border:1px solid var(--border);
+                           border-radius:8px; margin:8px 0; }
+article.article-body h1 { font-size:24px; margin-top:0; }
+article.article-body h2 { font-size:20px; border-bottom:1px solid var(--border); padding-bottom:6px; }
+article.article-body h3 { font-size:17px; }
+article.article-body pre { background:#f1f5f9; padding:14px; border-radius:8px; overflow-x:auto; }
+article.article-body code { background:#f1f5f9; padding:2px 6px; border-radius:4px; font-size:.92em; }
+article.article-body pre code { background:none; padding:0; }
+article.article-body table { border-collapse:collapse; width:100%; }
+article.article-body th, article.article-body td { border:1px solid var(--border); padding:8px 12px; }
+article.article-body th { background:var(--accent-soft); }
+article.article-body blockquote { border-left:4px solid var(--accent); margin-left:0;
+                                  padding:4px 16px; color:var(--muted); background:var(--accent-soft); }
+footer.site-footer { text-align:center; color:var(--muted); font-size:12.5px; margin-top:48px; }
+@media (max-width:640px) { article.article-body { padding:20px 18px; } }
+</style>
+</head>
+<body>
+<div class="container">
+<div class="article-nav"><a href="../index.html">← 返回首页</a> · <span class="badge badge-howto">How to</span></div>
+<article class="article-body">
+<p><strong>How to implement FUOTA for TS30x V2 by AWS</strong></p>
+<p><strong>Overview</strong></p>
+<p>This document describes how to perform bulk remote firmware update (FUOTA) for TS30x V2 devices on AWS IoT Core for LoRaWAN.</p>
+<p><strong>Update Method</strong></p>
+<p>AWS IoT Core delivers firmware to multiple devices simultaneously via multicast using the FUOTA task mechanism. Devices will receive, verify and install the firmware automatically.</p>
+<p><strong>Pre-Upgrade Checks</strong></p>
+<p>You have logged in to your AWS account.</p>
+<p>Devices have been created and properly configured.</p>
+<p>The associated gateways are online.</p>
+<p>Target devices support the FUOTA function and are correctly configured.</p>
+<p><strong>Overall Operation Procedure</strong></p>
+<table style="width:89%;">
+<colgroup>
+<col style="width: 44%" />
+<col style="width: 44%" />
+</colgroup>
+<tbody>
+<tr>
+<td style="text-align: left;"><strong>Step</strong></td>
+<td style="text-align: left;"><strong>Operation</strong></td>
+</tr>
+<tr>
+<td style="text-align: left;">1</td>
+<td style="text-align: left;">Check device profile configuration</td>
+</tr>
+<tr>
+<td style="text-align: left;">2</td>
+<td style="text-align: left;">Prepare firmware and upload it to Amazon S3</td>
+</tr>
+<tr>
+<td style="text-align: left;">3</td>
+<td style="text-align: left;">Create a multicast group</td>
+</tr>
+<tr>
+<td style="text-align: left;">4</td>
+<td style="text-align: left;">Create a FUOTA task</td>
+</tr>
+<tr>
+<td style="text-align: left;">5</td>
+<td style="text-align: left;">Start the upgrade</td>
+</tr>
+<tr>
+<td style="text-align: left;">6</td>
+<td style="text-align: left;">View upgrade results</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Step 1: Check Device Configuration</strong></p>
+<p>Ensure the working mode of the target devices' **Device Profile** is set to **Class A**, and FUOTA support is enabled in device configuration. The FUOTA option must be enabled when adding devices on the AWS platform to successfully deliver and apply firmware updates via FUOTA multicast.</p>
+<p><img src="../assets/howto/How-to-implement-FUOTA-for-TS30x-V2-by-AWS/media/image1.png" style="width:5.75in;height:2.77083in" /></p>
+<p><strong>Operation Path:</strong></p>
+<p>Log in to the AWS IoT Console → Click **IoT Core** → Select **LPWAN** from the left menu → Go to **Devices** → Locate the target device → Click **Profiles** of the device and copy the ID → Verify the device profile is set to **Class A**.</p>
+<p>①Eneter AWS IoT Core:</p>
+<p><img src="../assets/howto/How-to-implement-FUOTA-for-TS30x-V2-by-AWS/media/image2.png" style="width:5.75in;height:2.77083in" /></p>
+<p>②Serarch TS30x V2 devices:</p>
+<p><img src="../assets/howto/How-to-implement-FUOTA-for-TS30x-V2-by-AWS/media/image3.png" style="width:5.75in;height:2.77083in" /></p>
+<p>③Check the Profile ID</p>
+<p><img src="../assets/howto/How-to-implement-FUOTA-for-TS30x-V2-by-AWS/media/image4.png" style="width:5.75in;height:2.77083in" /></p>
+<p>④ Check tge Profile configuration</p>
+<p><img src="../assets/howto/How-to-implement-FUOTA-for-TS30x-V2-by-AWS/media/image5.png" style="width:5.75in;height:2.77083in" /></p>
+<p><strong>Configuration Items to Verify:</strong></p>
+<table style="width:89%;">
+<colgroup>
+<col style="width: 22%" />
+<col style="width: 22%" />
+<col style="width: 22%" />
+<col style="width: 22%" />
+</colgroup>
+<tbody>
+<tr>
+<td style="text-align: left;"><strong>No.</strong></td>
+<td style="text-align: left;"><strong>Configuration Item</strong></td>
+<td style="text-align: left;"><strong>Requirement</strong></td>
+<td style="text-align: left;"><strong>Description</strong></td>
+</tr>
+<tr>
+<td style="text-align: left;">1</td>
+<td style="text-align: left;">FUOTA Support</td>
+<td style="text-align: left;">Enable the FUOTA option when provisioning devices on AWS</td>
+<td style="text-align: left;">This setting is critical for successful FUOTA. Ensure the option is checked for all devices requiring firmware updates over the air.</td>
+</tr>
+<tr>
+<td style="text-align: left;">2</td>
+<td style="text-align: left;">Device Profile</td>
+<td style="text-align: left;">Set the operating mode to Class A in the profile</td>
+<td style="text-align: left;">If the device is configured for Class C, modify the profile to Class A, then reboot the device and let it rejoin the network.</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Step 2: Prepare the firmware and upload it to Amazon S3</strong></p>
+<p><strong>Operation Path:</strong></p>
+<p>AWS Console → S3 → Create Bucket → Upload firmware file File name: TS30X.0000.0200.0101-TS30X.0000.0200.0102.patch</p>
+<p>① Click S3:</p>
+<p><img src="../assets/howto/How-to-implement-FUOTA-for-TS30x-V2-by-AWS/media/image6.png" style="width:5.75in;height:2.77083in" /></p>
+<p>② Create BUCKET:</p>
+<p><img src="../assets/howto/How-to-implement-FUOTA-for-TS30x-V2-by-AWS/media/image7.png" style="width:5.75in;height:2.77083in" /></p>
+<p>③ Customize the BUCKET name:</p>
+<p><img src="../assets/howto/How-to-implement-FUOTA-for-TS30x-V2-by-AWS/media/image8.png" style="width:5.75in;height:2.77083in" /></p>
+<p>④ Upload PATCH file:</p>
+<p><img src="../assets/howto/How-to-implement-FUOTA-for-TS30x-V2-by-AWS/media/image9.png" style="width:5.75in;height:2.77083in" /></p>
+<p>⑤ Select the PATCH file to upload:</p>
+<p><img src="../assets/howto/How-to-implement-FUOTA-for-TS30x-V2-by-AWS/media/image10.png" style="width:5.75in;height:2.77083in" /></p>
+<p>⑥ Upload successfully:</p>
+<p><img src="../assets/howto/How-to-implement-FUOTA-for-TS30x-V2-by-AWS/media/image11.png" style="width:5.75in;height:2.77083in" /></p>
+<p><strong>Operating Steps:</strong></p>
+<p>- Access the AWS S3 Console</p>
+<p>- Create an S3 bucket to store firmware files</p>
+<p>- Customize the bucket name (e.g. test-ts30x)</p>
+<p>- Click **Upload files** to open the upload page</p>
+<p>- Select the upgrade package (.bin / .patch) and upload it to the bucket</p>
+<p>- Check the upload status (Status: succeeded)</p>
+<p><strong>Step 3: Create a multicast group</strong></p>
+<p><strong>Operation Path:</strong></p>
+<p>AWS Console → IoT Core → LPWAN → Multicast groups → Create a multicast group</p>
+<p>Create multicast group:</p>
+<p><img src="../assets/howto/How-to-implement-FUOTA-for-TS30x-V2-by-AWS/media/image12.png" style="width:5.75in;height:2.77083in" /></p>
+<p>② Customize a name for the multicast group:</p>
+<p><img src="../assets/howto/How-to-implement-FUOTA-for-TS30x-V2-by-AWS/media/image13.png" style="width:5.75in;height:2.77083in" /></p>
+<p>③-1: Add devices to the multicast group (enter the IDs one by one)</p>
+<p><img src="../assets/howto/How-to-implement-FUOTA-for-TS30x-V2-by-AWS/media/image14.png" style="width:5.75in;height:2.67708in" /></p>
+<p>③-2: Add devices to the multicast group (bulk addition)</p>
+<p><img src="../assets/howto/How-to-implement-FUOTA-for-TS30x-V2-by-AWS/media/image15.png" style="width:5.75in;height:2.66667in" /></p>
+<p>④ Check the status of the multicast group:</p>
+<p><img src="../assets/howto/How-to-implement-FUOTA-for-TS30x-V2-by-AWS/media/image16.png" style="width:5.75in;height:2.5625in" /></p>
+<p>⑤ Wait until devices in the multicast group show the status **Multicast setup ready**:</p>
+<p><img src="../assets/howto/How-to-implement-FUOTA-for-TS30x-V2-by-AWS/media/image17.png" style="width:5.75in;height:2.73958in" /></p>
+<p><strong>2. Operating Steps:</strong></p>
+<p>- Navigate to the **Multicast groups** page and create a multicast group.</p>
+<p>- Customize the multicast group name.</p>
+<p>- Add devices: Select the device frequency band, set the operating mode of multicast devices to **Class C**. Add devices one by one by ID, or select devices via device profile (the dedicated profile is exclusively for TS30X devices).</p>
+<p>- Verify the creation status of the multicast group.</p>
+<p>- Wait until all devices in the multicast group show <strong>Multicast setup ready</strong>. The status updates upon the device's next data uplink, so the waiting time depends on the sensor's reporting interval. A green icon indicates ready status, while a grey icon means not ready. S<strong>ee two solutions below for devices with the grey status.</strong></p>
+<p>Solution ①: After creating the multicast group, wait for one sensor reporting cycle. If a device remains in **Package attempting** status after this period, remove it from the multicast group, then re-add it. Wait for another reporting cycle and check if its status changes to **Multicast setup ready**. As shown below.</p>
+<p><img src="../assets/howto/How-to-implement-FUOTA-for-TS30x-V2-by-AWS/media/image18.png" style="width:5.75in;height:2.77083in" /></p>
+<p><img src="../assets/howto/How-to-implement-FUOTA-for-TS30x-V2-by-AWS/media/image19.png" style="width:5.75in;height:2.77083in" /></p>
+<p><img src="../assets/howto/How-to-implement-FUOTA-for-TS30x-V2-by-AWS/media/image20.png" style="width:5.75in;height:2.77083in" /></p>
+<p>Solution ②: If some devices stay in **Package attempting** status after one reporting cycle following multicast group creation, remove these unready devices (be sure to record their IDs). Prioritize running FUOTA tasks for devices marked **Multicast setup ready**. For the remaining unready devices, create a new multicast group and wait again. This method can greatly reduce waiting time.</p>
+<p><strong>Step 4: Create a FUOTA task</strong></p>
+<p><strong>Operation Path:</strong></p>
+<p>AWS Console → IoT Core → LPWAN → FUOTA → "Create FUOTA task" → Add devices → Add Multicast groups</p>
+<p>① Create FUOTA task:</p>
+<p><img src="../assets/howto/How-to-implement-FUOTA-for-TS30x-V2-by-AWS/media/image21.png" style="width:5.75in;height:2.77083in" /></p>
+<p>② Customize the FUOTA task name and select the LoRaWAN frequency band in use:</p>
+<p><img src="../assets/howto/How-to-implement-FUOTA-for-TS30x-V2-by-AWS/media/image22.png" style="width:5.75in;height:2.77083in" /></p>
+<p>③-1: Click Browse S3</p>
+<p><img src="../assets/howto/How-to-implement-FUOTA-for-TS30x-V2-by-AWS/media/image23.png" style="width:5.75in;height:2.77083in" /></p>
+<p>③-2: Select the PATCH file you upload:</p>
+<p><img src="../assets/howto/How-to-implement-FUOTA-for-TS30x-V2-by-AWS/media/image24.png" style="width:5.75in;height:2.77083in" /></p>
+<p>④ Configure the Fragment size, Fragment interval, and Redundancy percent in your FUOTA task according to the information shown in the image below.</p>
+<p><img src="../assets/howto/How-to-implement-FUOTA-for-TS30x-V2-by-AWS/media/image25.png" style="width:5.75in;height:2.77083in" /></p>
+<p>⑤Verify whether the parameter information is correct. Please note that the RfRegion shown in the image below must match the LoRaWAN frequency band used by your TS30x V2.</p>
+<p><img src="../assets/howto/How-to-implement-FUOTA-for-TS30x-V2-by-AWS/media/image26.png" style="width:5.75in;height:2.77083in" /></p>
+<p>⑥ Add FUOTA devices to the FUOTA task</p>
+<p><img src="../assets/howto/How-to-implement-FUOTA-for-TS30x-V2-by-AWS/media/image27.png" style="width:5.75in;height:2.61458in" /></p>
+<p>⑦ Select the LoRaWAN frequency band and add the multicast group you created to the FUOTA task:</p>
+<p><img src="../assets/howto/How-to-implement-FUOTA-for-TS30x-V2-by-AWS/media/image28.png" style="width:5.75in;height:2.17708in" /></p>
+<p><strong>Key Parameter Configuration</strong></p>
+<table style="width:89%;">
+<colgroup>
+<col style="width: 22%" />
+<col style="width: 22%" />
+<col style="width: 22%" />
+<col style="width: 22%" />
+</colgroup>
+<tbody>
+<tr>
+<td style="text-align: left;"><strong>No.</strong></td>
+<td style="text-align: left;"><strong>Parameter</strong></td>
+<td style="text-align: left;"><strong>Value</strong></td>
+<td style="text-align: left;"><strong>Description</strong></td>
+</tr>
+<tr>
+<td style="text-align: left;">1</td>
+<td style="text-align: left;">FUOTA task name</td>
+<td style="text-align: left;">Custom name (e.g. TS30X-FUOTA)</td>
+<td style="text-align: left;">Task identifier</td>
+</tr>
+<tr>
+<td style="text-align: left;">2</td>
+<td style="text-align: left;">Firmware file</td>
+<td style="text-align: left;">Select the firmware file uploaded to S3</td>
+<td style="text-align: left;">Referenced via S3 URI</td>
+</tr>
+<tr>
+<td style="text-align: left;">3</td>
+<td style="text-align: left;">Select RF region</td>
+<td style="text-align: left;">US915</td>
+<td style="text-align: left;">Select the LoRaWAN frequency band you are using.</td>
+</tr>
+<tr>
+<td style="text-align: left;">4</td>
+<td style="text-align: left;">Fragmentation redundancy (%)</td>
+<td style="text-align: left;">30%</td>
+<td style="text-align: left;">Redundancy ratio to improve delivery success rate</td>
+</tr>
+<tr>
+<td style="text-align: left;">5</td>
+<td style="text-align: left;">Fragment size (bytes)</td>
+<td style="text-align: left;">88</td>
+<td style="text-align: left;">Size of each data fragment</td>
+</tr>
+<tr>
+<td style="text-align: left;">6</td>
+<td style="text-align: left;">Fragment interval (ms)</td>
+<td style="text-align: left;">5000</td>
+<td style="text-align: left;">Transmission interval between fragments</td>
+</tr>
+</tbody>
+</table>
+<p><strong>3. Operating Steps</strong></p>
+<p>- Go to the FUOTA creation page</p>
+<p>- Customize the FUOTA task name and select the frequency band</p>
+<p>- Choose the firmware file stored in S3</p>
+<p>- Configure FUOTA parameters</p>
+<p>- Verify all parameter settings</p>
+<p>- Add devices to the created FUOTA task.</p>
+<p>- Select the previously created multicast group and click Create, then you can view the device information.</p>
+<p><strong>Step 5: Start the upgrade</strong></p>
+<p><strong>Pre-start Checklist</strong></p>
+<table style="width:89%;">
+<colgroup>
+<col style="width: 44%" />
+<col style="width: 44%" />
+</colgroup>
+<tbody>
+<tr>
+<td style="text-align: left;"><strong>No.</strong></td>
+<td style="text-align: left;"><strong>Check Item</strong></td>
+</tr>
+<tr>
+<td style="text-align: left;">1</td>
+<td style="text-align: left;">FUOTA support is enabled in Device Profile</td>
+</tr>
+<tr>
+<td style="text-align: left;">2</td>
+<td style="text-align: left;">Firmware file is uploaded to S3 and correctly referenced in the FUOTA task</td>
+</tr>
+<tr>
+<td style="text-align: left;">3</td>
+<td style="text-align: left;">Gateway is online</td>
+</tr>
+<tr>
+<td style="text-align: left;">4</td>
+<td style="text-align: left;">FUOTA task parameters are verified</td>
+</tr>
+<tr>
+<td style="text-align: left;">5</td>
+<td style="text-align: left;">All devices in the multicast group are in multicast setup ready status</td>
+</tr>
+</tbody>
+</table>
+<p><strong>2. Startup Operations:</strong></p>
+<p>On the FUOTA task details page, click **Schedule FUOTA task** and set the start time. It is recommended to schedule the task to start after **6 times the device reporting cycle** to reserve time for session retries. For example, if the reporting cycle of TS30x V2 is 10 minutes and all devices in the multicast group are in **Multicast setup ready** status, set the FUOTA task to start in 60 minutes.</p>
+<p>①Schedule the FUOTA task:</p>
+<p><img src="../assets/howto/How-to-implement-FUOTA-for-TS30x-V2-by-AWS/media/image29.png" style="width:5.75in;height:2.67708in" /></p>
+<p>②Set the FUOTA start time:</p>
+<p><img src="../assets/howto/How-to-implement-FUOTA-for-TS30x-V2-by-AWS/media/image30.png" style="width:5.75in;height:2.77083in" /></p>
+<p>③Device enters initial state:</p>
+<p><img src="../assets/howto/How-to-implement-FUOTA-for-TS30x-V2-by-AWS/media/image31.png" style="width:5.75in;height:2.77083in" /></p>
+<p>④Session preparing on the multicast group page:</p>
+<p><img src="../assets/howto/How-to-implement-FUOTA-for-TS30x-V2-by-AWS/media/image32.png" style="width:5.75in;height:2.77083in" /></p>
+<p><strong>Step 6: Check upgrade results</strong></p>
+<p><strong>Operation Path:</strong></p>
+<p>AWS Console → IoT Core → LPWAN → FUOTA → Select the target task (FUOTA done)</p>
+<p><img src="../assets/howto/How-to-implement-FUOTA-for-TS30x-V2-by-AWS/media/image33.png" style="width:5.75in;height:2.77083in" /></p>
+<p><strong>Success Indicator:</strong></p>
+<p>All devices in the completed task show **successful**. The figure below shows that part of the devices have been upgraded successfully.</p>
+<p><img src="../assets/howto/How-to-implement-FUOTA-for-TS30x-V2-by-AWS/media/image34.png" style="width:5.75in;height:2.6875in" /></p>
+<p><strong>Partial Device Failures:</strong></p>
+<p>Devices remaining in the initial state after task completion indicate upgrade failures.</p>
+<p><strong>Troubleshooting Steps for Failures:</strong></p>
+<p>① Since the platform does not support upgrade retries, record the IDs of failed devices.</p>
+<p>② Delete the original multicast group and FUOTA task from the platform, as shown below.</p>
+<p><img src="../assets/howto/How-to-implement-FUOTA-for-TS30x-V2-by-AWS/media/image35.png" style="width:5.75in;height:2.77083in" /></p>
+<p><img src="../assets/howto/How-to-implement-FUOTA-for-TS30x-V2-by-AWS/media/image36.png" style="width:5.75in;height:2.77083in" /></p>
+<p>③ Go back to Step 3: Create a multicast group and restart the operation.</p>
+<p><strong>Important Reminders:</strong></p>
+<table style="width:89%;">
+<colgroup>
+<col style="width: 44%" />
+<col style="width: 44%" />
+</colgroup>
+<tbody>
+<tr>
+<td style="text-align: left;"><strong>Key Points</strong></td>
+<td style="text-align: left;"><strong>Description</strong></td>
+</tr>
+<tr>
+<td style="text-align: left;">Test with a small batch first</td>
+<td style="text-align: left;">Select 2-3 devices for a trial run on the first upgrade. Carry out bulk execution after confirming the process runs normally.</td>
+</tr>
+<tr>
+<td style="text-align: left;">No device operation during upgrade</td>
+<td style="text-align: left;">Do not power off devices or modify configurations while upgrading.</td>
+</tr>
+<tr>
+<td style="text-align: left;">Delete and recreate for retry</td>
+<td style="text-align: left;">AWS FUOTA does not support retry. Delete and recreate the multicast group and FUOTA task after upgrade failures.</td>
+</tr>
+</tbody>
+</table>
+
+</article>
+<footer class="site-footer">技术文档中心</footer>
+</div>
+</body>
+</html>
