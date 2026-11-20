@@ -1,0 +1,188 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>How to perform packet loss detection on a Milesight gateway using Node-Red (1) · Tech Docs Hub</title>
+<style>
+:root { --accent:#2563eb; --accent-soft:#eff6ff; --text:#1f2937; --muted:#6b7280;
+        --border:#e5e7eb; --bg:#f8fafc; --card:#ffffff; }
+* { box-sizing: border-box; }
+body { margin:0; font-family: "Segoe UI", system-ui, sans-serif;
+       background:var(--bg); color:var(--text); line-height:1.75; }
+a { color:var(--accent); text-decoration:none; }
+a:hover { text-decoration:underline; }
+.container { max-width:960px; margin:0 auto; padding:24px 20px 64px; }
+header.site-header { background:linear-gradient(135deg,#1e3a8a,#2563eb); color:#fff; padding:36px 20px; }
+header.site-header .container { padding-top:0; padding-bottom:0; }
+header.site-header h1 { margin:0 0 6px; font-size:26px; }
+header.site-header p { margin:0; opacity:.85; font-size:14px; }
+.search-box { margin:24px 0 8px; }
+.search-box input { width:100%; padding:12px 16px; font-size:15px; border:1px solid var(--border);
+                    border-radius:10px; outline:none; background:#fff; }
+.search-box input:focus { border-color:var(--accent); box-shadow:0 0 0 3px var(--accent-soft); }
+.category { margin-top:24px; }
+.category-header { display:flex; align-items:center; gap:10px; margin:0 0 12px; cursor:pointer;
+                   user-select:none; padding:6px 0; }
+.category-header:hover { opacity:.85; }
+.category-header h2 { font-size:19px; margin:0; display:flex; align-items:center; gap:10px; }
+.badge { font-size:12px; font-weight:600; padding:2px 10px; border-radius:999px; }
+.badge-howto { background:#dcfce7; color:#15803d; }
+.badge-troubleshooting { background:#fee2e2; color:#b91c1c; }
+.badge-node-red { background:#ffedd5; color:#c2410c; }
+.badge-python { background:#dbeafe; color:#1d4ed8; }
+.count { color:var(--muted); font-size:13px; font-weight:400; }
+.chevron { display:inline-block; transition:transform .2s ease; font-size:14px; color:var(--muted);
+           margin-left:auto; }
+.category.collapsed .chevron { transform:rotate(-90deg); }
+.category.collapsed .article-list,
+.category.collapsed .empty { display:none; }
+ul.article-list { list-style:none; margin:0; padding:0; display:grid; gap:10px; }
+ul.article-list li { background:var(--card); border:1px solid var(--border); border-radius:10px;
+                     padding:14px 18px; transition:box-shadow .15s ease; }
+ul.article-list li:hover { box-shadow:0 4px 14px rgba(0,0,0,.06); }
+ul.article-list .title { font-size:16px; font-weight:600; }
+ul.article-list .meta { font-size:12.5px; color:var(--muted); margin-top:4px; }
+.empty { color:var(--muted); font-size:14px; padding:12px 4px; }
+/* Article page */
+.article-nav { margin:18px 0 0; font-size:14px; }
+article.article-body { background:var(--card); border:1px solid var(--border); border-radius:12px;
+                       padding:32px 40px; margin-top:16px; }
+article.article-body img { max-width:100%; height:auto; border:1px solid var(--border);
+                           border-radius:8px; margin:8px 0; cursor:zoom-in; transition:box-shadow .15s ease; }
+article.article-body img:hover { box-shadow:0 4px 16px rgba(0,0,0,.12); }
+article.article-body h1 { font-size:24px; margin-top:0; }
+article.article-body h2 { font-size:20px; border-bottom:1px solid var(--border); padding-bottom:6px; }
+article.article-body h3 { font-size:17px; }
+article.article-body pre { background:#f1f5f9; padding:14px; border-radius:8px; overflow-x:auto; }
+article.article-body code { background:#f1f5f9; padding:2px 6px; border-radius:4px; font-size:.92em; }
+article.article-body pre code { background:none; padding:0; }
+article.article-body table { border-collapse:collapse; width:100%; }
+article.article-body th, article.article-body td { border:1px solid var(--border); padding:8px 12px; }
+article.article-body th { background:var(--accent-soft); }
+article.article-body blockquote { border-left:4px solid var(--accent); margin-left:0;
+                                  padding:4px 16px; color:var(--muted); background:var(--accent-soft); }
+.attachment-link { display:inline-flex; align-items:center; gap:6px; padding:6px 14px; margin:4px 0;
+                   background:var(--accent-soft); border:1px solid var(--accent); border-radius:8px;
+                   font-weight:600; text-decoration:none; }
+.attachment-link:hover { background:#dbeafe; text-decoration:none; }
+.attachment-icon { font-size:16px; }
+footer.site-footer { text-align:center; color:var(--muted); font-size:12.5px; margin-top:48px; }
+/* Lightbox */
+.lightbox-overlay { display:none; position:fixed; inset:0; z-index:9999;
+                    background:rgba(0,0,0,.85); cursor:zoom-out; justify-content:center; align-items:center; }
+.lightbox-overlay.active { display:flex; }
+.lightbox-overlay img { max-width:95vw; max-height:92vh; border-radius:6px; box-shadow:0 8px 40px rgba(0,0,0,.4); }
+@media (max-width:640px) { article.article-body { padding:20px 18px; } }
+</style>
+</head>
+<body>
+<div class="lightbox-overlay" id="lightbox" onclick="closeLightbox()">
+  <img id="lightbox-img" src="" alt="">
+</div>
+<div class="container">
+<div class="article-nav"><a href="../index.html">&larr; Back to Home</a> &middot; <span class="badge badge-node-red">Node-RED</span></div>
+<article class="article-body">
+<figure>
+<img src="../assets/node-red/How-to-perform-packet-loss-detection-on-a-Milesight-gateway-using-Node-Red-1/media/image1.jpeg" style="width:8.27431in;height:11.70625in" alt="C:/Users/Iris/Desktop/完整word/word模板竖版_英文.jpgword模板竖版_英文" />
+<figcaption><p>How to perform packet loss detection on a Milesight gateway using Node-Red</p></figcaption>
+</figure>
+<table>
+<colgroup>
+<col style="width: 14%" />
+<col style="width: 19%" />
+<col style="width: 43%" />
+<col style="width: 22%" />
+</colgroup>
+<thead>
+<tr>
+<th><strong>Version</strong></th>
+<th><strong>Update Time</strong></th>
+<th><strong>Description</strong></th>
+<th><strong>Author</strong></th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>1.0</td>
+<td>March 29, 2026</td>
+<td>Initial version</td>
+<td>Charles</td>
+</tr>
+</tbody>
+</table>
+<h1 id="description">Description</h1>
+<p>For LoRaWAN sensors deployed in harsh environments or located far from the gateway, users may observe data packet loss issues on the built-in Network Server (NS) of the Milesight gateway. This article will guide you on how to use Node-Red on the Milesight gateway to automatically query missing data when data packet loss occurs with LoRaWAN sensors.</p>
+<h1 id="requirement">Requirement</h1>
+<ul>
+<li><p>Milesight Gateway: UG56/UG65/UG67</p></li>
+<li><p>LoRaWAN sensors that support querying historical data (using the Milesight EM300-DI as an example in this article)</p></li>
+</ul>
+<h1 id="configuration">Configuration</h1>
+<h2 id="step-1-launch-node-red-and-import-flow-example">Step 1: Launch Node-RED and Import Flow Example</h2>
+<ol type="1">
+<li><p>Go to <strong>App &gt; Node-RED</strong> page to enable Node-RED program and wait for a while to load the program, click <strong>Launch</strong> button to start Node-RED web GUI.</p></li>
+</ol>
+<p><img src="../assets/node-red/How-to-perform-packet-loss-detection-on-a-Milesight-gateway-using-Node-Red-1/media/image4.png" style="width:5.76597in;height:3.75694in" /></p>
+<ol start="2" type="1">
+<li><p>Log in the Node-RED web GUI. The account information is the same as gateway web GUI.</p></li>
+</ol>
+<p><img src="../assets/node-red/How-to-perform-packet-loss-detection-on-a-Milesight-gateway-using-Node-Red-1/media/image5.png" style="width:5.75972in;height:2.73611in" /></p>
+<ol start="3" type="1">
+<li><p>Click Import to import the node-red flow example by pasting the content or import the json format file.</p></li>
+</ol>
+<p><img src="../assets/node-red/How-to-perform-packet-loss-detection-on-a-Milesight-gateway-using-Node-Red-1/media/image6.png" style="width:5.76458in;height:3.52431in" /></p>
+<p><img src="../assets/node-red/How-to-perform-packet-loss-detection-on-a-Milesight-gateway-using-Node-Red-1/media/image7.png" style="width:5.76667in;height:4.8875in" /></p>
+<h2 id="step-2-node-red-configuration">Step 2: Node-RED Configuration</h2>
+<h3 id="flow-structure">Flow structure:</h3>
+<p><img src="../assets/node-red/How-to-perform-packet-loss-detection-on-a-Milesight-gateway-using-Node-Red-1/media/image8.png" style="width:5.80625in;height:1.75208in" alt="IMG_256" /></p>
+<p>Content:</p>
+<table>
+<colgroup>
+<col style="width: 100%" />
+</colgroup>
+<thead>
+<tr>
+<th>[{"id":"0a23a4bad264d016","type":"tab","label":"流程 2","disabled":false,"info":"","env":[]},{"id":"b164bea6d2d69162","type":"LoRa Input","z":"0a23a4bad264d016","name":"","devEUI":"","extendedField":"","x":100,"y":280,"wires":[["8ac40f82287e4964"]]},{"id":"692875f151b94a97","type":"function","z":"0a23a4bad264d016","name":"Determine if packet loss has occurred by fcnt","func":"//fcnt of current packet/nlet currentFcnt = msg.fcnt;/nmsg.report_interval = 600; // unit: second/n/n// if msg.fcnt is 1，then set value of currentFcnt to 1/nif (currentFcnt === 1) {/n global.set('lastFcnt', currentFcnt);/n msg.delta = 0;/n} else {/n /n let lastFcnt = global.get('lastFcnt');/n if (lastFcnt !== null &amp;&amp; currentFcnt !== lastFcnt + 1)/n {/n msg.delta = currentFcnt - lastFcnt;/n global.set('lastFcnt', currentFcnt);/n }/n else{/n msg.delta = 0;/n global.set('lastFcnt', currentFcnt);/n }/n /n/n/n}/n/nreturn msg;","outputs":1,"noerr":0,"initialize":"","finalize":"","libs":[],"x":450,"y":160,"wires":[["078b18b0da67e6a7"]]},{"id":"078b18b0da67e6a7","type":"function","z":"0a23a4bad264d016","name":"Calculate the start and end time of packet loss","func":"function getCurrentTimestampInSeconds() {/n return Math.floor(Date.now() / 1000);/n}/n/nlet time_curr = getCurrentTimestampInSeconds();/nlet time_pre = time_curr - (msg.delta * msg.report_interval) - 10;/n/n/nfunction toLittleEndianHex(timestamp) {/n timestamp = timestamp &gt;&gt;&gt; 0; /n /n let hex = timestamp.toString(16).padStart(8, '0');/n /n let littleEndian = hex.match(/../g).reverse().join('');/n return littleEndian;/n}/n/nlet time_curr_str = toLittleEndianHex(time_curr);/nlet time_pre_str = toLittleEndianHex(time_pre);/n/n/n/nif (msg.delta != 0) {/n msg.TimeCommand = 'fd' + '6c' + time_pre_str + time_curr_str;/n}/nelse{/n msg.TimeCommand = '';/n}/n/nreturn msg;","outputs":1,"noerr":0,"initialize":"","finalize":"","libs":[],"x":820,"y":160,"wires":[["ecc8780116840790"]]},{"id":"d736e600c2a3ad28","type":"function","z":"0a23a4bad264d016","name":"Send downlink commands to the gateway via MQTT API","func":"var command1 = msg.TimeCommand;/n/nmsg.finalCommand2 = hexToBase64(command1)/n/nconst cmd = `mosquitto_pub -h 127.0.0.1 -p 1883 -u loraadm -P URloraadm123456 -t application/1/device/24E124406F159636/tx -m '{/"confirmed/":true, /"fport/":85, /"data/":/"CQEA/w==/"}'`;/n/nif ( command1 != /"/"){/n msg.payload = replaceDataValue(cmd, msg.finalCommand2);/n}/nelse {/n msg.payload = /"/";/n}/n/nfunction hexToBase64(hexStr) {/n if (hexStr == /"/")/n {/n return 1;/n }/n else{/n let bytes = [];/n for (let i = 0; i &lt; hexStr.length; i += 2) {/n bytes.push(parseInt(hexStr.substr(i, 2), 16));/n }/n/n let binary = String.fromCharCode(...bytes);/n/n return btoa(binary);}/n}/n/nfunction btoa(str) {/n return Buffer.from(str, 'binary').toString('base64');/n}/n/nfunction replaceDataValue(cmdStr, newData) {/n/n return cmdStr.replace(/(/"data/":/")([^/"]*)(/")/, `//$1${newData}//$3`);/n}/n/nreturn msg","outputs":1,"noerr":0,"initialize":"","finalize":"","libs":[],"x":1030,"y":240,"wires":[["278826c596c9eea8"]]},{"id":"278826c596c9eea8","type":"exec","z":"0a23a4bad264d016","command":"exec","addpay":"payload","append":"","useSpawn":"false","timer":"","winHide":true,"oldrc":false,"name":"","x":810,"y":340,"wires":[["053976c3f29fd9c8"],[],[]]},{"id":"053976c3f29fd9c8","type":"debug","z":"0a23a4bad264d016","name":"debug 34","active":true,"tosidebar":true,"console":false,"tostatus":false,"complete":"false","statusVal":"","statusType":"auto","x":1020,"y":340,"wires":[]},{"id":"ecc8780116840790","type":"switch","z":"0a23a4bad264d016","name":"","property":"TimeCommand","propertyType":"msg","rules":[{"t":"nnull"},{"t":"null"}],"checkall":"true","repair":false,"outputs":2,"x":1090,"y":160,"wires":[["d736e600c2a3ad28"],[]]},{"id":"8ac40f82287e4964","type":"Device Filter","z":"0a23a4bad264d016","name":"","eui":"24E124406F159636","x":170,"y":160,"wires":[["692875f151b94a97"]]}]</th>
+</tr>
+</thead>
+<tbody>
+</tbody>
+</table>
+<p><strong>Step 3:</strong> Please ensure that your LoRaWAN sensor has enabled the historical data query function and refer to this article(https://support.milesight-iot.com/a/solutions/articles/73000514280) for instructions on connecting your sensor to the built-in Network Server (NS) of the Milesight gateway.</p>
+<p><strong>Step 4: Node-Red flow configuration</strong></p>
+<p>① Double-click the Device Filter node, then enter the Device EUI of your LoRaWAN sensor that has already been added to the built-in Network Server (NS) of the Milesight gateway.</p>
+<p><img src="../assets/node-red/How-to-perform-packet-loss-detection-on-a-Milesight-gateway-using-Node-Red-1/media/image9.png" style="width:6.29444in;height:1.58681in" alt="IMG_256" /></p>
+<p>② Double-click the Function node named "Determine if packet loss has occurred by fcnt", and modify msg.report_interval to the data reporting interval of your sensor, in seconds.</p>
+<p><img src="../assets/node-red/How-to-perform-packet-loss-detection-on-a-Milesight-gateway-using-Node-Red-1/media/image10.png" style="width:5.71528in;height:3.19236in" alt="IMG_256" /></p>
+<p>③ Since the historical data query command for the Milesight EM300-DI consists of "fd6c" plus the start time and end time, I double-clicked the Function node named "Calculate the start and end time of packet loss" and assigned the corresponding value to the msg.TimeCommand variable.</p>
+<p><img src="../assets/node-red/How-to-perform-packet-loss-detection-on-a-Milesight-gateway-using-Node-Red-1/media/image11.png" style="width:6.38472in;height:3.69444in" alt="IMG_256" /></p>
+<p>④Double-click the Function node named "Send downlink commands to the gateway via MQTT API", and fill in the device EUI in the MQTT topic with the device EUI of your LoRaWAN sensor, and set the fport to the port number your LoRaWAN sensor uses to receive LoRaWAN commands.</p>
+<p><img src="../assets/node-red/How-to-perform-packet-loss-detection-on-a-Milesight-gateway-using-Node-Red-1/media/image12.png" style="width:5.76389in;height:3.16389in" alt="IMG_256" /></p>
+<h2 id="step-5-deploy-and-check-result">Step 5: Deploy and Check Result</h2>
+<p><img src="../assets/node-red/How-to-perform-packet-loss-detection-on-a-Milesight-gateway-using-Node-Red-1/media/image13.png" style="width:4.35in;height:2.09167in" /></p>
+<p><strong>Step 6:</strong> Double-click the Function node named "Send downlink commands to the gateway via MQTT API", and fill in the device EUI in the MQTT topic with the device EUI of your LoRaWAN sensor, and set the fport to the port number your LoRaWAN sensor uses to receive LoRaWAN commands.</p>
+<p><img src="../assets/node-red/How-to-perform-packet-loss-detection-on-a-Milesight-gateway-using-Node-Red-1/media/image14.png" style="width:6.60972in;height:3.27708in" alt="IMG_256" /></p>
+<p><strong>-------END-----</strong></p>
+
+</article>
+<footer class="site-footer">Tech Docs Hub</footer>
+</div>
+<script>
+document.querySelectorAll('article.article-body img').forEach(function(img) {
+  img.addEventListener('click', function() {
+    document.getElementById('lightbox-img').src = this.src;
+    document.getElementById('lightbox').classList.add('active');
+    document.body.style.overflow = 'hidden';
+  });
+});
+function closeLightbox() {
+  document.getElementById('lightbox').classList.remove('active');
+  document.body.style.overflow = '';
+}
+document.addEventListener('keydown', function(e) {
+  if (e.key === 'Escape') closeLightbox();
+});
+</script>
+</body>
+</html>
