@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>How to implement FUOTA using the built-in Network Server in a Milesight gateway · Tech Docs Hub</title>
+<style>
+:root { --accent:#2563eb; --accent-soft:#eff6ff; --text:#1f2937; --muted:#6b7280;
+        --border:#e5e7eb; --bg:#f8fafc; --card:#ffffff; }
+* { box-sizing: border-box; }
+body { margin:0; font-family: "Segoe UI", system-ui, sans-serif;
+       background:var(--bg); color:var(--text); line-height:1.75; }
+a { color:var(--accent); text-decoration:none; }
+a:hover { text-decoration:underline; }
+.container { max-width:960px; margin:0 auto; padding:24px 20px 64px; }
+header.site-header { background:linear-gradient(135deg,#1e3a8a,#2563eb); color:#fff; padding:36px 20px; }
+header.site-header .container { padding-top:0; padding-bottom:0; }
+header.site-header h1 { margin:0 0 6px; font-size:26px; }
+header.site-header p { margin:0; opacity:.85; font-size:14px; }
+.search-box { margin:24px 0 8px; }
+.search-box input { width:100%; padding:12px 16px; font-size:15px; border:1px solid var(--border);
+                    border-radius:10px; outline:none; background:#fff; }
+.search-box input:focus { border-color:var(--accent); box-shadow:0 0 0 3px var(--accent-soft); }
+.category { margin-top:24px; }
+.category-header { display:flex; align-items:center; gap:10px; margin:0 0 12px; cursor:pointer;
+                   user-select:none; padding:6px 0; }
+.category-header:hover { opacity:.85; }
+.category-header h2 { font-size:19px; margin:0; display:flex; align-items:center; gap:10px; }
+.badge { font-size:12px; font-weight:600; padding:2px 10px; border-radius:999px; }
+.badge-howto { background:#dcfce7; color:#15803d; }
+.badge-troubleshooting { background:#fee2e2; color:#b91c1c; }
+.count { color:var(--muted); font-size:13px; font-weight:400; }
+.chevron { display:inline-block; transition:transform .2s ease; font-size:14px; color:var(--muted);
+           margin-left:auto; }
+.category.collapsed .chevron { transform:rotate(-90deg); }
+.category.collapsed .article-list,
+.category.collapsed .empty { display:none; }
+ul.article-list { list-style:none; margin:0; padding:0; display:grid; gap:10px; }
+ul.article-list li { background:var(--card); border:1px solid var(--border); border-radius:10px;
+                     padding:14px 18px; transition:box-shadow .15s ease; }
+ul.article-list li:hover { box-shadow:0 4px 14px rgba(0,0,0,.06); }
+ul.article-list .title { font-size:16px; font-weight:600; }
+ul.article-list .meta { font-size:12.5px; color:var(--muted); margin-top:4px; }
+.empty { color:var(--muted); font-size:14px; padding:12px 4px; }
+/* Article page */
+.article-nav { margin:18px 0 0; font-size:14px; }
+article.article-body { background:var(--card); border:1px solid var(--border); border-radius:12px;
+                       padding:32px 40px; margin-top:16px; }
+article.article-body img { max-width:100%; height:auto; border:1px solid var(--border);
+                           border-radius:8px; margin:8px 0; cursor:zoom-in; transition:box-shadow .15s ease; }
+article.article-body img:hover { box-shadow:0 4px 16px rgba(0,0,0,.12); }
+article.article-body h1 { font-size:24px; margin-top:0; }
+article.article-body h2 { font-size:20px; border-bottom:1px solid var(--border); padding-bottom:6px; }
+article.article-body h3 { font-size:17px; }
+article.article-body pre { background:#f1f5f9; padding:14px; border-radius:8px; overflow-x:auto; }
+article.article-body code { background:#f1f5f9; padding:2px 6px; border-radius:4px; font-size:.92em; }
+article.article-body pre code { background:none; padding:0; }
+article.article-body table { border-collapse:collapse; width:100%; }
+article.article-body th, article.article-body td { border:1px solid var(--border); padding:8px 12px; }
+article.article-body th { background:var(--accent-soft); }
+article.article-body blockquote { border-left:4px solid var(--accent); margin-left:0;
+                                  padding:4px 16px; color:var(--muted); background:var(--accent-soft); }
+footer.site-footer { text-align:center; color:var(--muted); font-size:12.5px; margin-top:48px; }
+/* Lightbox */
+.lightbox-overlay { display:none; position:fixed; inset:0; z-index:9999;
+                    background:rgba(0,0,0,.85); cursor:zoom-out; justify-content:center; align-items:center; }
+.lightbox-overlay.active { display:flex; }
+.lightbox-overlay img { max-width:95vw; max-height:92vh; border-radius:6px; box-shadow:0 8px 40px rgba(0,0,0,.4); }
+@media (max-width:640px) { article.article-body { padding:20px 18px; } }
+</style>
+</head>
+<body>
+<div class="lightbox-overlay" id="lightbox" onclick="closeLightbox()">
+  <img id="lightbox-img" src="" alt="">
+</div>
+<div class="container">
+<div class="article-nav"><a href="../index.html">&larr; Back to Home</a> &middot; <span class="badge badge-howto">How to</span></div>
+<article class="article-body">
+<figure>
+<img src="../assets/howto/How-to-implement-FUOTA-using-the-built-in-Network-Server-in-a-Milesight-gateway/media/image4.jpeg" style="width:8.27431in;height:11.70625in" alt="C:/Users/Iris/Desktop/完整word/word模板竖版_英文.jpgword模板竖版_英文" />
+<figcaption><p>How to implement FUOTA using the built-in Network Server in a Milesight gateway</p></figcaption>
+</figure>
+<table>
+<colgroup>
+<col style="width: 14%" />
+<col style="width: 19%" />
+<col style="width: 43%" />
+<col style="width: 22%" />
+</colgroup>
+<tbody>
+<tr>
+<td><strong>Version</strong></td>
+<td><strong>Update Time</strong></td>
+<td><strong>Description</strong></td>
+<td><strong>Author</strong></td>
+</tr>
+<tr>
+<td>1.0</td>
+<td>June 29, 2025</td>
+<td>Initial version</td>
+<td>Charles</td>
+</tr>
+</tbody>
+</table>
+<h1 id="description">Description</h1>
+<p>The built-in Network Server (NS) in Milesight gateways supports the FUOTA feature, which enables you to upgrade the firmware of sensors added to the gateway’s built-in NS. This article will guide you on how to implement the FUOTA feature on Milesight gateways.</p>
+<h1 id="requirement">Requirement</h1>
+<ul>
+<li><p>Milesight UG6x gateways with firmware version 60.0.0.46 or above</p></li>
+<li><p>Milesight UG56 gateways with firmware version 56.0.0.6 or above</p></li>
+<li><p>Sensors that support the standard LoRaWAN FUOTA protocol</p></li>
+</ul>
+<h1 id="configuration">Configuration</h1>
+<p><strong>Step 1:</strong> FUOTA for LoRaWAN sensors using the built-in network server on Milesight gateways requires a .PATCH file or a .BIN file Please contact Milesight technical support and inform them of your device’s current firmware version as well as the firmware version you wish to upgrade to. The Milesight technical support team will provide you with the appropriate .PATCH file or .BIN file based on this information. In this article, I will use the WT201 with firmware version v1.5-a2 for testing, and upgrade its firmware to v1.6-t1 using the FUOTA feature of the built-in network server on the Milesight gateway.</p>
+<p><img src="../assets/howto/How-to-implement-FUOTA-using-the-built-in-Network-Server-in-a-Milesight-gateway/media/image5.png" style="width:5.56944in;height:3.7875in" alt="IMG_256" /></p>
+<h2 id="step-2-please-refer-to-this-articlehow-to-connect-lorawan-nodes-to-milesight-gateway-iot-support-to-connect-your-lorawan-sensor-to-the-built-in-network-server-of-the-milesight-gateway."><strong>Step 2:</strong> Please refer to this article(<a href="https://support.milesight-iot.com/support/solutions/articles/73000514280-how-to-connect-lorawan-nodes-to-milesight-gateway">How to Connect LoRaWAN Nodes to Milesight Gateway : IoT Support</a>) to connect your LoRaWAN sensor to the built-in network server of the Milesight gateway.</h2>
+<p><strong>Step 3:</strong> FUOTA Task Configuration.</p>
+<p>① Click the “Add” button to create a new FUOTA task.</p>
+<p><img src="../assets/howto/How-to-implement-FUOTA-using-the-built-in-Network-Server-in-a-Milesight-gateway/media/image6.png" style="width:6.69931in;height:3.34306in" alt="IMG_256" /></p>
+<p>②Task Settings</p>
+<p>• Task Name: Fill in the task name,repeatable data.</p>
+<p>• Start Time: Task start time, default one hour later.</p>
+<p>• Description: Task description, edit without limitations.</p>
+<p>③ Firmware setting</p>
+<p>• Firmware selection with a new .PATCH or .BIN file uploaded, Differential upgrade firmware package for select sensors.</p>
+<p>• Configuration of fragment downlink (stay default).</p>
+<p>Fragment Size: Usually, it is recommended to keep the default setting. In LoRaWAN environments with less interference, the fragment size can be increased to 128 bytes to improve transmission efficiency. In more interference-prone environments, the fragment size can be reduced to 64 bytes to minimize the impact of losing a single fragment on the overall transmission.</p>
+<p>Fragment Interval: Usually, it is recommended to keep the default setting. In LoRaWAN environments with less interference, the interval can be reduced to 2–3 seconds to shorten transmission time. In environments with more interference, it can be increased to 7–10 seconds to give the device more time for processing.</p>
+<p>Redundancy percent: Usually, it is recommended to keep the default setting. In LoRaWAN environments with less interference, it can be reduced to 10–20% since the network is stable and the packet loss rate is low. In environments with more interference, it can be increased to 40–50% to improve the success rate of transmission.</p>
+<p>• After the firmware selection or uploaded, there will be device listed and you can select the devices you want to upgrade.</p>
+<p>④ Multicast Setting</p>
+<p>• DR and frequency of fragment downlink in multi-cast (stay default)</p>
+<p><img src="../assets/howto/How-to-implement-FUOTA-using-the-built-in-Network-Server-in-a-Milesight-gateway/media/image7.png" style="width:6.2125in;height:3.00278in" alt="IMG_256" /></p>
+<p><strong>Step 4:</strong> Task Creation finished</p>
+<p>After the task creation, it will be listed on the FUOTA and status will be Pending.</p>
+<p><img src="../assets/howto/How-to-implement-FUOTA-using-the-built-in-Network-Server-in-a-Milesight-gateway/media/image8.png" style="width:6.60625in;height:3.19236in" alt="IMG_256" /></p>
+<p><strong>Step 5:</strong> Task Start</p>
+<p>When the task start time arrives, the status will be waiting.</p>
+<p><img src="../assets/howto/How-to-implement-FUOTA-using-the-built-in-Network-Server-in-a-Milesight-gateway/media/image9.png" style="width:6.12917in;height:2.96181in" alt="IMG_256" /></p>
+<p>When the device is ready, the FUOTA task will start, and update status will be "Executing".</p>
+<p><img src="../assets/howto/How-to-implement-FUOTA-using-the-built-in-Network-Server-in-a-Milesight-gateway/media/image10.png" style="width:6.52222in;height:3.15208in" alt="IMG_256" /></p>
+<p><img src="../assets/howto/How-to-implement-FUOTA-using-the-built-in-Network-Server-in-a-Milesight-gateway/media/image11.png" style="width:6.40972in;height:3.09792in" alt="IMG_256" /></p>
+<p>Packets will show downlink packet with size 91, which is 88+3 as configured and The whole upgrade process takes about 15-20 minutes.</p>
+<p><img src="../assets/howto/How-to-implement-FUOTA-using-the-built-in-Network-Server-in-a-Milesight-gateway/media/image12.png" style="width:5.79167in;height:2.79861in" alt="IMG_256" /></p>
+<p><strong>Step 6:</strong> FUOTA Task Finished</p>
+<p>When it finished, status will be Finished.</p>
+<p><img src="../assets/howto/How-to-implement-FUOTA-using-the-built-in-Network-Server-in-a-Milesight-gateway/media/image13.png" style="width:5.68889in;height:2.74931in" alt="IMG_256" /></p>
+<p>If success, status will be 'Updated successful</p>
+<p><img src="../assets/howto/How-to-implement-FUOTA-using-the-built-in-Network-Server-in-a-Milesight-gateway/media/image14.png" style="width:6.06806in;height:2.93264in" alt="IMG_256" /></p>
+<p><strong>Note:</strong> After the gateway shows“Upgrade complete”,it takes time for the sensors to be upgraded.</p>
+<p>For the gateway, the upgradeis successful when the nodereceives astatus response from the gateway, but in reality, the sensor may not have completed the upgradeyet.</p>
+<p>In fact, at this time, the sensor may not have completed theupgrade, generally need to wait 10 15 minutes after the completion of the gateway transmission before the node will complete the installation of the upgrade package.</p>
+<p>If failed, update status will be failed, you can hover your mouse to see the reason.</p>
+<p><img src="../assets/howto/How-to-implement-FUOTA-using-the-built-in-Network-Server-in-a-Milesight-gateway/media/image15.png" style="width:4.95278in;height:2.41319in" alt="IMG_256" /></p>
+<p><strong>__END__</strong></p>
+
+</article>
+<footer class="site-footer">Tech Docs Hub</footer>
+</div>
+<script>
+document.querySelectorAll('article.article-body img').forEach(function(img) {
+  img.addEventListener('click', function() {
+    document.getElementById('lightbox-img').src = this.src;
+    document.getElementById('lightbox').classList.add('active');
+    document.body.style.overflow = 'hidden';
+  });
+});
+function closeLightbox() {
+  document.getElementById('lightbox').classList.remove('active');
+  document.body.style.overflow = '';
+}
+document.addEventListener('keydown', function(e) {
+  if (e.key === 'Escape') closeLightbox();
+});
+</script>
+</body>
+</html>
