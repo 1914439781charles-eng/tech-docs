@@ -1,0 +1,181 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Milesight Gateway Pulse Data Detection Solution · Tech Docs Hub</title>
+<style>
+:root { --accent:#2563eb; --accent-soft:#eff6ff; --text:#1f2937; --muted:#6b7280;
+        --border:#e5e7eb; --bg:#f8fafc; --card:#ffffff; }
+* { box-sizing: border-box; }
+body { margin:0; font-family: "Segoe UI", system-ui, sans-serif;
+       background:var(--bg); color:var(--text); line-height:1.75; }
+a { color:var(--accent); text-decoration:none; }
+a:hover { text-decoration:underline; }
+.container { max-width:960px; margin:0 auto; padding:24px 20px 64px; }
+header.site-header { background:linear-gradient(135deg,#1e3a8a,#2563eb); color:#fff; padding:36px 20px; }
+header.site-header .container { padding-top:0; padding-bottom:0; }
+header.site-header h1 { margin:0 0 6px; font-size:26px; }
+header.site-header p { margin:0; opacity:.85; font-size:14px; }
+.search-box { margin:24px 0 8px; }
+.search-box input { width:100%; padding:12px 16px; font-size:15px; border:1px solid var(--border);
+                    border-radius:10px; outline:none; background:#fff; }
+.search-box input:focus { border-color:var(--accent); box-shadow:0 0 0 3px var(--accent-soft); }
+.category { margin-top:24px; }
+.category-header { display:flex; align-items:center; gap:10px; margin:0 0 12px; cursor:pointer;
+                   user-select:none; padding:6px 0; }
+.category-header:hover { opacity:.85; }
+.category-header h2 { font-size:19px; margin:0; display:flex; align-items:center; gap:10px; }
+.badge { font-size:12px; font-weight:600; padding:2px 10px; border-radius:999px; }
+.badge-howto { background:#dcfce7; color:#15803d; }
+.badge-troubleshooting { background:#fee2e2; color:#b91c1c; }
+.badge-node-red { background:#ffedd5; color:#c2410c; }
+.badge-python { background:#dbeafe; color:#1d4ed8; }
+.count { color:var(--muted); font-size:13px; font-weight:400; }
+.chevron { display:inline-block; transition:transform .2s ease; font-size:14px; color:var(--muted);
+           margin-left:auto; }
+.category.collapsed .chevron { transform:rotate(-90deg); }
+.category.collapsed .article-list,
+.category.collapsed .empty { display:none; }
+ul.article-list { list-style:none; margin:0; padding:0; display:grid; gap:10px; }
+ul.article-list li { background:var(--card); border:1px solid var(--border); border-radius:10px;
+                     padding:14px 18px; transition:box-shadow .15s ease; }
+ul.article-list li:hover { box-shadow:0 4px 14px rgba(0,0,0,.06); }
+ul.article-list .title { font-size:16px; font-weight:600; }
+ul.article-list .meta { font-size:12.5px; color:var(--muted); margin-top:4px; }
+.empty { color:var(--muted); font-size:14px; padding:12px 4px; }
+/* Article page */
+.article-nav { margin:18px 0 0; font-size:14px; }
+article.article-body { background:var(--card); border:1px solid var(--border); border-radius:12px;
+                       padding:32px 40px; margin-top:16px; }
+article.article-body img { max-width:100%; height:auto; border:1px solid var(--border);
+                           border-radius:8px; margin:8px 0; cursor:zoom-in; transition:box-shadow .15s ease; }
+article.article-body img:hover { box-shadow:0 4px 16px rgba(0,0,0,.12); }
+article.article-body h1 { font-size:24px; margin-top:0; }
+article.article-body h2 { font-size:20px; border-bottom:1px solid var(--border); padding-bottom:6px; }
+article.article-body h3 { font-size:17px; }
+article.article-body pre { background:#f1f5f9; padding:14px; border-radius:8px; overflow-x:auto; }
+article.article-body code { background:#f1f5f9; padding:2px 6px; border-radius:4px; font-size:.92em; }
+article.article-body pre code { background:none; padding:0; }
+article.article-body table { border-collapse:collapse; width:100%; }
+article.article-body th, article.article-body td { border:1px solid var(--border); padding:8px 12px; }
+article.article-body th { background:var(--accent-soft); }
+article.article-body blockquote { border-left:4px solid var(--accent); margin-left:0;
+                                  padding:4px 16px; color:var(--muted); background:var(--accent-soft); }
+.attachment-link { display:inline-flex; align-items:center; gap:6px; padding:6px 14px; margin:4px 0;
+                   background:var(--accent-soft); border:1px solid var(--accent); border-radius:8px;
+                   font-weight:600; text-decoration:none; }
+.attachment-link:hover { background:#dbeafe; text-decoration:none; }
+.attachment-icon { font-size:16px; }
+footer.site-footer { text-align:center; color:var(--muted); font-size:12.5px; margin-top:48px; }
+/* Lightbox */
+.lightbox-overlay { display:none; position:fixed; inset:0; z-index:9999;
+                    background:rgba(0,0,0,.85); cursor:zoom-out; justify-content:center; align-items:center; }
+.lightbox-overlay.active { display:flex; }
+.lightbox-overlay img { max-width:95vw; max-height:92vh; border-radius:6px; box-shadow:0 8px 40px rgba(0,0,0,.4); }
+@media (max-width:640px) { article.article-body { padding:20px 18px; } }
+</style>
+</head>
+<body>
+<div class="lightbox-overlay" id="lightbox" onclick="closeLightbox()">
+  <img id="lightbox-img" src="" alt="">
+</div>
+<div class="container">
+<div class="article-nav"><a href="../index.html">&larr; Back to Home</a> &middot; <span class="badge badge-node-red">Node-RED</span></div>
+<article class="article-body">
+<figure>
+<img src="../assets/node-red/Milesight-Gateway-Pulse-Data-Detection-Solution/media/image4.jpeg" style="width:8.27431in;height:11.70625in" alt="C:/Users/Iris/Desktop/完整word/word模板竖版_英文.jpgword模板竖版_英文" />
+<figcaption><p>Milesight Gateway Pulse Data Detection Solution</p></figcaption>
+</figure>
+<table>
+<colgroup>
+<col style="width: 14%" />
+<col style="width: 19%" />
+<col style="width: 43%" />
+<col style="width: 22%" />
+</colgroup>
+<tbody>
+<tr>
+<td><strong>Version</strong></td>
+<td><strong>Update Time</strong></td>
+<td><strong>Description</strong></td>
+<td><strong>Author</strong></td>
+</tr>
+<tr>
+<td>1.0</td>
+<td>Mar 30, 2025</td>
+<td>Initial version</td>
+<td>Charles</td>
+</tr>
+</tbody>
+</table>
+<h1 id="description">Description</h1>
+<p>This Node-Red setup allows you to output the pulse values read by the Milesight EM300-DI to a third-party pulse counter via the UC300, making it easy for you to observe pulses generated by devices like water meters or electricity meters on the third-party pulse counter.</p>
+<h1 id="requirement">Requirement</h1>
+<ul>
+<li><p>Milesight Gateway: UG56/UG65/UG67</p></li>
+<li><p>Pulse Reading Sensor：Milesight EM300-DI</p></li>
+<li><p>Pulse Analog Output Sensor: Milesight UC300</p></li>
+</ul>
+<h1 id="configuration">Configuration</h1>
+<h2 id="step-1-launch-node-red-and-import-flow-example">Step 1: Launch Node-RED and Import Flow Example</h2>
+<ol type="1">
+<li><p>Go to <strong>App &gt; Node-RED</strong> page to enable Node-RED program and wait for a while to load the program, click <strong>Launch</strong> button to start Node-RED web GUI.</p>
+<p><img src="../assets/node-red/Milesight-Gateway-Pulse-Data-Detection-Solution/media/image5.png" style="width:5.76597in;height:3.75694in" /></p></li>
+<li><p>Log in the Node-RED web GUI. The account information is the same as gateway web GUI.</p>
+<p><img src="../assets/node-red/Milesight-Gateway-Pulse-Data-Detection-Solution/media/image6.png" style="width:5.75972in;height:2.73611in" /></p></li>
+<li><p>Click Import to import the node-red flow example by pasting the content or import the json format file.</p>
+<p><img src="../assets/node-red/Milesight-Gateway-Pulse-Data-Detection-Solution/media/image7.png" style="width:5.76458in;height:3.52431in" /></p></li>
+</ol>
+<p><img src="../assets/node-red/Milesight-Gateway-Pulse-Data-Detection-Solution/media/image8.png" style="width:5.76667in;height:4.8875in" /></p>
+<h2 id="step-2-node-red-configuration">Step 2: Node-RED Configuration</h2>
+<h3 id="flow-structure">Flow structure:</h3>
+<p><img src="../assets/node-red/Milesight-Gateway-Pulse-Data-Detection-Solution/media/image9.png" style="width:5.52361in;height:3.16875in" alt="IMG_256" /></p>
+<p>Content:</p>
+<table>
+<colgroup>
+<col style="width: 100%" />
+</colgroup>
+<tbody>
+<tr>
+<td>[{"id":"f79a47d6f0282a11","type":"tab","label":"流程 3","disabled":false,"info":"","env":[]},{"id":"d03bdca959f470af","type":"LoRa Input","z":"f79a47d6f0282a11","name":"","devEUI":"","extendedField":"","x":360,"y":180,"wires":[["671708bb4b2d7e25"]]},{"id":"671708bb4b2d7e25","type":"Device Filter","z":"f79a47d6f0282a11","name":"EM300-DI","eui":"24E124136C379287","x":560,"y":180,"wires":[["ede9d31772d48a95"]]},{"id":"ede9d31772d48a95","type":"function","z":"f79a47d6f0282a11","name":"function 1","func":"/**/n * Payload Decoder/n */n * Copyright 2024 Milesight IoT/n */n * @product EM300-DI/n *//n// Chirpstack v4/n/n/n// The Things Network/nfunction Decoder(bytes, port) {/n return milesightDeviceDecode(bytes);/n}/n/nfunction milesightDeviceDecode(bytes) {/n var decoded = {};/n/n for (var i = 0; i &lt; bytes.length;) {/n var channel_id = bytes[i++];/n var channel_type = bytes[i++];/n/n // BATTERY/n if (channel_id === 0x01 &amp;&amp; channel_type === 0x75) {/n decoded.battery = bytes[i];/n i += 1;/n }/n // TEMPERATURE/n else if (channel_id === 0x03 &amp;&amp; channel_type === 0x67) {/n // ℃/n decoded.temperature = readInt16LE(bytes.slice(i, i + 2)) / 10;/n i += 2;/n/n // ℉/n // decoded.temperature = readInt16LE(bytes.slice(i, i + 2)) / 10 * 1.8 + 32;/n // i +=2;/n }/n // HUMIDITY/n else if (channel_id === 0x04 &amp;&amp; channel_type === 0x68) {/n decoded.humidity = bytes[i] / 2;/n i += 1;/n }/n // GPIO/n else if (channel_id === 0x05 &amp;&amp; channel_type === 0x00) {/n decoded.gpio = readGPIOStatus(bytes[i]);/n i += 1;/n }/n // PULSE COUNTER/n else if (channel_id === 0x05 &amp;&amp; channel_type === 0xc8) {/n decoded.pulse = readUInt32LE(bytes.slice(i, i + 4));/n i += 4;/n }/n // PULSE COUNTER (v1.3+)/n else if (channel_id === 0x05 &amp;&amp; channel_type === 0xe1) {/n decoded.water_conv = readUInt16LE(bytes.slice(i, i + 2)) / 10;/n decoded.pulse_conv = readUInt16LE(bytes.slice(i + 2, i + 4)) / 10;/n decoded.water = readFloatLE(bytes.slice(i + 4, i + 8));/n decoded.counter = (decoded.water * decoded.pulse_conv) / decoded.water_conv;/n i += 8;/n }/n // GPIO ALARM/n else if (channel_id === 0x85 &amp;&amp; channel_type === 0x00) {/n decoded.gpio = readGPIOStatus(bytes[i]);/n decoded.gpio_alarm = readGPIOAlarm(bytes[i + 1]);/n i += 2;/n }/n // WATER ALARM/n else if (channel_id === 0x85 &amp;&amp; channel_type === 0xe1) {/n decoded.water_conv = readUInt16LE(bytes.slice(i, i + 2)) / 10;/n decoded.pulse_conv = readUInt16LE(bytes.slice(i + 2, i + 4)) / 10;/n decoded.water = readFloatLE(bytes.slice(i + 4, i + 8));/n decoded.water_alarm = readWaterAlarm(bytes[i + 8]);/n i += 9;/n }/n // HISTORICAL DATA/n else if (channel_id === 0x20 &amp;&amp; channel_type === 0xce) {/n // maybe not historical raw data/n if (bytes.slice(i).length &lt; 12) break;/n/n var point = {};/n point.timestamp = readUInt32LE(bytes.slice(i, i + 4));/n point.temperature = readInt16LE(bytes.slice(i + 4, i + 6)) / 10;/n point.humidity = bytes[i + 6] / 2;/n var mode = bytes[i + 7];/n if (mode === 1) {/n point.gpio_type = /"gpio/";/n point.gpio = bytes[i + 8];/n } else if (mode === 2) {/n point.gpio_type = /"pulse/";/n point.pulse = readUInt32LE(bytes.slice(i + 9, i + 13));/n }/n decoded.history = decoded.history || [];/n decoded.history.push(point);/n i += 13;/n }/n // HISTORICAL DATA (v2)/n else if (channel_id === 0x21 &amp;&amp; channel_type === 0xce) {/n // var point = {};/n point.timestamp = readUInt32LE(bytes.slice(i, i + 4));/n point.temperature = readInt16LE(bytes.slice(i + 4, i + 6)) / 10;/n point.humidity = bytes[i + 6] / 2;/n point.alarm = readAlarm(bytes[i + 7]);/n var mode = bytes[i + 8];/n if (mode === 1) {/n point.gpio_type = /"gpio/";/n point.gpio = readGPIOStatus(bytes[i + 9]);/n } else if (mode === 2) {/n point.gpio_type = /"pulse/";/n point.water_conv = readUInt16LE(bytes.slice(i + 10, i + 12)) / 10;/n point.pulse_conv = readUInt16LE(bytes.slice(i + 12, i + 14)) / 10;/n point.water = readFloatLE(bytes.slice(i + 14, i + 18));/n }/n/n decoded.history = decoded.history || [];/n decoded.history.push(point);/n i += 18;/n } else {/n break;/n }/n }/n //decoded.FCNT = msg.LoRaObject.fCnt;/n //decoded.var = typeof(msg.fcnt);/n return decoded;/n}/n/n/* ******************************************/n * bytes to number/n ********************************************//nfunction readUInt16LE(bytes) {/n var value = (bytes[1] &lt;&lt; 8) + bytes[0];/n return value &amp; 0xffff;/n}/n/nfunction readInt16LE(bytes) {/n var ref = readUInt16LE(bytes);/n return ref &gt; 0x7fff ? ref - 0x10000 : ref;/n}/n/nfunction readUInt32LE(bytes) {/n var value = (bytes[3] &lt;&lt; 24) + (bytes[2] &lt;&lt; 16) + (bytes[1] &lt;&lt; 8) + bytes[0];/n return (value &amp; 0xffffffff) &gt;&gt;&gt; 0;/n}/n/nfunction readFloatLE(bytes) {/n // JavaScript bitwise operators yield a 32 bits integer, not a float./n // Assume LSB (least significant byte first)./n var bits = (bytes[3] &lt;&lt; 24) | (bytes[2] &lt;&lt; 16) | (bytes[1] &lt;&lt; 8) | bytes[0];/n var sign = bits &gt;&gt;&gt; 31 === 0 ? 1.0 : -1.0;/n var e = (bits &gt;&gt;&gt; 23) &amp; 0xff;/n var m = e === 0 ? (bits &amp; 0x7fffff) &lt;&lt; 1 : (bits &amp; 0x7fffff) | 0x800000;/n var f = sign * m * Math.pow(2, e - 150);/n/n var v = Number(f.toFixed(2));/n return v;/n}/n/nfunction readGPIOStatus(bytes) {/n // 0: low, 1: high/n switch (bytes) {/n case 0:/n return /"low/";/n case 1:/n return /"high/";/n default:/n return /"unknown/";/n }/n}/n/nfunction readGPIOAlarm(bytes) {/n // 1: gpio alarm, 0: gpio alarm release/n switch (bytes) {/n case 0:/n return /"gpio alarm release/";/n case 1:/n return /"gpio alarm/";/n default:/n return /"unknown/";/n }/n}/n/nfunction readWaterAlarm(bytes) {/n // 1: water outage timeout alarm, 2: water outage timeout alarm release, 3: water flow timeout alarm, 4: water flow timeout alarm release/n switch (bytes) {/n case 1:/n return /"water outage timeout alarm/";/n case 2:/n return /"water outage timeout alarm release/";/n case 3:/n return /"water flow timeout alarm/";/n case 4:/n return /"water flow timeout alarm release/";/n default:/n return /"unknown/";/n }/n}/n/nfunction readAlarm(bytes) {/n // 0: none, 1: water outage timeout alarm, 2: water outage timeout alarm release, 3: water flow timeout alarm, 4: water flow timeout alarm release, 5: gpio alarm, 6: gpio alarm release/n switch (bytes) {/n case 0:/n return /"none/";/n case 1:/n return /"water outage timeout alarm/";/n case 2:/n return /"water outage timeout alarm release/";/n case 3:/n return /"water flow timeout alarm/";/n case 4:/n return /"water flow timeout alarm release/";/n case 5:/n return /"gpio alarm/";/n case 6:/n return /"gpio alarm release/";/n default:/n return /"unknown/";/n }/n}/n/nvar buffer = Buffer.from(msg.payload, 'base64');/nvar aa = Decoder(buffer);/nmsg.payload = aa;/nmsg.buffer = buffer;/nreturn msg;/n/n","outputs":1,"noerr":0,"initialize":"","finalize":"","libs":[],"x":780,"y":180,"wires":[["a0384be43e88bccd"]]},{"id":"f5f0050a94c34b14","type":"debug","z":"f79a47d6f0282a11","name":"debug 60","active":true,"tosidebar":true,"console":false,"tostatus":false,"complete":"true","targetType":"full","statusVal":"","statusType":"auto","x":1240,"y":220,"wires":[]},{"id":"a0384be43e88bccd","type":"function","z":"f79a47d6f0282a11","name":"function 37","func":"/nif(msg.fcnt == 2 || msg.payload.counter == 0) /n{/n global.set(/"init_pulse/", msg.payload.counter);/n msg.pulse = global.get(/"init_pulse/");/n}/nelse if (msg.fcnt &gt; 2)/n{/n msg.pulse = (msg.payload.counter - global.get(/"init_pulse/"));/n global.set(/"init_pulse/", msg.payload.counter);/n /n/n}/n/nelse/n{/n msg.pulse = 0;/n}/nreturn msg;","outputs":1,"noerr":0,"initialize":"","finalize":"","libs":[],"x":990,"y":200,"wires":[["f5f0050a94c34b14","fcf88ff9a6390ae2"]]},{"id":"fcf88ff9a6390ae2","type":"function","z":"f79a47d6f0282a11","name":"function 41","func":"var input;/n/n/ntry {/n/n const regValue = global.get(/"register1/");/n input = msg.pulse + regValue;/n/n if (isNaN(input)) {/n /n input = msg.pulse;/n }/n} catch (error) {/n input = msg.pulse;/n}/n/n/n/nmsg.input1 = input/nif (input &gt;= 1000)/n{/nvar output = getThousandsPlace(input);/n/nglobal.set(/"register1/", input % 1000);/n/n}/n/nelse/n{/nvar output = 0/nglobal.set(/"register1/", input);/n/n/n}/n/nfunction getThousandsPlace(number) {/n /n if (!Number.isInteger(number) || number &lt; 0) {/n throw new Error(/"error/");/n }/n/n /n const thousandsPlace = Math.floor((number % 10000) / 1000);/n/n return thousandsPlace;/n}/n/n/nlet count = output;/n/n// 创建一个包含 count 次输出的数组/nlet outputArray = [];/nfor (let i = 0; i &lt; count; i++) {/n outputArray.push({ payload: msg.message });/n}/n/n// 将数组作为消息的 payload 传递出去/nmsg.payload = outputArray;/nreturn msg;/n","outputs":1,"noerr":0,"initialize":"","finalize":"","libs":[],"x":570,"y":640,"wires":[["504c4808b1020cd7","e363bd2d1ffe2683"]]},{"id":"e363bd2d1ffe2683","type":"split","z":"f79a47d6f0282a11","name":"","splt":"//n","spltType":"str","arraySplt":1,"arraySpltType":"len","stream":false,"addname":"","x":770,"y":620,"wires":[["b037c501298e8517"]]},{"id":"60e5a1b0143a3d4d","type":"debug","z":"f79a47d6f0282a11","name":"debug 62","active":true,"tosidebar":true,"console":false,"tostatus":false,"complete":"true","targetType":"full","statusVal":"","statusType":"auto","x":1340,"y":760,"wires":[]},{"id":"b037c501298e8517","type":"delay","z":"f79a47d6f0282a11","name":"","pauseType":"rate","timeout":"5","timeoutUnits":"seconds","rate":"1","nbRateUnits":"3","rateUnits":"second","randomFirst":"1","randomLast":"5","randomUnits":"seconds","drop":false,"allowrate":false,"outputs":1,"x":1040,"y":620,"wires":[["60e5a1b0143a3d4d","18c607a4b2b20616"]]},{"id":"18c607a4b2b20616","type":"LoRa Output","z":"f79a47d6f0282a11","name":"","eui":"24E124445C060301","payloadType":"ascii","payload":"11111","confirmed":true,"port":85,"x":1310,"y":580,"wires":[]},{"id":"504c4808b1020cd7","type":"debug","z":"f79a47d6f0282a11","name":"debug 63","active":true,"tosidebar":true,"console":true,"tostatus":false,"complete":"true","targetType":"full","statusVal":"","statusType":"auto","x":910,"y":760,"wires":[]}]</td>
+</tr>
+</tbody>
+</table>
+<p>Node description:</p>
+<p>LoRa Input : Receive data from all built-in NS sensors.</p>
+<p>EM300-DI: Filter the sensor data from the EM300-DI from the built-in NS according to the Device EUI. Therefore, before using this FLOW, double-click the node and fill in the Device EUI for the EM300-DI you are using.</p>
+<p>Function 1:This node is used to decode the data from EM300-DI.</p>
+<p>Function 37 and function 41: The two nodes are used together and generally do not require configuration changes. Their function is to open the DO1 port of the UC300 for a certain amount of time and then close it every time the EM300-DI reads 1000 pulses, so as to simulate the output of a pulse.</p>
+<p>LoRa Output: This node is used to send a command with the content of 11111 to the UC300. Please fill in the Device EUI of your UC300 in this node. Connect your pulse counter to the DO1 interface of the Milesight UC300, then use the Milesight ToolBox to configure rules for the UC300 (as shown below). The UC300 DO1 port should be open for longer than the minimum pulse width that can be detected by this third party pulse counter.</p>
+<p><img src="../assets/node-red/Milesight-Gateway-Pulse-Data-Detection-Solution/media/image10.png" style="width:6.00417in;height:4.08403in" alt="IMG_256" /></p>
+<h2 id="step-3-deploy-and-check-result">Step 3: Deploy and Check Result</h2>
+<ol type="1">
+<li><p>Click <strong>Deploy</strong> to save all node-red configurations.</p>
+<p><img src="../assets/node-red/Milesight-Gateway-Pulse-Data-Detection-Solution/media/image11.png" style="width:4.35in;height:2.09167in" /></p></li>
+<li><p>The topology of the final solution is as follows</p>
+<p><img src="../assets/node-red/Milesight-Gateway-Pulse-Data-Detection-Solution/media/image12.png" style="width:6.35069in;height:2.74861in" alt="IMG_256" /></p></li>
+</ol>
+<p><strong>-------END-----</strong></p>
+
+</article>
+<footer class="site-footer">Tech Docs Hub</footer>
+</div>
+<script>
+document.querySelectorAll('article.article-body img').forEach(function(img) {
+  img.addEventListener('click', function() {
+    document.getElementById('lightbox-img').src = this.src;
+    document.getElementById('lightbox').classList.add('active');
+    document.body.style.overflow = 'hidden';
+  });
+});
+function closeLightbox() {
+  document.getElementById('lightbox').classList.remove('active');
+  document.body.style.overflow = '';
+}
+document.addEventListener('keydown', function(e) {
+  if (e.key === 'Escape') closeLightbox();
+});
+</script>
+</body>
+</html>

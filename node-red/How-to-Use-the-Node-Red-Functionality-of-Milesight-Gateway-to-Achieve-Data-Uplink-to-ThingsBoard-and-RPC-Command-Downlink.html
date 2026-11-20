@@ -1,0 +1,212 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>How to Use the Node-Red Functionality of Milesight Gateway to Achieve Data Uplink to ThingsBoard and RPC Command Downlink · Tech Docs Hub</title>
+<style>
+:root { --accent:#2563eb; --accent-soft:#eff6ff; --text:#1f2937; --muted:#6b7280;
+        --border:#e5e7eb; --bg:#f8fafc; --card:#ffffff; }
+* { box-sizing: border-box; }
+body { margin:0; font-family: "Segoe UI", system-ui, sans-serif;
+       background:var(--bg); color:var(--text); line-height:1.75; }
+a { color:var(--accent); text-decoration:none; }
+a:hover { text-decoration:underline; }
+.container { max-width:960px; margin:0 auto; padding:24px 20px 64px; }
+header.site-header { background:linear-gradient(135deg,#1e3a8a,#2563eb); color:#fff; padding:36px 20px; }
+header.site-header .container { padding-top:0; padding-bottom:0; }
+header.site-header h1 { margin:0 0 6px; font-size:26px; }
+header.site-header p { margin:0; opacity:.85; font-size:14px; }
+.search-box { margin:24px 0 8px; }
+.search-box input { width:100%; padding:12px 16px; font-size:15px; border:1px solid var(--border);
+                    border-radius:10px; outline:none; background:#fff; }
+.search-box input:focus { border-color:var(--accent); box-shadow:0 0 0 3px var(--accent-soft); }
+.category { margin-top:24px; }
+.category-header { display:flex; align-items:center; gap:10px; margin:0 0 12px; cursor:pointer;
+                   user-select:none; padding:6px 0; }
+.category-header:hover { opacity:.85; }
+.category-header h2 { font-size:19px; margin:0; display:flex; align-items:center; gap:10px; }
+.badge { font-size:12px; font-weight:600; padding:2px 10px; border-radius:999px; }
+.badge-howto { background:#dcfce7; color:#15803d; }
+.badge-troubleshooting { background:#fee2e2; color:#b91c1c; }
+.badge-node-red { background:#ffedd5; color:#c2410c; }
+.badge-python { background:#dbeafe; color:#1d4ed8; }
+.count { color:var(--muted); font-size:13px; font-weight:400; }
+.chevron { display:inline-block; transition:transform .2s ease; font-size:14px; color:var(--muted);
+           margin-left:auto; }
+.category.collapsed .chevron { transform:rotate(-90deg); }
+.category.collapsed .article-list,
+.category.collapsed .empty { display:none; }
+ul.article-list { list-style:none; margin:0; padding:0; display:grid; gap:10px; }
+ul.article-list li { background:var(--card); border:1px solid var(--border); border-radius:10px;
+                     padding:14px 18px; transition:box-shadow .15s ease; }
+ul.article-list li:hover { box-shadow:0 4px 14px rgba(0,0,0,.06); }
+ul.article-list .title { font-size:16px; font-weight:600; }
+ul.article-list .meta { font-size:12.5px; color:var(--muted); margin-top:4px; }
+.empty { color:var(--muted); font-size:14px; padding:12px 4px; }
+/* Article page */
+.article-nav { margin:18px 0 0; font-size:14px; }
+article.article-body { background:var(--card); border:1px solid var(--border); border-radius:12px;
+                       padding:32px 40px; margin-top:16px; }
+article.article-body img { max-width:100%; height:auto; border:1px solid var(--border);
+                           border-radius:8px; margin:8px 0; cursor:zoom-in; transition:box-shadow .15s ease; }
+article.article-body img:hover { box-shadow:0 4px 16px rgba(0,0,0,.12); }
+article.article-body h1 { font-size:24px; margin-top:0; }
+article.article-body h2 { font-size:20px; border-bottom:1px solid var(--border); padding-bottom:6px; }
+article.article-body h3 { font-size:17px; }
+article.article-body pre { background:#f1f5f9; padding:14px; border-radius:8px; overflow-x:auto; }
+article.article-body code { background:#f1f5f9; padding:2px 6px; border-radius:4px; font-size:.92em; }
+article.article-body pre code { background:none; padding:0; }
+article.article-body table { border-collapse:collapse; width:100%; }
+article.article-body th, article.article-body td { border:1px solid var(--border); padding:8px 12px; }
+article.article-body th { background:var(--accent-soft); }
+article.article-body blockquote { border-left:4px solid var(--accent); margin-left:0;
+                                  padding:4px 16px; color:var(--muted); background:var(--accent-soft); }
+.attachment-link { display:inline-flex; align-items:center; gap:6px; padding:6px 14px; margin:4px 0;
+                   background:var(--accent-soft); border:1px solid var(--accent); border-radius:8px;
+                   font-weight:600; text-decoration:none; }
+.attachment-link:hover { background:#dbeafe; text-decoration:none; }
+.attachment-icon { font-size:16px; }
+footer.site-footer { text-align:center; color:var(--muted); font-size:12.5px; margin-top:48px; }
+/* Lightbox */
+.lightbox-overlay { display:none; position:fixed; inset:0; z-index:9999;
+                    background:rgba(0,0,0,.85); cursor:zoom-out; justify-content:center; align-items:center; }
+.lightbox-overlay.active { display:flex; }
+.lightbox-overlay img { max-width:95vw; max-height:92vh; border-radius:6px; box-shadow:0 8px 40px rgba(0,0,0,.4); }
+@media (max-width:640px) { article.article-body { padding:20px 18px; } }
+</style>
+</head>
+<body>
+<div class="lightbox-overlay" id="lightbox" onclick="closeLightbox()">
+  <img id="lightbox-img" src="" alt="">
+</div>
+<div class="container">
+<div class="article-nav"><a href="../index.html">&larr; Back to Home</a> &middot; <span class="badge badge-node-red">Node-RED</span></div>
+<article class="article-body">
+<figure>
+<img src="../assets/node-red/How-to-Use-the-Node-Red-Functionality-of-Milesight-Gateway-to-Achieve-Data-Uplink-to-ThingsBoard-and-RPC-Command-Downlink/media/image4.jpeg" style="width:8.27431in;height:11.70625in" alt="C:/Users/Iris/Desktop/完整word/word模板竖版_英文.jpgword模板竖版_英文" />
+<figcaption><p>How to Use the Node-Red Functionality of Milesight Gateway to Achieve Data Uplink to ThingsBoard and RPC Command Downlink</p></figcaption>
+</figure>
+<table>
+<colgroup>
+<col style="width: 14%" />
+<col style="width: 19%" />
+<col style="width: 43%" />
+<col style="width: 22%" />
+</colgroup>
+<tbody>
+<tr>
+<td><strong>Version</strong></td>
+<td><strong>Update Time</strong></td>
+<td><strong>Description</strong></td>
+<td><strong>Author</strong></td>
+</tr>
+<tr>
+<td>1.0</td>
+<td>August 22, 2024</td>
+<td>Initial version</td>
+<td>Charles</td>
+</tr>
+</tbody>
+</table>
+<h1 id="section"></h1>
+<h1 id="description">Description</h1>
+<p>This article will describe how to integrate Milesight Gateway to Thingsboard via MQTT.</p>
+<h1 id="requirement">Requirement</h1>
+<ul>
+<li>Milesight Gateway: UG56, UG65, UG67, UG63 (embedded network server version), UG8x</li>
+<li>ThingsBoard Account:<a href="https://thingsboard.cloud/login">ThingsBoard Cloud</a> or <a href="https://thingsboard.io/docs/user-guide/install/pe/installation-options/">install</a> your own platform instance</li>
+</ul>
+<h1 id="configuration">Configuration</h1>
+<p>Step1: Add Milesight sensor to your Milesight gateway.</p>
+<p>Step2: Log in your ThingsBoard account and go to <strong>Entities &gt; Devices</strong> page to add a Milesight gateway device.</p>
+<p><img src="../assets/node-red/How-to-Use-the-Node-Red-Functionality-of-Milesight-Gateway-to-Achieve-Data-Uplink-to-ThingsBoard-and-RPC-Command-Downlink/media/image5.png" style="width:6.38889in;height:3.03056in" alt="IMG_256" /></p>
+<p>Step3: Customize the device name and enable <strong>Whether it is a gateway or not</strong> option. If you already created device profile, you can also select corresponding profile. Click <strong>Add to</strong> save the settings.</p>
+<p><img src="../assets/node-red/How-to-Use-the-Node-Red-Functionality-of-Milesight-Gateway-to-Achieve-Data-Uplink-to-ThingsBoard-and-RPC-Command-Downlink/media/image6.png" style="width:6.45208in;height:3.06181in" alt="IMG_256" /></p>
+<p><strong>Note:</strong> click <strong>Next: Credentials</strong> if you need to customize the client ID and user credentials.</p>
+<p>Step4: After device created, select <strong>MQTT</strong> and <strong>Windows</strong> option, then copy the command to get MQTT connection information.</p>
+<p><img src="../assets/node-red/How-to-Use-the-Node-Red-Functionality-of-Milesight-Gateway-to-Achieve-Data-Uplink-to-ThingsBoard-and-RPC-Command-Downlink/media/image7.png" style="width:6.67569in;height:3.16806in" alt="IMG_256" /></p>
+<p>In this example, the command is</p>
+<table>
+<colgroup>
+<col style="width: 100%" />
+</colgroup>
+<tbody>
+<tr>
+<td><em>mosquitto_pub -d -q 1 -h demo.thingsboard.io -p 1883 -t v1/devices/me/telemetry -u "lmcnby8ehhf5etrfgj85" -m "{temperature:25}"</em></td>
+</tr>
+</tbody>
+</table>
+<p>We can get these information from above command:</p>
+<p>Broker address: <em>demo.thingsboard.io</em></p>
+<p>Broker port: 1883</p>
+<p>Access token: <em>lmcnby8ehhf5etrfgj85</em></p>
+<p>Topic: v1/devices/me/telemetry</p>
+<p>Step5: Enable the Node-Red feature on your Milesight gateway and import the relevant JSON(<a class="attachment-link" href="../assets/attachments/node-red/How-to-Use-the-Node-Red-Functionality-of-Milesight-Gateway-to-Achieve-Data-Uplink-to-ThingsBoard-and-RPC-Command-Downlink/flows.json" download="flows.json"><span class="attachment-icon">&#128206;</span> Download flows.json</a>) file.</p>
+<p><img src="../assets/node-red/How-to-Use-the-Node-Red-Functionality-of-Milesight-Gateway-to-Achieve-Data-Uplink-to-ThingsBoard-and-RPC-Command-Downlink/media/image9.png" style="width:6.03056in;height:2.97083in" alt="IMG_256" /></p>
+<p><img src="../assets/node-red/How-to-Use-the-Node-Red-Functionality-of-Milesight-Gateway-to-Achieve-Data-Uplink-to-ThingsBoard-and-RPC-Command-Downlink/media/image10.png" style="width:6.13194in;height:3.02083in" alt="IMG_256" /></p>
+<p><img src="../assets/node-red/How-to-Use-the-Node-Red-Functionality-of-Milesight-Gateway-to-Achieve-Data-Uplink-to-ThingsBoard-and-RPC-Command-Downlink/media/image11.png" style="width:6.27569in;height:3.09097in" alt="IMG_256" /></p>
+<p><img src="../assets/node-red/How-to-Use-the-Node-Red-Functionality-of-Milesight-Gateway-to-Achieve-Data-Uplink-to-ThingsBoard-and-RPC-Command-Downlink/media/image12.png" style="width:6.17014in;height:3.03819in" alt="IMG_256" /></p>
+<p>Step6: Double-click the two nodes shown in the diagram below, and enter the Broker address and Access Token from point 4 above into the Server-side and Username fields, respectively.</p>
+<p><img src="../assets/node-red/How-to-Use-the-Node-Red-Functionality-of-Milesight-Gateway-to-Achieve-Data-Uplink-to-ThingsBoard-and-RPC-Command-Downlink/media/image13.png" style="width:7.64931in;height:3.76806in" alt="IMG_256" /></p>
+<p><img src="../assets/node-red/How-to-Use-the-Node-Red-Functionality-of-Milesight-Gateway-to-Achieve-Data-Uplink-to-ThingsBoard-and-RPC-Command-Downlink/media/image14.png" style="width:6.19861in;height:3.05278in" alt="IMG_256" /></p>
+<p><img src="../assets/node-red/How-to-Use-the-Node-Red-Functionality-of-Milesight-Gateway-to-Achieve-Data-Uplink-to-ThingsBoard-and-RPC-Command-Downlink/media/image15.png" style="width:6.42569in;height:3.16458in" alt="IMG_256" /></p>
+<p><img src="../assets/node-red/How-to-Use-the-Node-Red-Functionality-of-Milesight-Gateway-to-Achieve-Data-Uplink-to-ThingsBoard-and-RPC-Command-Downlink/media/image16.png" style="width:6.21667in;height:3.06181in" alt="IMG_256" /></p>
+<p><img src="../assets/node-red/How-to-Use-the-Node-Red-Functionality-of-Milesight-Gateway-to-Achieve-Data-Uplink-to-ThingsBoard-and-RPC-Command-Downlink/media/image17.png" style="width:5.14861in;height:2.53611in" alt="IMG_256" /></p>
+<p><img src="../assets/node-red/How-to-Use-the-Node-Red-Functionality-of-Milesight-Gateway-to-Achieve-Data-Uplink-to-ThingsBoard-and-RPC-Command-Downlink/media/image18.png" style="width:5.825in;height:2.86944in" alt="IMG_256" /></p>
+<p>The node shown in the figure below is used to filter sensor data based on the Device EUI of the sensor device, to prevent unnecessary sensor data from being reported to ThingsBoard.</p>
+<p><img src="../assets/node-red/How-to-Use-the-Node-Red-Functionality-of-Milesight-Gateway-to-Achieve-Data-Uplink-to-ThingsBoard-and-RPC-Command-Downlink/media/image19.png" style="width:6.43472in;height:3.16944in" alt="IMG_256" /></p>
+<p>Step7: Since data displayed on ThingsBoard needs to be in JSON format, please refer to this article(https://support.milesight-iot.com/support/solutions/articles/73000535734-how-to-use-decoder-on-node-red) to add a decoder for your sensor device.</p>
+<p><img src="../assets/node-red/How-to-Use-the-Node-Red-Functionality-of-Milesight-Gateway-to-Achieve-Data-Uplink-to-ThingsBoard-and-RPC-Command-Downlink/media/image20.png" style="width:6.21042in;height:3.05903in" alt="IMG_256" /></p>
+<p>Step8: Afterwards, you will be able to see the data reported by the sensor on the ThingsBoard platform.</p>
+<p><img src="../assets/node-red/How-to-Use-the-Node-Red-Functionality-of-Milesight-Gateway-to-Achieve-Data-Uplink-to-ThingsBoard-and-RPC-Command-Downlink/media/image21.png" style="width:5.83681in;height:2.76944in" alt="IMG_256" /></p>
+<p>Step 9: To control Milesight sensors via RPC on ThingsBoard, please define RPC controls on the ThingsBoard platform.</p>
+<p><img src="../assets/node-red/How-to-Use-the-Node-Red-Functionality-of-Milesight-Gateway-to-Achieve-Data-Uplink-to-ThingsBoard-and-RPC-Command-Downlink/media/image22.png" style="width:6.29444in;height:2.98681in" alt="IMG_256" /></p>
+<p><img src="../assets/node-red/How-to-Use-the-Node-Red-Functionality-of-Milesight-Gateway-to-Achieve-Data-Uplink-to-ThingsBoard-and-RPC-Command-Downlink/media/image23.png" style="width:6.56458in;height:3.11458in" alt="IMG_256" /></p>
+<p><img src="../assets/node-red/How-to-Use-the-Node-Red-Functionality-of-Milesight-Gateway-to-Achieve-Data-Uplink-to-ThingsBoard-and-RPC-Command-Downlink/media/image24.png" style="width:5.35486in;height:2.54097in" alt="IMG_256" /></p>
+<p><img src="../assets/node-red/How-to-Use-the-Node-Red-Functionality-of-Milesight-Gateway-to-Achieve-Data-Uplink-to-ThingsBoard-and-RPC-Command-Downlink/media/image25.png" style="width:5.57986in;height:2.64792in" alt="IMG_256" /></p>
+<p><img src="../assets/node-red/How-to-Use-the-Node-Red-Functionality-of-Milesight-Gateway-to-Achieve-Data-Uplink-to-ThingsBoard-and-RPC-Command-Downlink/media/image26.png" style="width:6.35417in;height:3.01528in" alt="IMG_256" /></p>
+<p><img src="../assets/node-red/How-to-Use-the-Node-Red-Functionality-of-Milesight-Gateway-to-Achieve-Data-Uplink-to-ThingsBoard-and-RPC-Command-Downlink/media/image27.png" style="width:6.95139in;height:3.29861in" alt="IMG_256" /></p>
+<p>In addition to using the aforementioned buttons to send RPC commands, we can also define related buttons according to our needs, as shown in the figure below.</p>
+<p><img src="../assets/node-red/How-to-Use-the-Node-Red-Functionality-of-Milesight-Gateway-to-Achieve-Data-Uplink-to-ThingsBoard-and-RPC-Command-Downlink/media/image28.png" style="width:6.22639in;height:2.95417in" alt="IMG_256" /></p>
+<p>①For the Slider button, when you slide the button, it will send a JSON object {"action":2} to the MQTT client on Node-Red.</p>
+<p><img src="../assets/node-red/How-to-Use-the-Node-Red-Functionality-of-Milesight-Gateway-to-Achieve-Data-Uplink-to-ThingsBoard-and-RPC-Command-Downlink/media/image29.png" style="width:9.50278in;height:4.50903in" alt="IMG_256" /></p>
+<p>②For the switch control, when the button is in the ON state, it will send a JSON object {"params": true} to the MQTT client on Node-Red. When the button is in the OFF state, it will send a JSON object {"params": false} to the MQTT client on Node-Red.</p>
+<p><img src="../assets/node-red/How-to-Use-the-Node-Red-Functionality-of-Milesight-Gateway-to-Achieve-Data-Uplink-to-ThingsBoard-and-RPC-Command-Downlink/media/image30.png" style="width:6.60208in;height:3.13264in" alt="IMG_256" /></p>
+<p>③For the Knob control, when you rotate the knob to a certain value, the MQTT client on Node-Red will receive a JSON object containing that value.</p>
+<p><img src="../assets/node-red/How-to-Use-the-Node-Red-Functionality-of-Milesight-Gateway-to-Achieve-Data-Uplink-to-ThingsBoard-and-RPC-Command-Downlink/media/image31.png" style="width:6.78958in;height:3.22083in" alt="IMG_256" /></p>
+<p>④For the round control, I have written a logic function. When I turn on this button, it will send a JSON object containing the value 1 to the MQTT client on Node-Red. When I turn off this button, it will send a JSON object containing the value 2 to the MQTT client on Node-Red.</p>
+<p><img src="../assets/node-red/How-to-Use-the-Node-Red-Functionality-of-Milesight-Gateway-to-Achieve-Data-Uplink-to-ThingsBoard-and-RPC-Command-Downlink/media/image32.png" style="width:6.72222in;height:3.18958in" alt="IMG_256" /></p>
+<p>Step10: Define a JSON-formatted data payload that will be sent to Node-Red on the gateway when you click this RPC control. This way, you can perform corresponding sensor node control in Node-Red based on the received data content.</p>
+<p><img src="../assets/node-red/How-to-Use-the-Node-Red-Functionality-of-Milesight-Gateway-to-Achieve-Data-Uplink-to-ThingsBoard-and-RPC-Command-Downlink/media/image33.png" style="width:6.33819in;height:3.00833in" alt="IMG_256" /></p>
+<p><img src="../assets/node-red/How-to-Use-the-Node-Red-Functionality-of-Milesight-Gateway-to-Achieve-Data-Uplink-to-ThingsBoard-and-RPC-Command-Downlink/media/image34.png" style="width:6.27986in;height:2.97986in" alt="IMG_256" /></p>
+<p>Step11: When you click this RPC button on ThingsBoard, Node-Red on the Milesight gateway will receive the data {"action":1}, as shown in the diagram below.</p>
+<p><img src="../assets/node-red/How-to-Use-the-Node-Red-Functionality-of-Milesight-Gateway-to-Achieve-Data-Uplink-to-ThingsBoard-and-RPC-Command-Downlink/media/image35.png" style="width:6.01597in;height:2.85486in" alt="IMG_256" /></p>
+<p><img src="../assets/node-red/How-to-Use-the-Node-Red-Functionality-of-Milesight-Gateway-to-Achieve-Data-Uplink-to-ThingsBoard-and-RPC-Command-Downlink/media/image36.png" style="width:6.25278in;height:3.07986in" alt="IMG_256" /></p>
+<p><img src="../assets/node-red/How-to-Use-the-Node-Red-Functionality-of-Milesight-Gateway-to-Achieve-Data-Uplink-to-ThingsBoard-and-RPC-Command-Downlink/media/image37.png" style="width:5.98056in;height:2.94583in" alt="IMG_256" /></p>
+<p><img src="../assets/node-red/How-to-Use-the-Node-Red-Functionality-of-Milesight-Gateway-to-Achieve-Data-Uplink-to-ThingsBoard-and-RPC-Command-Downlink/media/image38.png" style="width:5.97292in;height:2.94167in" alt="IMG_256" /></p>
+<p>Step12: Finally, you can click the RPC button on ThingsBoard to control the sensors connected to the Milesight gateway.</p>
+<p><img src="../assets/node-red/How-to-Use-the-Node-Red-Functionality-of-Milesight-Gateway-to-Achieve-Data-Uplink-to-ThingsBoard-and-RPC-Command-Downlink/media/image39.png" style="width:5.65625in;height:2.78611in" alt="IMG_256" /></p>
+<p><strong>__END__</strong></p>
+
+</article>
+<footer class="site-footer">Tech Docs Hub</footer>
+</div>
+<script>
+document.querySelectorAll('article.article-body img').forEach(function(img) {
+  img.addEventListener('click', function() {
+    document.getElementById('lightbox-img').src = this.src;
+    document.getElementById('lightbox').classList.add('active');
+    document.body.style.overflow = 'hidden';
+  });
+});
+function closeLightbox() {
+  document.getElementById('lightbox').classList.remove('active');
+  document.body.style.overflow = '';
+}
+document.addEventListener('keydown', function(e) {
+  if (e.key === 'Escape') closeLightbox();
+});
+</script>
+</body>
+</html>

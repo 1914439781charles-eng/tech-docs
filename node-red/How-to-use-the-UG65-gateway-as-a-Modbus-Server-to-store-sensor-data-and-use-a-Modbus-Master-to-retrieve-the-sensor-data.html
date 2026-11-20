@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>How to use the UG65 gateway as a Modbus Server to store sensor data, and use a Modbus Master to retrieve the sensor data · Tech Docs Hub</title>
+<style>
+:root { --accent:#2563eb; --accent-soft:#eff6ff; --text:#1f2937; --muted:#6b7280;
+        --border:#e5e7eb; --bg:#f8fafc; --card:#ffffff; }
+* { box-sizing: border-box; }
+body { margin:0; font-family: "Segoe UI", system-ui, sans-serif;
+       background:var(--bg); color:var(--text); line-height:1.75; }
+a { color:var(--accent); text-decoration:none; }
+a:hover { text-decoration:underline; }
+.container { max-width:960px; margin:0 auto; padding:24px 20px 64px; }
+header.site-header { background:linear-gradient(135deg,#1e3a8a,#2563eb); color:#fff; padding:36px 20px; }
+header.site-header .container { padding-top:0; padding-bottom:0; }
+header.site-header h1 { margin:0 0 6px; font-size:26px; }
+header.site-header p { margin:0; opacity:.85; font-size:14px; }
+.search-box { margin:24px 0 8px; }
+.search-box input { width:100%; padding:12px 16px; font-size:15px; border:1px solid var(--border);
+                    border-radius:10px; outline:none; background:#fff; }
+.search-box input:focus { border-color:var(--accent); box-shadow:0 0 0 3px var(--accent-soft); }
+.category { margin-top:24px; }
+.category-header { display:flex; align-items:center; gap:10px; margin:0 0 12px; cursor:pointer;
+                   user-select:none; padding:6px 0; }
+.category-header:hover { opacity:.85; }
+.category-header h2 { font-size:19px; margin:0; display:flex; align-items:center; gap:10px; }
+.badge { font-size:12px; font-weight:600; padding:2px 10px; border-radius:999px; }
+.badge-howto { background:#dcfce7; color:#15803d; }
+.badge-troubleshooting { background:#fee2e2; color:#b91c1c; }
+.badge-node-red { background:#ffedd5; color:#c2410c; }
+.badge-python { background:#dbeafe; color:#1d4ed8; }
+.count { color:var(--muted); font-size:13px; font-weight:400; }
+.chevron { display:inline-block; transition:transform .2s ease; font-size:14px; color:var(--muted);
+           margin-left:auto; }
+.category.collapsed .chevron { transform:rotate(-90deg); }
+.category.collapsed .article-list,
+.category.collapsed .empty { display:none; }
+ul.article-list { list-style:none; margin:0; padding:0; display:grid; gap:10px; }
+ul.article-list li { background:var(--card); border:1px solid var(--border); border-radius:10px;
+                     padding:14px 18px; transition:box-shadow .15s ease; }
+ul.article-list li:hover { box-shadow:0 4px 14px rgba(0,0,0,.06); }
+ul.article-list .title { font-size:16px; font-weight:600; }
+ul.article-list .meta { font-size:12.5px; color:var(--muted); margin-top:4px; }
+.empty { color:var(--muted); font-size:14px; padding:12px 4px; }
+/* Article page */
+.article-nav { margin:18px 0 0; font-size:14px; }
+article.article-body { background:var(--card); border:1px solid var(--border); border-radius:12px;
+                       padding:32px 40px; margin-top:16px; }
+article.article-body img { max-width:100%; height:auto; border:1px solid var(--border);
+                           border-radius:8px; margin:8px 0; cursor:zoom-in; transition:box-shadow .15s ease; }
+article.article-body img:hover { box-shadow:0 4px 16px rgba(0,0,0,.12); }
+article.article-body h1 { font-size:24px; margin-top:0; }
+article.article-body h2 { font-size:20px; border-bottom:1px solid var(--border); padding-bottom:6px; }
+article.article-body h3 { font-size:17px; }
+article.article-body pre { background:#f1f5f9; padding:14px; border-radius:8px; overflow-x:auto; }
+article.article-body code { background:#f1f5f9; padding:2px 6px; border-radius:4px; font-size:.92em; }
+article.article-body pre code { background:none; padding:0; }
+article.article-body table { border-collapse:collapse; width:100%; }
+article.article-body th, article.article-body td { border:1px solid var(--border); padding:8px 12px; }
+article.article-body th { background:var(--accent-soft); }
+article.article-body blockquote { border-left:4px solid var(--accent); margin-left:0;
+                                  padding:4px 16px; color:var(--muted); background:var(--accent-soft); }
+.attachment-link { display:inline-flex; align-items:center; gap:6px; padding:6px 14px; margin:4px 0;
+                   background:var(--accent-soft); border:1px solid var(--accent); border-radius:8px;
+                   font-weight:600; text-decoration:none; }
+.attachment-link:hover { background:#dbeafe; text-decoration:none; }
+.attachment-icon { font-size:16px; }
+footer.site-footer { text-align:center; color:var(--muted); font-size:12.5px; margin-top:48px; }
+/* Lightbox */
+.lightbox-overlay { display:none; position:fixed; inset:0; z-index:9999;
+                    background:rgba(0,0,0,.85); cursor:zoom-out; justify-content:center; align-items:center; }
+.lightbox-overlay.active { display:flex; }
+.lightbox-overlay img { max-width:95vw; max-height:92vh; border-radius:6px; box-shadow:0 8px 40px rgba(0,0,0,.4); }
+@media (max-width:640px) { article.article-body { padding:20px 18px; } }
+</style>
+</head>
+<body>
+<div class="lightbox-overlay" id="lightbox" onclick="closeLightbox()">
+  <img id="lightbox-img" src="" alt="">
+</div>
+<div class="container">
+<div class="article-nav"><a href="../index.html">&larr; Back to Home</a> &middot; <span class="badge badge-node-red">Node-RED</span></div>
+<article class="article-body">
+<figure>
+<img src="../assets/node-red/How-to-use-the-UG65-gateway-as-a-Modbus-Server-to-store-sensor-data-and-use-a-Modbus-Master-to-retrieve-the-sensor-data/media/image4.png" style="width:8.27847in;height:11.70972in" alt="D:/桌面/15(英文）.png15(英文）" />
+<figcaption><p>How to use the UG65 gateway as a Modbus Server to store sensor data, and use a Modbus Master to retrieve the sensor data</p></figcaption>
+</figure>
+<p>This document will guide you on how to use Node-RED on the UG65 gateway to store voltage data values from a WS523 device in the gateway's internal registers, allowing you to read the data values in real-time using Modbus Master.</p>
+<p>You can enter this link on your PC browser to download the related JSON file：.https://resource.milesight-iot.com/Support/Charles/flows-modbus.json</p>
+<p>Step by step:</p>
+<ol type="1">
+<li><p>You need to connect the WS523 device to the built-in NS (Network Server) of the Milesight UG65.</p></li>
+<li><p>You need to log in to the front-end configuration webpage of the UG65 gateway, launch the Node-RED software, and import the JSON file.You can download this JSON file as an attachment in the email. After importing this JSON file into Node-RED, you will see the following data flow diagram. The functionality of this data flow diagram is to write the voltage value of the WS523 device into the built-in registers of the UG65 when the WS523 socket is externally powered</p>
+<p><img src="../assets/node-red/How-to-use-the-UG65-gateway-as-a-Modbus-Server-to-store-sensor-data-and-use-a-Modbus-Master-to-retrieve-the-sensor-data/media/image5.png" style="width:5.79097in;height:2.54444in" alt="IMG_256" /></p>
+<p>The functions of each node in the diagram are as follows:</p>
+<p>① LoRa Input: Receive LoRa data transmitted by the WS523.</p>
+<p>② decoder for WS523: Decode the LoRa data received from the WS523.</p>
+<p>③ Ws523 state selector: Filter out the sensor data from WS523 devices that are externally powered.</p>
+<p>④ Write to Modbus Slave: Write the voltage data from the WS523 sensor into a specific register (determined by the Slave ID and Starting Address).</p>
+<p>⑤ Modbus Flex Write and Modbus Flex Server: Write the voltage data into the registers of the local machine (UG65).</p>
+<p>The most notable node mentioned above is the 'Write to Modbus Slave' node. It is a function node that determines where we store the voltage data in which register and starting address. When you double-click on this node with your mouse, you will see the code inside it, as shown in the following image.</p>
+<p><img src="../assets/node-red/How-to-use-the-UG65-gateway-as-a-Modbus-Server-to-store-sensor-data-and-use-a-Modbus-Master-to-retrieve-the-sensor-data/media/image6.png" style="width:4.34375in;height:5.90486in" alt="IMG_256" /></p>
+<p>The code in the above image is as follows:</p></li>
+</ol>
+<p>var fc = 16;</p>
+<p>var addresses = 1;</p>
+<p>var value_1 = msg.payload.voltage;</p>
+<p>var buf = Buffer.alloc(4);</p>
+<p>buf.writeFloatBE(value_1);</p>
+<p>var values_1 = [(buf[0] * 256 + buf[1]), (buf[2] * 256) + buf[3]]</p>
+<p>msg.payload = { "value": values_1,'fc': fc, 'unitid': 1, 'address': 1, 'quantity': 2 };</p>
+<p>return msg;</p>
+<p>The statement msg.payload = { "value": values_1,'fc': fc, 'unitid': 1, 'address': 1, 'quantity': 2 }; is the code what you need to modify. You don't need to modify the rest of the code. 'unitid' determines the Slave ID, and 'address' determines the starting address of the register. Therefore, you only need to modify 'unitid' and 'address' to store the voltage data in different registers. So from the above code, we can understand that I am storing the voltage value in the register with Slave ID 1 and starting address 1.</p>
+<ol start="3" type="1">
+<li><p>Reading Test From Modbus Master</p>
+<p>The voltage of my current WS523 socket is 1.8 volts. I am using Modbus Poll software as a Modbus Master to read the voltage value stored in the register with Slave ID 1 and starting address 1 in UG65.</p>
+<p>As shown in the figure below, I successfully obtained the register data of Slave ID 1 and starting address 1 in Modbus Poll, which stored the current voltage value of WS523. As shown in the figure below, I successfully obtained the register data of Slave ID 1 and starting address 1 in Modbus Poll, which stored the current voltage value of WS523.</p></li>
+</ol>
+<p><img src="../assets/node-red/How-to-use-the-UG65-gateway-as-a-Modbus-Server-to-store-sensor-data-and-use-a-Modbus-Master-to-retrieve-the-sensor-data/media/image7.png" style="width:5.84792in;height:2.94444in" alt="IMG_256" /></p>
+
+</article>
+<footer class="site-footer">Tech Docs Hub</footer>
+</div>
+<script>
+document.querySelectorAll('article.article-body img').forEach(function(img) {
+  img.addEventListener('click', function() {
+    document.getElementById('lightbox-img').src = this.src;
+    document.getElementById('lightbox').classList.add('active');
+    document.body.style.overflow = 'hidden';
+  });
+});
+function closeLightbox() {
+  document.getElementById('lightbox').classList.remove('active');
+  document.body.style.overflow = '';
+}
+document.addEventListener('keydown', function(e) {
+  if (e.key === 'Escape') closeLightbox();
+});
+</script>
+</body>
+</html>

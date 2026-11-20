@@ -1,0 +1,198 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>How to perform batch operations using Node-RED(Newest) · Tech Docs Hub</title>
+<style>
+:root { --accent:#2563eb; --accent-soft:#eff6ff; --text:#1f2937; --muted:#6b7280;
+        --border:#e5e7eb; --bg:#f8fafc; --card:#ffffff; }
+* { box-sizing: border-box; }
+body { margin:0; font-family: "Segoe UI", system-ui, sans-serif;
+       background:var(--bg); color:var(--text); line-height:1.75; }
+a { color:var(--accent); text-decoration:none; }
+a:hover { text-decoration:underline; }
+.container { max-width:960px; margin:0 auto; padding:24px 20px 64px; }
+header.site-header { background:linear-gradient(135deg,#1e3a8a,#2563eb); color:#fff; padding:36px 20px; }
+header.site-header .container { padding-top:0; padding-bottom:0; }
+header.site-header h1 { margin:0 0 6px; font-size:26px; }
+header.site-header p { margin:0; opacity:.85; font-size:14px; }
+.search-box { margin:24px 0 8px; }
+.search-box input { width:100%; padding:12px 16px; font-size:15px; border:1px solid var(--border);
+                    border-radius:10px; outline:none; background:#fff; }
+.search-box input:focus { border-color:var(--accent); box-shadow:0 0 0 3px var(--accent-soft); }
+.category { margin-top:24px; }
+.category-header { display:flex; align-items:center; gap:10px; margin:0 0 12px; cursor:pointer;
+                   user-select:none; padding:6px 0; }
+.category-header:hover { opacity:.85; }
+.category-header h2 { font-size:19px; margin:0; display:flex; align-items:center; gap:10px; }
+.badge { font-size:12px; font-weight:600; padding:2px 10px; border-radius:999px; }
+.badge-howto { background:#dcfce7; color:#15803d; }
+.badge-troubleshooting { background:#fee2e2; color:#b91c1c; }
+.badge-node-red { background:#ffedd5; color:#c2410c; }
+.badge-python { background:#dbeafe; color:#1d4ed8; }
+.count { color:var(--muted); font-size:13px; font-weight:400; }
+.chevron { display:inline-block; transition:transform .2s ease; font-size:14px; color:var(--muted);
+           margin-left:auto; }
+.category.collapsed .chevron { transform:rotate(-90deg); }
+.category.collapsed .article-list,
+.category.collapsed .empty { display:none; }
+ul.article-list { list-style:none; margin:0; padding:0; display:grid; gap:10px; }
+ul.article-list li { background:var(--card); border:1px solid var(--border); border-radius:10px;
+                     padding:14px 18px; transition:box-shadow .15s ease; }
+ul.article-list li:hover { box-shadow:0 4px 14px rgba(0,0,0,.06); }
+ul.article-list .title { font-size:16px; font-weight:600; }
+ul.article-list .meta { font-size:12.5px; color:var(--muted); margin-top:4px; }
+.empty { color:var(--muted); font-size:14px; padding:12px 4px; }
+/* Article page */
+.article-nav { margin:18px 0 0; font-size:14px; }
+article.article-body { background:var(--card); border:1px solid var(--border); border-radius:12px;
+                       padding:32px 40px; margin-top:16px; }
+article.article-body img { max-width:100%; height:auto; border:1px solid var(--border);
+                           border-radius:8px; margin:8px 0; cursor:zoom-in; transition:box-shadow .15s ease; }
+article.article-body img:hover { box-shadow:0 4px 16px rgba(0,0,0,.12); }
+article.article-body h1 { font-size:24px; margin-top:0; }
+article.article-body h2 { font-size:20px; border-bottom:1px solid var(--border); padding-bottom:6px; }
+article.article-body h3 { font-size:17px; }
+article.article-body pre { background:#f1f5f9; padding:14px; border-radius:8px; overflow-x:auto; }
+article.article-body code { background:#f1f5f9; padding:2px 6px; border-radius:4px; font-size:.92em; }
+article.article-body pre code { background:none; padding:0; }
+article.article-body table { border-collapse:collapse; width:100%; }
+article.article-body th, article.article-body td { border:1px solid var(--border); padding:8px 12px; }
+article.article-body th { background:var(--accent-soft); }
+article.article-body blockquote { border-left:4px solid var(--accent); margin-left:0;
+                                  padding:4px 16px; color:var(--muted); background:var(--accent-soft); }
+.attachment-link { display:inline-flex; align-items:center; gap:6px; padding:6px 14px; margin:4px 0;
+                   background:var(--accent-soft); border:1px solid var(--accent); border-radius:8px;
+                   font-weight:600; text-decoration:none; }
+.attachment-link:hover { background:#dbeafe; text-decoration:none; }
+.attachment-icon { font-size:16px; }
+footer.site-footer { text-align:center; color:var(--muted); font-size:12.5px; margin-top:48px; }
+/* Lightbox */
+.lightbox-overlay { display:none; position:fixed; inset:0; z-index:9999;
+                    background:rgba(0,0,0,.85); cursor:zoom-out; justify-content:center; align-items:center; }
+.lightbox-overlay.active { display:flex; }
+.lightbox-overlay img { max-width:95vw; max-height:92vh; border-radius:6px; box-shadow:0 8px 40px rgba(0,0,0,.4); }
+@media (max-width:640px) { article.article-body { padding:20px 18px; } }
+</style>
+</head>
+<body>
+<div class="lightbox-overlay" id="lightbox" onclick="closeLightbox()">
+  <img id="lightbox-img" src="" alt="">
+</div>
+<div class="container">
+<div class="article-nav"><a href="../index.html">&larr; Back to Home</a> &middot; <span class="badge badge-node-red">Node-RED</span></div>
+<article class="article-body">
+<figure>
+<img src="../assets/node-red/How-to-perform-batch-operations-using-Node-REDNewest/media/image3.png" style="width:8.27847in;height:11.70972in" alt="D:/桌面/15(英文）.png15(英文）" />
+<figcaption><p>How to perform batch operations on using Node-RED</p></figcaption>
+</figure>
+<p><strong>Description:</strong></p>
+<p>This article will use Milesight UG56 as an example to illustrate how to achieve the following seven functionalities using Node-RED by calling HTTP APIs.</p>
+<p>①Batch export all devices of the built-in NS in the gateway.</p>
+<p>②Batch export all custom payload codecs of the gateway.</p>
+<p>③Batch import custom payload codecs into the gateway.</p>
+<p>④Batch export all applications of the gateway.</p>
+<p>⑤Batch import all applications of the gateway.</p>
+<p>⑥Batch export profiles of the gateway.</p>
+<p>⑦Batch import profiles of the gateway.</p>
+<p><strong>Configuration:</strong></p>
+<p>①Please import the relevant node flow diagram into your Node-RED software on the gateway. As shown in the following image. You can click on this icon(<a class="attachment-link" href="../assets/attachments/node-red/How-to-perform-batch-operations-using-Node-REDNewest/flows%20%28BULK%29.json" download="flows (BULK).json"><span class="attachment-icon">&#128206;</span> Download flows (BULK).json</a>) to download the node flow file(JSON file).</p>
+<p><img src="../assets/node-red/How-to-perform-batch-operations-using-Node-REDNewest/media/image5.png" style="width:5.03611in;height:2.2875in" alt="IMG_256" /></p>
+<p><img src="../assets/node-red/How-to-perform-batch-operations-using-Node-REDNewest/media/image6.png" style="width:5.71944in;height:2.71389in" alt="IMG_256" /></p>
+<p><img src="../assets/node-red/How-to-perform-batch-operations-using-Node-REDNewest/media/image7.png" style="width:5.74236in;height:2.74931in" alt="IMG_256" /></p>
+<p><img src="../assets/node-red/How-to-perform-batch-operations-using-Node-REDNewest/media/image8.png" style="width:5.77847in;height:2.74167in" alt="IMG_256" /></p>
+<p><img src="../assets/node-red/How-to-perform-batch-operations-using-Node-REDNewest/media/image9.png" style="width:6.08125in;height:3.00208in" alt="IMG_256" /></p>
+<p><img src="../assets/node-red/How-to-perform-batch-operations-using-Node-REDNewest/media/image10.png" style="width:5.80486in;height:2.86528in" alt="IMG_256" /></p>
+<p>②Please click on two locations in the node flow diagram to obtain the HTTP API token, as shown in the following image. You can copy the token. (This token has an expiration time, usually after 24 hours.)</p>
+<p><img src="../assets/node-red/How-to-perform-batch-operations-using-Node-REDNewest/media/image11.png" style="width:5.07708in;height:2.50625in" alt="IMG_256" /></p>
+<p>Finally, paste this HTTP API token into the locations shown in the diagram below.</p>
+<p><img src="../assets/node-red/How-to-perform-batch-operations-using-Node-REDNewest/media/image12.png" style="width:6.27431in;height:3.09722in" alt="IMG_256" /></p>
+<p><img src="../assets/node-red/How-to-perform-batch-operations-using-Node-REDNewest/media/image13.png" style="width:5.78611in;height:2.85625in" alt="IMG_256" /></p>
+<p><img src="../assets/node-red/How-to-perform-batch-operations-using-Node-REDNewest/media/image14.png" style="width:5.50694in;height:2.54167in" alt="IMG_256" /></p>
+<p><img src="../assets/node-red/How-to-perform-batch-operations-using-Node-REDNewest/media/image15.png" style="width:5.37361in;height:2.65208in" alt="IMG_256" /></p>
+<p><img src="../assets/node-red/How-to-perform-batch-operations-using-Node-REDNewest/media/image16.png" style="width:5.59722in;height:2.7625in" alt="IMG_256" /></p>
+<p><img src="../assets/node-red/How-to-perform-batch-operations-using-Node-REDNewest/media/image17.png" style="width:5.7in;height:2.61875in" alt="IMG_256" /></p>
+<p><img src="../assets/node-red/How-to-perform-batch-operations-using-Node-REDNewest/media/image18.png" style="width:5.58403in;height:2.75625in" alt="IMG_256" /></p>
+<p><strong>Feature demonstration：</strong></p>
+<p><strong>①</strong>Batch export all devices of the built-in NS in the gateway.</p>
+<p>The following image shows all devices on the built-in NS of my UG56.</p>
+<p><img src="../assets/node-red/How-to-perform-batch-operations-using-Node-REDNewest/media/image19.png" style="width:6.475in;height:3.19653in" alt="IMG_256" /></p>
+<p>As shown in the image below, when you click on this button in Node-RED, you will be able to download and obtain the device list from the gateway's frontend interface.</p>
+<p><img src="../assets/node-red/How-to-perform-batch-operations-using-Node-REDNewest/media/image20.png" style="width:6.60833in;height:3.2625in" alt="IMG_256" /></p>
+<p><img src="../assets/node-red/How-to-perform-batch-operations-using-Node-REDNewest/media/image21.png" style="width:6.26806in;height:3.09444in" alt="IMG_256" /></p>
+<p><img src="../assets/node-red/How-to-perform-batch-operations-using-Node-REDNewest/media/image22.png" style="width:5.90625in;height:2.91528in" alt="IMG_256" /></p>
+<p><img src="../assets/node-red/How-to-perform-batch-operations-using-Node-REDNewest/media/image23.png" style="width:6.43403in;height:3.25069in" alt="IMG_256" /></p>
+<p>It is worth noting that you can use the aforementioned devices.csv table to import it into the device list of other gateways, as shown in the image below.</p>
+<p><img src="../assets/node-red/How-to-perform-batch-operations-using-Node-REDNewest/media/image24.png" style="width:5.58681in;height:2.65069in" alt="IMG_256" /></p>
+<p><strong>②</strong>Batch export all custom payload codecs of the gateway.</p>
+<p>The picture below shows the custom payload codecs on my gateway's built-in NS.</p>
+<p><img src="../assets/node-red/How-to-perform-batch-operations-using-Node-REDNewest/media/image25.png" style="width:6.22569in;height:3.07292in" alt="IMG_256" /></p>
+<p><img src="../assets/node-red/How-to-perform-batch-operations-using-Node-REDNewest/media/image26.png" style="width:5.81806in;height:2.87222in" alt="IMG_256" /></p>
+<p>You can click on the button as shown in the diagram below in Node-RED, and then you will be able to download all the custom payload codecs for the current gateway from the frontend interface of the gateway.</p>
+<p><img src="../assets/node-red/How-to-perform-batch-operations-using-Node-REDNewest/media/image27.png" style="width:6.56806in;height:3.24167in" alt="IMG_256" /></p>
+<p><img src="../assets/node-red/How-to-perform-batch-operations-using-Node-REDNewest/media/image21.png" style="width:5.65972in;height:2.79444in" alt="IMG_256" /></p>
+<p><img src="../assets/node-red/How-to-perform-batch-operations-using-Node-REDNewest/media/image28.png" style="width:6.23194in;height:3.06944in" alt="IMG_256" /></p>
+<p><img src="../assets/node-red/How-to-perform-batch-operations-using-Node-REDNewest/media/image29.png" style="width:6.57153in;height:3.32014in" alt="IMG_256" /></p>
+<p><strong>③</strong>Batch import custom payload codecs into the gateway.</p>
+<p>You can use the exported CSV table from the second point above as a template and name this file as im_codecs.csv, as shown in the following figure.</p>
+<p><img src="../assets/node-red/How-to-perform-batch-operations-using-Node-REDNewest/media/image30.png" style="width:6.48542in;height:3.44514in" alt="IMG_256" /></p>
+<p>Afterwards, you can use SFTP to transfer the im_codecs.csv file and place it under the /tmp directory of the UG56 gateway, as shown in the following figure.</p>
+<p><img src="../assets/node-red/How-to-perform-batch-operations-using-Node-REDNewest/media/image31.png" style="width:6.12708in;height:3.85208in" alt="IMG_256" /></p>
+<p>The SFTP account for Milesight UG56 is root, and the password is LoRaWAN@2018</p>
+<p>Afterwards, when you click on the button as shown in the diagram below on the Node-RED of the gateway, you will see that your custom payload codecs have been imported into the gateway.</p>
+<p><img src="../assets/node-red/How-to-perform-batch-operations-using-Node-REDNewest/media/image32.png" style="width:6.09306in;height:3.00764in" alt="IMG_256" /></p>
+<p><img src="../assets/node-red/How-to-perform-batch-operations-using-Node-REDNewest/media/image33.png" style="width:6.27639in;height:3.09792in" alt="IMG_256" /></p>
+<p><img src="../assets/node-red/How-to-perform-batch-operations-using-Node-REDNewest/media/image34.png" style="width:6.27708in;height:3.09792in" alt="IMG_256" /></p>
+<p>④Batch export all applications of the gateway.</p>
+<p>This is a list of all the applications built into my gateway's NS, as shown in the following image.</p>
+<p><img src="../assets/node-red/How-to-perform-batch-operations-using-Node-REDNewest/media/image35.png" style="width:6.06111in;height:2.99167in" alt="IMG_256" /></p>
+<p>When I click on this button in Node-RED, all the applications can be downloaded from the gateway's frontend page, as shown in the following image.</p>
+<p><img src="../assets/node-red/How-to-perform-batch-operations-using-Node-REDNewest/media/image36.png" style="width:6.13264in;height:2.81389in" alt="IMG_256" /></p>
+<p><img src="../assets/node-red/How-to-perform-batch-operations-using-Node-REDNewest/media/image21.png" style="width:5.71736in;height:2.71528in" alt="IMG_256" /></p>
+<p><img src="../assets/node-red/How-to-perform-batch-operations-using-Node-REDNewest/media/image37.png" style="width:5.64722in;height:2.90278in" alt="IMG_256" /></p>
+<p><img src="../assets/node-red/How-to-perform-batch-operations-using-Node-REDNewest/media/image38.png" style="width:5.91319in;height:2.325in" alt="IMG_256" /></p>
+<p>⑤Batch import all applications of the gateway.</p>
+<p>You can use the CSV table mentioned in Step ④ above, rename the table as 'im_app.csv', and then place this table in the '/tmp/' directory of the gateway's backend where you need to import these applications using WinSCP. Please refer to the following image for more details.</p>
+<p><img src="../assets/node-red/How-to-perform-batch-operations-using-Node-REDNewest/media/image39.png" style="width:6.43889in;height:3.23958in" alt="IMG_256" /></p>
+<p><img src="../assets/node-red/How-to-perform-batch-operations-using-Node-REDNewest/media/image40.png" style="width:5.11319in;height:3.28264in" alt="IMG_256" /></p>
+<p><img src="../assets/node-red/How-to-perform-batch-operations-using-Node-REDNewest/media/image41.png" style="width:6.30903in;height:2.89861in" alt="IMG_256" /></p>
+<p>You will see the batch imported applications on the gateway, as shown in the following image.</p>
+<p><img src="../assets/node-red/How-to-perform-batch-operations-using-Node-REDNewest/media/image42.png" style="width:6.59514in;height:3.25556in" alt="IMG_256" /></p>
+<p>⑥Batch export profiles of the gateway.</p>
+<p>The following image shows the profiles on my gateway's built-in NS.</p>
+<p><img src="../assets/node-red/How-to-perform-batch-operations-using-Node-REDNewest/media/image43.png" style="width:6.15833in;height:3.03958in" alt="IMG_256" /></p>
+<p>You can click on the button shown in the following image in Node-RED, and then you will be able to download all the profiles from the built-in NS on the gateway through the frontend interface, as shown in the following image.</p>
+<p><img src="../assets/node-red/How-to-perform-batch-operations-using-Node-REDNewest/media/image44.png" style="width:5.79861in;height:2.65486in" alt="IMG_256" /></p>
+<p><img src="../assets/node-red/How-to-perform-batch-operations-using-Node-REDNewest/media/image21.png" style="width:5.71736in;height:2.71528in" alt="IMG_256" /></p>
+<p><img src="../assets/node-red/How-to-perform-batch-operations-using-Node-REDNewest/media/image45.png" style="width:5.40139in;height:3.62847in" alt="IMG_256" /></p>
+<p><img src="../assets/node-red/How-to-perform-batch-operations-using-Node-REDNewest/media/image46.png" style="width:5.85764in;height:2.39167in" alt="IMG_256" /></p>
+<p>⑦Batch import profiles of the gateway.</p>
+<p>You can use the CSV table mentioned in Step ⑥ above, rename it as 'im_prof.csv', and then you can use WinSCP to place this renamed CSV table in the '/tmp/' directory of the gateway's backend. Please refer to the following image for more details.</p>
+<p><img src="../assets/node-red/How-to-perform-batch-operations-using-Node-REDNewest/media/image47.png" style="width:5.93819in;height:3.78819in" alt="IMG_256" /></p>
+<p>Afterwards, you can click on the button in Node-RED, which will import all the profiles from the table into the built-in NS of this gateway. Please refer to the following image for more details.</p>
+<p><img src="../assets/node-red/How-to-perform-batch-operations-using-Node-REDNewest/media/image48.png" style="width:5.96875in;height:3.5in" alt="IMG_256" /></p>
+<p><img src="../assets/node-red/How-to-perform-batch-operations-using-Node-REDNewest/media/image49.png" style="width:6.53542in;height:3.22569in" alt="IMG_256" /></p>
+<p><strong>_END_</strong></p>
+
+</article>
+<footer class="site-footer">Tech Docs Hub</footer>
+</div>
+<script>
+document.querySelectorAll('article.article-body img').forEach(function(img) {
+  img.addEventListener('click', function() {
+    document.getElementById('lightbox-img').src = this.src;
+    document.getElementById('lightbox').classList.add('active');
+    document.body.style.overflow = 'hidden';
+  });
+});
+function closeLightbox() {
+  document.getElementById('lightbox').classList.remove('active');
+  document.body.style.overflow = '';
+}
+document.addEventListener('keydown', function(e) {
+  if (e.key === 'Escape') closeLightbox();
+});
+</script>
+</body>
+</html>

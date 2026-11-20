@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>How to Upgrade Milesight Gateway Firmware Using Node-Red · Tech Docs Hub</title>
+<style>
+:root { --accent:#2563eb; --accent-soft:#eff6ff; --text:#1f2937; --muted:#6b7280;
+        --border:#e5e7eb; --bg:#f8fafc; --card:#ffffff; }
+* { box-sizing: border-box; }
+body { margin:0; font-family: "Segoe UI", system-ui, sans-serif;
+       background:var(--bg); color:var(--text); line-height:1.75; }
+a { color:var(--accent); text-decoration:none; }
+a:hover { text-decoration:underline; }
+.container { max-width:960px; margin:0 auto; padding:24px 20px 64px; }
+header.site-header { background:linear-gradient(135deg,#1e3a8a,#2563eb); color:#fff; padding:36px 20px; }
+header.site-header .container { padding-top:0; padding-bottom:0; }
+header.site-header h1 { margin:0 0 6px; font-size:26px; }
+header.site-header p { margin:0; opacity:.85; font-size:14px; }
+.search-box { margin:24px 0 8px; }
+.search-box input { width:100%; padding:12px 16px; font-size:15px; border:1px solid var(--border);
+                    border-radius:10px; outline:none; background:#fff; }
+.search-box input:focus { border-color:var(--accent); box-shadow:0 0 0 3px var(--accent-soft); }
+.category { margin-top:24px; }
+.category-header { display:flex; align-items:center; gap:10px; margin:0 0 12px; cursor:pointer;
+                   user-select:none; padding:6px 0; }
+.category-header:hover { opacity:.85; }
+.category-header h2 { font-size:19px; margin:0; display:flex; align-items:center; gap:10px; }
+.badge { font-size:12px; font-weight:600; padding:2px 10px; border-radius:999px; }
+.badge-howto { background:#dcfce7; color:#15803d; }
+.badge-troubleshooting { background:#fee2e2; color:#b91c1c; }
+.badge-node-red { background:#ffedd5; color:#c2410c; }
+.badge-python { background:#dbeafe; color:#1d4ed8; }
+.count { color:var(--muted); font-size:13px; font-weight:400; }
+.chevron { display:inline-block; transition:transform .2s ease; font-size:14px; color:var(--muted);
+           margin-left:auto; }
+.category.collapsed .chevron { transform:rotate(-90deg); }
+.category.collapsed .article-list,
+.category.collapsed .empty { display:none; }
+ul.article-list { list-style:none; margin:0; padding:0; display:grid; gap:10px; }
+ul.article-list li { background:var(--card); border:1px solid var(--border); border-radius:10px;
+                     padding:14px 18px; transition:box-shadow .15s ease; }
+ul.article-list li:hover { box-shadow:0 4px 14px rgba(0,0,0,.06); }
+ul.article-list .title { font-size:16px; font-weight:600; }
+ul.article-list .meta { font-size:12.5px; color:var(--muted); margin-top:4px; }
+.empty { color:var(--muted); font-size:14px; padding:12px 4px; }
+/* Article page */
+.article-nav { margin:18px 0 0; font-size:14px; }
+article.article-body { background:var(--card); border:1px solid var(--border); border-radius:12px;
+                       padding:32px 40px; margin-top:16px; }
+article.article-body img { max-width:100%; height:auto; border:1px solid var(--border);
+                           border-radius:8px; margin:8px 0; cursor:zoom-in; transition:box-shadow .15s ease; }
+article.article-body img:hover { box-shadow:0 4px 16px rgba(0,0,0,.12); }
+article.article-body h1 { font-size:24px; margin-top:0; }
+article.article-body h2 { font-size:20px; border-bottom:1px solid var(--border); padding-bottom:6px; }
+article.article-body h3 { font-size:17px; }
+article.article-body pre { background:#f1f5f9; padding:14px; border-radius:8px; overflow-x:auto; }
+article.article-body code { background:#f1f5f9; padding:2px 6px; border-radius:4px; font-size:.92em; }
+article.article-body pre code { background:none; padding:0; }
+article.article-body table { border-collapse:collapse; width:100%; }
+article.article-body th, article.article-body td { border:1px solid var(--border); padding:8px 12px; }
+article.article-body th { background:var(--accent-soft); }
+article.article-body blockquote { border-left:4px solid var(--accent); margin-left:0;
+                                  padding:4px 16px; color:var(--muted); background:var(--accent-soft); }
+.attachment-link { display:inline-flex; align-items:center; gap:6px; padding:6px 14px; margin:4px 0;
+                   background:var(--accent-soft); border:1px solid var(--accent); border-radius:8px;
+                   font-weight:600; text-decoration:none; }
+.attachment-link:hover { background:#dbeafe; text-decoration:none; }
+.attachment-icon { font-size:16px; }
+footer.site-footer { text-align:center; color:var(--muted); font-size:12.5px; margin-top:48px; }
+/* Lightbox */
+.lightbox-overlay { display:none; position:fixed; inset:0; z-index:9999;
+                    background:rgba(0,0,0,.85); cursor:zoom-out; justify-content:center; align-items:center; }
+.lightbox-overlay.active { display:flex; }
+.lightbox-overlay img { max-width:95vw; max-height:92vh; border-radius:6px; box-shadow:0 8px 40px rgba(0,0,0,.4); }
+@media (max-width:640px) { article.article-body { padding:20px 18px; } }
+</style>
+</head>
+<body>
+<div class="lightbox-overlay" id="lightbox" onclick="closeLightbox()">
+  <img id="lightbox-img" src="" alt="">
+</div>
+<div class="container">
+<div class="article-nav"><a href="../index.html">&larr; Back to Home</a> &middot; <span class="badge badge-node-red">Node-RED</span></div>
+<article class="article-body">
+<p>How to Upgrade Milesight Gateway Firmware Using Node-Red</p>
+<h2 id="section"></h2>
+<figure>
+<img src="../assets/node-red/How-to-Upgrade-Milesight-Gateway-Firmware-Using-Node-Red/media/image4.jpeg" style="width:8.27431in;height:11.70625in" alt="C:/Users/Iris/Desktop/完整word/word模板竖版_英文.jpgword模板竖版_英文" />
+</figure>
+<table>
+<colgroup>
+<col style="width: 14%" />
+<col style="width: 24%" />
+<col style="width: 38%" />
+<col style="width: 22%" />
+</colgroup>
+<tbody>
+<tr>
+<td><strong>Version</strong></td>
+<td><strong>Update Time</strong></td>
+<td><strong>Description</strong></td>
+<td><strong>Author</strong></td>
+</tr>
+<tr>
+<td>1.0</td>
+<td>Sept 11, 2024</td>
+<td>Initial version</td>
+<td>Charles</td>
+</tr>
+<tr>
+<td>2.0</td>
+<td>Nov 11, 2024</td>
+<td>Optimized the method of filling in the gateway firmware.</td>
+<td>Charles</td>
+</tr>
+</tbody>
+</table>
+<h1 id="description">Description</h1>
+<p>When you attempt to upgrade the gateway firmware via the Milesight gateway’s front-end page and the upgrade fails due to internet speed issues, but your Milesight gateway can still access the internet, you can use the Node-Red feature of the Milesight gateway to complete the gateway firmware upgrade. Additionally, you can use the built-in Node-Red feature in the Milesight gateway to automate the upgrade process.</p>
+<h1 id="requirement">Requirement</h1>
+<ul>
+<li><p>Milesight Gateway: UG56/UG65/UG67</p></li>
+</ul>
+<p><strong>Configuration</strong></p>
+<p><strong>Step 1:</strong> Enable the Node-Red feature on the Milesight gateway.</p>
+<p>Please ensure that your Milesight gateway can access the internet. You can use the Ping tool on the Milesight gateway to check if the gateway currently has internet access. If you find that your Milesight gateway cannot access the internet, please refer to this article(https://support.milesight-iot.com/support/solutions/articles/73000514278-how-to-connect-milesight-gateway-to-the-internet) to configure the network.</p>
+<p><img src="../assets/node-red/How-to-Upgrade-Milesight-Gateway-Firmware-Using-Node-Red/media/image5.png" style="width:6.19444in;height:3.09097in" alt="IMG_256" /></p>
+<p><strong>Step 2:</strong> Enable the Node-Red feature on the Milesight gateway.</p>
+<p><img src="../assets/node-red/How-to-Upgrade-Milesight-Gateway-Firmware-Using-Node-Red/media/image6.png" style="width:5.58681in;height:2.75764in" alt="IMG_256" /></p>
+<p> </p>
+<p> </p>
+<p><strong>Step 3:</strong> Click this icon(<a class="attachment-link" href="../assets/attachments/node-red/How-to-Upgrade-Milesight-Gateway-Firmware-Using-Node-Red/flows%20%28UPGRADE%29.json" download="flows (UPGRADE).json"><span class="attachment-icon">&#128206;</span> Download flows (UPGRADE).json</a>) to download the node flow file (JSON file), and then import this JSON file into Node-Red.</p>
+<p><img src="../assets/node-red/How-to-Upgrade-Milesight-Gateway-Firmware-Using-Node-Red/media/image8.png" style="width:5.86667in;height:2.89583in" alt="IMG_257" /></p>
+<p> </p>
+<p><img src="../assets/node-red/How-to-Upgrade-Milesight-Gateway-Firmware-Using-Node-Red/media/image9.png" style="width:5.78403in;height:2.85556in" alt="IMG_258" /></p>
+<p> </p>
+<p> </p>
+<p><img src="../assets/node-red/How-to-Upgrade-Milesight-Gateway-Firmware-Using-Node-Red/media/image10.png" style="width:6.40208in;height:3.16042in" alt="IMG_260" /></p>
+<p><img src="../assets/node-red/How-to-Upgrade-Milesight-Gateway-Firmware-Using-Node-Red/media/image11.png" style="width:6.70903in;height:3.34722in" alt="IMG_256" /></p>
+<p><strong>Step 4:</strong> You can click this link(https://www.milesight.com/iot/resources/download-center/#firmware-lorawan-gateway) to go to the Milesight official website, and then select the relevant firmware for your Milesight gateway based on the gateway model. Next, double-click the 'Download Firmware' node in Node-Red, and enter the firmware version you wish to upgrade to in the corresponding input field. For example, if I want to upgrade the Milesight gateway to version 60.0.0.43-r3, I can proceed as follows.</p>
+<p><img src="../assets/node-red/How-to-Upgrade-Milesight-Gateway-Firmware-Using-Node-Red/media/image12.png" style="width:6.02778in;height:3.00694in" alt="IMG_256" /></p>
+<p><img src="../assets/node-red/How-to-Upgrade-Milesight-Gateway-Firmware-Using-Node-Red/media/image13.png" style="width:5.72569in;height:2.85694in" alt="IMG_256" /></p>
+<p><img src="../assets/node-red/How-to-Upgrade-Milesight-Gateway-Firmware-Using-Node-Red/media/image14.png" style="width:6.62778in;height:3.30694in" alt="IMG_256" /></p>
+<p><strong>Step 5:</strong> You can click this ‘Download Firmware’ inject node to allow the gateway to download the relevant firmware. While the gateway is downloading the firmware, this EXEC node will display a blue icon, indicating that the download task is in progress. This download process may take about 2 minutes.</p>
+<p><img src="../assets/node-red/How-to-Upgrade-Milesight-Gateway-Firmware-Using-Node-Red/media/image15.png" style="width:6.47292in;height:3.22986in" alt="IMG_256" /></p>
+<p><img src="../assets/node-red/How-to-Upgrade-Milesight-Gateway-Firmware-Using-Node-Red/media/image16.png" style="width:5.71319in;height:2.85069in" alt="IMG_256" /></p>
+<p>Once the download task is completed, you will observe that the blue icon has disappeared, and you will see the output result of the code as 0 in the right-hand console.</p>
+<p><img src="../assets/node-red/How-to-Upgrade-Milesight-Gateway-Firmware-Using-Node-Red/media/image17.png" style="width:6.41111in;height:3.19931in" alt="IMG_256" /></p>
+<p><strong>Step 6:</strong> After successfully downloading the relevant gateway firmware, you can click 'Start Upgrading' inject node to begin the firmware upgrade process for the gateway. If you have entered the correct gateway firmware, you will see 'start upgrade firmware' output in the console on the right side of the Node-Red page. During the firmware upgrade process, your gateway will automatically restart, which is normal. About three minutes after the gateway starts upgrading, you can log in to the gateway's front-end page and see that the firmware version has been successfully upgraded.</p>
+<p><img src="../assets/node-red/How-to-Upgrade-Milesight-Gateway-Firmware-Using-Node-Red/media/image18.png" style="width:6.02917in;height:3.18958in" alt="IMG_256" /></p>
+<p><img src="../assets/node-red/How-to-Upgrade-Milesight-Gateway-Firmware-Using-Node-Red/media/image19.png" style="width:6.71667in;height:3.25139in" alt="IMG_256" /></p>
+<p><img src="../assets/node-red/How-to-Upgrade-Milesight-Gateway-Firmware-Using-Node-Red/media/image20.png" style="width:6.63889in;height:3.20139in" alt="IMG_256" /></p>
+<p>__END__</p>
+
+</article>
+<footer class="site-footer">Tech Docs Hub</footer>
+</div>
+<script>
+document.querySelectorAll('article.article-body img').forEach(function(img) {
+  img.addEventListener('click', function() {
+    document.getElementById('lightbox-img').src = this.src;
+    document.getElementById('lightbox').classList.add('active');
+    document.body.style.overflow = 'hidden';
+  });
+});
+function closeLightbox() {
+  document.getElementById('lightbox').classList.remove('active');
+  document.body.style.overflow = '';
+}
+document.addEventListener('keydown', function(e) {
+  if (e.key === 'Escape') closeLightbox();
+});
+</script>
+</body>
+</html>

@@ -1,0 +1,180 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>How to Store and Download Sensor Data on a Milesight Gateway Using Node-Red (1) · Tech Docs Hub</title>
+<style>
+:root { --accent:#2563eb; --accent-soft:#eff6ff; --text:#1f2937; --muted:#6b7280;
+        --border:#e5e7eb; --bg:#f8fafc; --card:#ffffff; }
+* { box-sizing: border-box; }
+body { margin:0; font-family: "Segoe UI", system-ui, sans-serif;
+       background:var(--bg); color:var(--text); line-height:1.75; }
+a { color:var(--accent); text-decoration:none; }
+a:hover { text-decoration:underline; }
+.container { max-width:960px; margin:0 auto; padding:24px 20px 64px; }
+header.site-header { background:linear-gradient(135deg,#1e3a8a,#2563eb); color:#fff; padding:36px 20px; }
+header.site-header .container { padding-top:0; padding-bottom:0; }
+header.site-header h1 { margin:0 0 6px; font-size:26px; }
+header.site-header p { margin:0; opacity:.85; font-size:14px; }
+.search-box { margin:24px 0 8px; }
+.search-box input { width:100%; padding:12px 16px; font-size:15px; border:1px solid var(--border);
+                    border-radius:10px; outline:none; background:#fff; }
+.search-box input:focus { border-color:var(--accent); box-shadow:0 0 0 3px var(--accent-soft); }
+.category { margin-top:24px; }
+.category-header { display:flex; align-items:center; gap:10px; margin:0 0 12px; cursor:pointer;
+                   user-select:none; padding:6px 0; }
+.category-header:hover { opacity:.85; }
+.category-header h2 { font-size:19px; margin:0; display:flex; align-items:center; gap:10px; }
+.badge { font-size:12px; font-weight:600; padding:2px 10px; border-radius:999px; }
+.badge-howto { background:#dcfce7; color:#15803d; }
+.badge-troubleshooting { background:#fee2e2; color:#b91c1c; }
+.badge-node-red { background:#ffedd5; color:#c2410c; }
+.badge-python { background:#dbeafe; color:#1d4ed8; }
+.count { color:var(--muted); font-size:13px; font-weight:400; }
+.chevron { display:inline-block; transition:transform .2s ease; font-size:14px; color:var(--muted);
+           margin-left:auto; }
+.category.collapsed .chevron { transform:rotate(-90deg); }
+.category.collapsed .article-list,
+.category.collapsed .empty { display:none; }
+ul.article-list { list-style:none; margin:0; padding:0; display:grid; gap:10px; }
+ul.article-list li { background:var(--card); border:1px solid var(--border); border-radius:10px;
+                     padding:14px 18px; transition:box-shadow .15s ease; }
+ul.article-list li:hover { box-shadow:0 4px 14px rgba(0,0,0,.06); }
+ul.article-list .title { font-size:16px; font-weight:600; }
+ul.article-list .meta { font-size:12.5px; color:var(--muted); margin-top:4px; }
+.empty { color:var(--muted); font-size:14px; padding:12px 4px; }
+/* Article page */
+.article-nav { margin:18px 0 0; font-size:14px; }
+article.article-body { background:var(--card); border:1px solid var(--border); border-radius:12px;
+                       padding:32px 40px; margin-top:16px; }
+article.article-body img { max-width:100%; height:auto; border:1px solid var(--border);
+                           border-radius:8px; margin:8px 0; cursor:zoom-in; transition:box-shadow .15s ease; }
+article.article-body img:hover { box-shadow:0 4px 16px rgba(0,0,0,.12); }
+article.article-body h1 { font-size:24px; margin-top:0; }
+article.article-body h2 { font-size:20px; border-bottom:1px solid var(--border); padding-bottom:6px; }
+article.article-body h3 { font-size:17px; }
+article.article-body pre { background:#f1f5f9; padding:14px; border-radius:8px; overflow-x:auto; }
+article.article-body code { background:#f1f5f9; padding:2px 6px; border-radius:4px; font-size:.92em; }
+article.article-body pre code { background:none; padding:0; }
+article.article-body table { border-collapse:collapse; width:100%; }
+article.article-body th, article.article-body td { border:1px solid var(--border); padding:8px 12px; }
+article.article-body th { background:var(--accent-soft); }
+article.article-body blockquote { border-left:4px solid var(--accent); margin-left:0;
+                                  padding:4px 16px; color:var(--muted); background:var(--accent-soft); }
+.attachment-link { display:inline-flex; align-items:center; gap:6px; padding:6px 14px; margin:4px 0;
+                   background:var(--accent-soft); border:1px solid var(--accent); border-radius:8px;
+                   font-weight:600; text-decoration:none; }
+.attachment-link:hover { background:#dbeafe; text-decoration:none; }
+.attachment-icon { font-size:16px; }
+footer.site-footer { text-align:center; color:var(--muted); font-size:12.5px; margin-top:48px; }
+/* Lightbox */
+.lightbox-overlay { display:none; position:fixed; inset:0; z-index:9999;
+                    background:rgba(0,0,0,.85); cursor:zoom-out; justify-content:center; align-items:center; }
+.lightbox-overlay.active { display:flex; }
+.lightbox-overlay img { max-width:95vw; max-height:92vh; border-radius:6px; box-shadow:0 8px 40px rgba(0,0,0,.4); }
+@media (max-width:640px) { article.article-body { padding:20px 18px; } }
+</style>
+</head>
+<body>
+<div class="lightbox-overlay" id="lightbox" onclick="closeLightbox()">
+  <img id="lightbox-img" src="" alt="">
+</div>
+<div class="container">
+<div class="article-nav"><a href="../index.html">&larr; Back to Home</a> &middot; <span class="badge badge-node-red">Node-RED</span></div>
+<article class="article-body">
+<figure>
+<img src="../assets/node-red/How-to-Store-and-Download-Sensor-Data-on-a-Milesight-Gateway-Using-Node-Red-1/media/image4.jpeg" style="width:8.27431in;height:11.70625in" alt="C:/Users/Iris/Desktop/完整word/word模板竖版_英文.jpgword模板竖版_英文" />
+<figcaption><p><strong>How to Store and Download Sensor Data on a Milesight Gateway Using Node-Red</strong></p></figcaption>
+</figure>
+<table>
+<colgroup>
+<col style="width: 14%" />
+<col style="width: 19%" />
+<col style="width: 43%" />
+<col style="width: 22%" />
+</colgroup>
+<tbody>
+<tr>
+<td><strong>Version</strong></td>
+<td><strong>Update Time</strong></td>
+<td><strong>Description</strong></td>
+<td><strong>Author</strong></td>
+</tr>
+<tr>
+<td>1.0</td>
+<td>Nov. 21, 2024</td>
+<td>Initial version</td>
+<td>Charles</td>
+</tr>
+</tbody>
+</table>
+<h1 id="description">Description</h1>
+<p><strong>The Milesight gateway supports Node-Red functionality, which allows you to easily store the data from sensors added to the built-in NS of the Milesight gateway on its internal disk and download it.</strong></p>
+<h1 id="requirement">Requirement</h1>
+<ul>
+<li><p>Milesight Gateway: UG56/UG65/UG67</p></li>
+<li><p>Milesight sensor(This article will use the Milesight WT201 as an example)</p></li>
+</ul>
+<h1 id="configuration">Configuration</h1>
+<h2 id="step-1-launch-node-red-and-import-flow-example">Step 1: Launch Node-RED and Import Flow Example</h2>
+<ol type="1">
+<li><p>Go to <strong>App &gt; Node-RED</strong> page to enable Node-RED program and wait for a while to load the program, click <strong>Launch</strong> button to start Node-RED web GUI.</p>
+<p><img src="../assets/node-red/How-to-Store-and-Download-Sensor-Data-on-a-Milesight-Gateway-Using-Node-Red-1/media/image5.png" style="width:5.76597in;height:3.75694in" /></p></li>
+<li><p>Log in the Node-RED web GUI. The account information is the same as gateway web GUI.</p>
+<p><img src="../assets/node-red/How-to-Store-and-Download-Sensor-Data-on-a-Milesight-Gateway-Using-Node-Red-1/media/image6.png" style="width:5.75972in;height:2.73611in" /></p></li>
+<li><p>Click <strong>Import</strong> to import the node-red flow example by pasting the content or import the json format file.</p>
+<p><img src="../assets/node-red/How-to-Store-and-Download-Sensor-Data-on-a-Milesight-Gateway-Using-Node-Red-1/media/image7.png" style="width:5.76458in;height:3.52431in" /></p></li>
+</ol>
+<p><img src="../assets/node-red/How-to-Store-and-Download-Sensor-Data-on-a-Milesight-Gateway-Using-Node-Red-1/media/image8.png" style="width:5.76667in;height:4.8875in" /></p>
+<h2 id="step-2-node-red-configuration">Step 2: Node-RED Configuration</h2>
+<h3 id="flow-structure">Flow structure:</h3>
+<p><img src="../assets/node-red/How-to-Store-and-Download-Sensor-Data-on-a-Milesight-Gateway-Using-Node-Red-1/media/image9.png" style="width:6.47361in;height:3.825in" alt="IMG_256" /></p>
+<p>Content:</p>
+<table>
+<colgroup>
+<col style="width: 100%" />
+</colgroup>
+<tbody>
+<tr>
+<td>[{"id":"109bd359.450d09","type":"tab","label":"Flow 1","disabled":false,"info":""},{"id":"d91b718cb14b9349","type":"LoRa Input","z":"109bd359.450d09","name":"","devEUI":"","extendedField":"","x":140,"y":360,"wires":[["f511eca73c089a42"]]},{"id":"f511eca73c089a42","type":"Device Filter","z":"109bd359.450d09","name":"24E124715D324132","eui":"24E124715D324132","x":380,"y":360,"wires":[["5cb90deed87c562a","eb666db2053f0f5b"]]},{"id":"5cb90deed87c562a","type":"function","z":"109bd359.450d09","name":"function 1","func":"var t = msg.time;/nvar tm = {/"time/": t};/nvar raw_obj = msg.object;/nvar new_obj = {...tm,...raw_obj};/nmsg.payload = new_obj;/nreturn msg;","outputs":1,"noerr":0,"initialize":"","finalize":"","libs":[],"x":620,"y":360,"wires":[["85b922c5f37b459d","2f8167e11861aa85"]]},{"id":"283a0d934dc6e42f","type":"file","z":"109bd359.450d09","name":"","filename":"/etc/urlog/data.csv","filenameType":"str","appendNewline":false,"createDir":true,"overwriteFile":"false","encoding":"none","x":1170,"y":360,"wires":[["180f8453a7de4fe4"]]},{"id":"180f8453a7de4fe4","type":"debug","z":"109bd359.450d09","name":"debug 29","active":true,"tosidebar":true,"console":false,"tostatus":false,"complete":"true","targetType":"full","statusVal":"","statusType":"auto","x":1440,"y":260,"wires":[]},{"id":"85b922c5f37b459d","type":"csv","z":"109bd359.450d09","name":"","sep":",","hdrin":"","hdrout":"none","multi":"one","ret":"//n","temp":"","skip":"0","strings":true,"include_empty_strings":"","include_null_values":"","x":830,"y":360,"wires":[["283a0d934dc6e42f"]]},{"id":"2f8167e11861aa85","type":"function","z":"109bd359.450d09","name":"function 35","func":"var x =Object.keys(msg.payload);/nmsg.title = global.set(/"title/", x);/nmsg.payload = x;/nreturn msg;","outputs":1,"noerr":0,"initialize":"","finalize":"","libs":[],"x":750,"y":100,"wires":[["973928e5edd03293"]]},{"id":"f32ad02a8fa1e0d1","type":"file","z":"109bd359.450d09","name":"","filename":"/etc/urlog/data.csv","filenameType":"str","appendNewline":false,"createDir":true,"overwriteFile":"false","encoding":"none","x":1330,"y":100,"wires":[[]]},{"id":"973928e5edd03293","type":"csv","z":"109bd359.450d09","name":"","sep":",","hdrin":"","hdrout":"none","multi":"one","ret":"//n","temp":"","skip":"0","strings":true,"include_empty_strings":"","include_null_values":"","x":910,"y":100,"wires":[["b948a2e00f31a6b8"]]},{"id":"b948a2e00f31a6b8","type":"rbe","z":"109bd359.450d09","name":"","func":"rbe","gap":"","start":"","inout":"out","septopics":false,"property":"payload","topi":"topic","x":1110,"y":100,"wires":[["f32ad02a8fa1e0d1"]]},{"id":"2a3d86a7af4c0774","type":"inject","z":"109bd359.450d09","name":"","props":[],"repeat":"32400","crontab":"","once":true,"onceDelay":0.1,"topic":"","x":230,"y":760,"wires":[["db0fcfa8e43f1d86"]]},{"id":"db0fcfa8e43f1d86","type":"exec","z":"109bd359.450d09","command":"du -m /etc/urlog/data.csv | awk '{print $1}'","addpay":false,"append":"","useSpawn":"false","timer":"","winHide":false,"oldrc":false,"name":"","x":540,"y":760,"wires":[["103ae61106ceb33e"],[],[]]},{"id":"544b144386121fa7","type":"exec","z":"109bd359.450d09","command":"rm -rf /etc/urlog/data.csv","addpay":false,"append":"","useSpawn":"false","timer":"","winHide":false,"oldrc":false,"name":"","x":990,"y":760,"wires":[["fa90dc7abcac3db8","3018af0cab3ba422"],[],[]]},{"id":"103ae61106ceb33e","type":"switch","z":"109bd359.450d09","name":"","property":"payload","propertyType":"msg","rules":[{"t":"gte","v":"90","vt":"num"}],"checkall":"true","repair":false,"outputs":1,"x":790,"y":760,"wires":[["544b144386121fa7"]]},{"id":"d0a0abedb136e715","type":"comment","z":"109bd359.450d09","name":"Check data file size","info":"Check data file size","x":550,"y":700,"wires":[]},{"id":"0ffd161657346be7","type":"comment","z":"109bd359.450d09","name":"If larger than 90 MB","info":"","x":790,"y":700,"wires":[]},{"id":"5e1c058cca87fae1","type":"comment","z":"109bd359.450d09","name":"Remove data file when data file is larger than 90MB","info":"","x":1070,"y":720,"wires":[]},{"id":"fa90dc7abcac3db8","type":"debug","z":"109bd359.450d09","name":"","active":true,"tosidebar":true,"console":false,"tostatus":false,"complete":"payload","targetType":"msg","statusVal":"","statusType":"auto","x":1290,"y":760,"wires":[]},{"id":"bbd3339e03238072","type":"comment","z":"109bd359.450d09","name":"detecte file size every 9 hours","info":"","x":200,"y":700,"wires":[]},{"id":"3018af0cab3ba422","type":"function","z":"109bd359.450d09","name":"function 36","func":"var new_title = global.get(/"title/");/nmsg.payload = new_title;/nreturn msg;","outputs":1,"noerr":0,"initialize":"","finalize":"","libs":[],"x":1090,"y":860,"wires":[["a95adcd0d251b88c"]]},{"id":"a95adcd0d251b88c","type":"csv","z":"109bd359.450d09","name":"","sep":",","hdrin":"","hdrout":"none","multi":"one","ret":"//n","temp":"","skip":"0","strings":true,"include_empty_strings":"","include_null_values":"","x":1250,"y":860,"wires":[["a113d4f3e05f15c9"]]},{"id":"a113d4f3e05f15c9","type":"file","z":"109bd359.450d09","name":"","filename":"/etc/urlog/data.csv","filenameType":"str","appendNewline":false,"createDir":true,"overwriteFile":"false","encoding":"none","x":1450,"y":860,"wires":[[]]},{"id":"eb666db2053f0f5b","type":"debug","z":"109bd359.450d09","name":"debug 31","active":true,"tosidebar":true,"console":false,"tostatus":false,"complete":"true","targetType":"full","statusVal":"","statusType":"auto","x":400,"y":160,"wires":[]},{"id":"bd93a89f474b7672","type":"comment","z":"109bd359.450d09","name":"Retrieve sensor data based on the DeviceEUI of the sensor.","info":"","x":340,"y":400,"wires":[]}]</td>
+</tr>
+</tbody>
+</table>
+<p>Download link of this flow:</p>
+<p><a href="https://resource.milesight-iot.com/Support/Charles/flows%20(STORAGE).json">https://resource.milesight-iot.com/Support/Charles/flows%20(STORAGE).json</a></p>
+<h2 id="step-3">Step 3: </h2>
+<h2 id="please-refer-to-this-linkhttpssupport.milesight-iot.comsupportsolutionsarticles73000514280-how-to-connect-lorawan-nodes-to-milesight-gateway-to-add-the-sensor-to-the-built-in-ns-of-the-milesight-gateway.">Please refer to this link(https://support.milesight-iot.com/support/solutions/articles/73000514280-how-to-connect-lorawan-nodes-to-milesight-gateway) to add the sensor to the built-in NS of the Milesight gateway.</h2>
+<p>In this article, I successfully added the Milesight WT201 with DeviceEUI 24E124715D324132 to the built-in NS of the Milesight gateway, as shown in the figure below.</p>
+<p><img src="../assets/node-red/How-to-Store-and-Download-Sensor-Data-on-a-Milesight-Gateway-Using-Node-Red-1/media/image10.png" style="width:6.13056in;height:3.05903in" alt="IMG_256" /></p>
+<p>Please double-click this Filter node, and then enter the DeviceEUI of the sensor data you want to retrieve in this Filter node. In this article, I have entered the DeviceEUI of this WT201.</p>
+<p><img src="../assets/node-red/How-to-Store-and-Download-Sensor-Data-on-a-Milesight-Gateway-Using-Node-Red-1/media/image11.png" style="width:6.45208in;height:3.53611in" alt="IMG_256" /></p>
+<p>After entering the correct DeviceEUI, please click the Deploy button to complete the deployment. Subsequently, the sensor data reported by this WT201 will be stored on the disk of the Milesight gateway.</p>
+<p><img src="../assets/node-red/How-to-Store-and-Download-Sensor-Data-on-a-Milesight-Gateway-Using-Node-Red-1/media/image12.png" style="width:6.35833in;height:3.17222in" alt="IMG_256" /></p>
+<h2 id="step-4">Step 4: </h2>
+<h2 id="when-you-want-to-download-the-data-from-this-sensor-please-click-the-log-download-button-on-the-milesight-gateway.-after-downloading-and-extracting-the-logs-you-will-find-a-csv-file-named-data.csv-which-contains-the-latest-data-uploaded-by-your-sensor.-please-note-that-due-to-the-limited-disk-space-of-the-milesight-gateway-the-data.csv-file-will-be-automatically-deleted-when-its-size-reaches-90mb.">When you want to download the data from this sensor, please click the log download button on the Milesight gateway. After downloading and extracting the logs, you will find a CSV file named data.csv, which contains the latest data uploaded by your sensor. Please note that due to the limited disk space of the Milesight gateway, the data.csv file will be automatically deleted when its size reaches 90MB.</h2>
+<p><img src="../assets/node-red/How-to-Store-and-Download-Sensor-Data-on-a-Milesight-Gateway-Using-Node-Red-1/media/image13.png" style="width:5.36667in;height:3.46458in" alt="IMG_256" /></p>
+<p><img src="../assets/node-red/How-to-Store-and-Download-Sensor-Data-on-a-Milesight-Gateway-Using-Node-Red-1/media/image14.png" style="width:6.44444in;height:2.83611in" alt="IMG_256" /></p>
+<p><strong>-------END-----</strong></p>
+
+</article>
+<footer class="site-footer">Tech Docs Hub</footer>
+</div>
+<script>
+document.querySelectorAll('article.article-body img').forEach(function(img) {
+  img.addEventListener('click', function() {
+    document.getElementById('lightbox-img').src = this.src;
+    document.getElementById('lightbox').classList.add('active');
+    document.body.style.overflow = 'hidden';
+  });
+});
+function closeLightbox() {
+  document.getElementById('lightbox').classList.remove('active');
+  document.body.style.overflow = '';
+}
+document.addEventListener('keydown', function(e) {
+  if (e.key === 'Escape') closeLightbox();
+});
+</script>
+</body>
+</html>

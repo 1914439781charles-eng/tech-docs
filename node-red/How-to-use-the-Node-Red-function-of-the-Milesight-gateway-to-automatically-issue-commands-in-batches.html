@@ -1,0 +1,195 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>How to use the Node-Red function of the Milesight gateway to automatically issue commands in batches · Tech Docs Hub</title>
+<style>
+:root { --accent:#2563eb; --accent-soft:#eff6ff; --text:#1f2937; --muted:#6b7280;
+        --border:#e5e7eb; --bg:#f8fafc; --card:#ffffff; }
+* { box-sizing: border-box; }
+body { margin:0; font-family: "Segoe UI", system-ui, sans-serif;
+       background:var(--bg); color:var(--text); line-height:1.75; }
+a { color:var(--accent); text-decoration:none; }
+a:hover { text-decoration:underline; }
+.container { max-width:960px; margin:0 auto; padding:24px 20px 64px; }
+header.site-header { background:linear-gradient(135deg,#1e3a8a,#2563eb); color:#fff; padding:36px 20px; }
+header.site-header .container { padding-top:0; padding-bottom:0; }
+header.site-header h1 { margin:0 0 6px; font-size:26px; }
+header.site-header p { margin:0; opacity:.85; font-size:14px; }
+.search-box { margin:24px 0 8px; }
+.search-box input { width:100%; padding:12px 16px; font-size:15px; border:1px solid var(--border);
+                    border-radius:10px; outline:none; background:#fff; }
+.search-box input:focus { border-color:var(--accent); box-shadow:0 0 0 3px var(--accent-soft); }
+.category { margin-top:24px; }
+.category-header { display:flex; align-items:center; gap:10px; margin:0 0 12px; cursor:pointer;
+                   user-select:none; padding:6px 0; }
+.category-header:hover { opacity:.85; }
+.category-header h2 { font-size:19px; margin:0; display:flex; align-items:center; gap:10px; }
+.badge { font-size:12px; font-weight:600; padding:2px 10px; border-radius:999px; }
+.badge-howto { background:#dcfce7; color:#15803d; }
+.badge-troubleshooting { background:#fee2e2; color:#b91c1c; }
+.badge-node-red { background:#ffedd5; color:#c2410c; }
+.badge-python { background:#dbeafe; color:#1d4ed8; }
+.count { color:var(--muted); font-size:13px; font-weight:400; }
+.chevron { display:inline-block; transition:transform .2s ease; font-size:14px; color:var(--muted);
+           margin-left:auto; }
+.category.collapsed .chevron { transform:rotate(-90deg); }
+.category.collapsed .article-list,
+.category.collapsed .empty { display:none; }
+ul.article-list { list-style:none; margin:0; padding:0; display:grid; gap:10px; }
+ul.article-list li { background:var(--card); border:1px solid var(--border); border-radius:10px;
+                     padding:14px 18px; transition:box-shadow .15s ease; }
+ul.article-list li:hover { box-shadow:0 4px 14px rgba(0,0,0,.06); }
+ul.article-list .title { font-size:16px; font-weight:600; }
+ul.article-list .meta { font-size:12.5px; color:var(--muted); margin-top:4px; }
+.empty { color:var(--muted); font-size:14px; padding:12px 4px; }
+/* Article page */
+.article-nav { margin:18px 0 0; font-size:14px; }
+article.article-body { background:var(--card); border:1px solid var(--border); border-radius:12px;
+                       padding:32px 40px; margin-top:16px; }
+article.article-body img { max-width:100%; height:auto; border:1px solid var(--border);
+                           border-radius:8px; margin:8px 0; cursor:zoom-in; transition:box-shadow .15s ease; }
+article.article-body img:hover { box-shadow:0 4px 16px rgba(0,0,0,.12); }
+article.article-body h1 { font-size:24px; margin-top:0; }
+article.article-body h2 { font-size:20px; border-bottom:1px solid var(--border); padding-bottom:6px; }
+article.article-body h3 { font-size:17px; }
+article.article-body pre { background:#f1f5f9; padding:14px; border-radius:8px; overflow-x:auto; }
+article.article-body code { background:#f1f5f9; padding:2px 6px; border-radius:4px; font-size:.92em; }
+article.article-body pre code { background:none; padding:0; }
+article.article-body table { border-collapse:collapse; width:100%; }
+article.article-body th, article.article-body td { border:1px solid var(--border); padding:8px 12px; }
+article.article-body th { background:var(--accent-soft); }
+article.article-body blockquote { border-left:4px solid var(--accent); margin-left:0;
+                                  padding:4px 16px; color:var(--muted); background:var(--accent-soft); }
+.attachment-link { display:inline-flex; align-items:center; gap:6px; padding:6px 14px; margin:4px 0;
+                   background:var(--accent-soft); border:1px solid var(--accent); border-radius:8px;
+                   font-weight:600; text-decoration:none; }
+.attachment-link:hover { background:#dbeafe; text-decoration:none; }
+.attachment-icon { font-size:16px; }
+footer.site-footer { text-align:center; color:var(--muted); font-size:12.5px; margin-top:48px; }
+/* Lightbox */
+.lightbox-overlay { display:none; position:fixed; inset:0; z-index:9999;
+                    background:rgba(0,0,0,.85); cursor:zoom-out; justify-content:center; align-items:center; }
+.lightbox-overlay.active { display:flex; }
+.lightbox-overlay img { max-width:95vw; max-height:92vh; border-radius:6px; box-shadow:0 8px 40px rgba(0,0,0,.4); }
+@media (max-width:640px) { article.article-body { padding:20px 18px; } }
+</style>
+</head>
+<body>
+<div class="lightbox-overlay" id="lightbox" onclick="closeLightbox()">
+  <img id="lightbox-img" src="" alt="">
+</div>
+<div class="container">
+<div class="article-nav"><a href="../index.html">&larr; Back to Home</a> &middot; <span class="badge badge-node-red">Node-RED</span></div>
+<article class="article-body">
+<p>How to use the Node-Red function of the Milesight gateway to automatically issue commands in batches</p>
+<figure>
+<img src="../assets/node-red/How-to-use-the-Node-Red-function-of-the-Milesight-gateway-to-automatically-issue-commands-in-batches/media/image4.jpeg" style="width:8.27431in;height:11.70625in" alt="C:/Users/Iris/Desktop/完整word/word模板竖版_英文.jpgword模板竖版_英文" />
+</figure>
+<table>
+<colgroup>
+<col style="width: 14%" />
+<col style="width: 19%" />
+<col style="width: 43%" />
+<col style="width: 22%" />
+</colgroup>
+<tbody>
+<tr>
+<td><strong>Version</strong></td>
+<td><strong>Update Time</strong></td>
+<td><strong>Description</strong></td>
+<td><strong>Author</strong></td>
+</tr>
+<tr>
+<td>1.0</td>
+<td>June 24, 2025</td>
+<td>Initial version</td>
+<td>Charles</td>
+</tr>
+<tr>
+<td>2.0</td>
+<td>July 14,2025</td>
+<td>Added functions for failed retransmission and checking devices that failed to execute.</td>
+<td>Charles</td>
+</tr>
+</tbody>
+</table>
+<h1 id="description">Description</h1>
+<p>When you add many sensors to the built-in NS of the Milesight UG6x/UG56 gateway, and these sensors are not joined to any LoRaWAN broadcast group, if you want to send control commands to these sensors in bulk rather than sending commands to each device individually, you can refer to this article to use Node-Red functionality to automatically send control commands to the sensors in bulk.</p>
+<h1 id="requirement">Requirement</h1>
+<ul>
+<li><p>Milesight Gateway: UG56/UG65/UG67</p></li>
+<li><p>Milesight Class C type Sensor</p></li>
+</ul>
+<h1 id="configuration">Configuration</h1>
+<h2 id="step-1-launch-node-red-and-import-flow-example">Step 1: Launch Node-RED and Import Flow Example</h2>
+<ol type="1">
+<li><p>Go to <strong>App &gt; Node-RED</strong> page to enable Node-RED program and wait for 1 minute to load the program, click <strong>Launch</strong> button to start Node-RED web GUI.</p>
+<p><img src="../assets/node-red/How-to-use-the-Node-Red-function-of-the-Milesight-gateway-to-automatically-issue-commands-in-batches/media/image5.png" style="width:5.76597in;height:3.75694in" /></p></li>
+<li><p>Log in the Node-RED web GUI. The account information is the same as gateway web GUI.</p>
+<p><img src="../assets/node-red/How-to-use-the-Node-Red-function-of-the-Milesight-gateway-to-automatically-issue-commands-in-batches/media/image6.png" style="width:5.75972in;height:2.73611in" /></p></li>
+<li><p>Click <strong>Import</strong> to import the node-red flow example by pasting the content or import the json format file.</p>
+<p><img src="../assets/node-red/How-to-use-the-Node-Red-function-of-the-Milesight-gateway-to-automatically-issue-commands-in-batches/media/image7.png" style="width:5.76458in;height:3.52431in" /></p></li>
+</ol>
+<p><img src="../assets/node-red/How-to-use-the-Node-Red-function-of-the-Milesight-gateway-to-automatically-issue-commands-in-batches/media/image8.png" style="width:5.76667in;height:4.8875in" /></p>
+<h2 id="step-2-node-red-configuration">Step 2: Node-RED Configuration</h2>
+<h3 id="flow-structure">Flow structure:</h3>
+<p><img src="../assets/node-red/How-to-use-the-Node-Red-function-of-the-Milesight-gateway-to-automatically-issue-commands-in-batches/media/image9.png" style="width:6.17431in;height:3.60417in" alt="IMG_256" /></p>
+<p>Content:</p>
+<table>
+<colgroup>
+<col style="width: 100%" />
+</colgroup>
+<tbody>
+<tr>
+<td>[{"id":"e1a18ad94b2fa1a2","type":"tab","label":"BULK","disabled":false,"info":""},{"id":"6d8960c3e3b39472","type":"http request","z":"e1a18ad94b2fa1a2","name":"login &gt; token","method":"POST","ret":"txt","paytoqs":"ignore","url":"","tls":"","persist":false,"proxy":"","insecureHTTPParser":false,"authType":"","senderr":false,"headers":[],"x":570,"y":100,"wires":[["5e0d5caa23490e6c"]]},{"id":"1d3bf7e216549d1a","type":"inject","z":"e1a18ad94b2fa1a2","name":"get token","props":[],"repeat":"","crontab":"","once":false,"onceDelay":0.1,"topic":"","x":180,"y":100,"wires":[["61b5fa3f290ff513"]]},{"id":"61b5fa3f290ff513","type":"function","z":"e1a18ad94b2fa1a2","name":"prepare login &gt; token","func":"msg.url=/"https://127.0.0.1:8080/api/internal/login/";/nmsg.payload = {/"password/":/"password/",/"username/":/"apiuser/"} ;//JSON/nmsg.headers = {};/nmsg.headers['content-type'] = 'application/json';/nmsg.rejectUnauthorized=false;/nreturn msg;","outputs":1,"noerr":0,"initialize":"","finalize":"","libs":[],"x":360,"y":100,"wires":[["6d8960c3e3b39472"]]},{"id":"5e0d5caa23490e6c","type":"json","z":"e1a18ad94b2fa1a2","name":"","property":"payload","action":"","pretty":false,"x":770,"y":100,"wires":[["5fb19e1c471291a3"]]},{"id":"5fb19e1c471291a3","type":"change","z":"e1a18ad94b2fa1a2","name":"","rules":[{"t":"set","p":"token","pt":"global","to":"payload.jwt","tot":"msg"}],"action":"","property":"","from":"","to":"","reg":false,"x":940,"y":100,"wires":[["24b67939942a681e"]]},{"id":"24b67939942a681e","type":"debug","z":"e1a18ad94b2fa1a2","name":"","active":true,"tosidebar":true,"console":false,"tostatus":false,"complete":"true","targetType":"full","statusVal":"","statusType":"auto","x":1190,"y":100,"wires":[]},{"id":"847e082e8b38bcb0","type":"comment","z":"e1a18ad94b2fa1a2","name":"Get a Token from the UG65 API","info":"","x":230,"y":60,"wires":[]},{"id":"52870be0a52b502c","type":"function","z":"e1a18ad94b2fa1a2","name":"Prepare downlink","func":"msg.url = /"https://127.0.0.1:8080/api/urdevices/"/nmsg.payload = {} ;/n//msg.headers = {};/nmsg.headers = {/"Authorization/":msg.token};/nmsg.headers['content-type'] = 'application/json';/nmsg.rejectUnauthorized=false;/nreturn msg;","outputs":1,"noerr":0,"initialize":"","finalize":"","libs":[],"x":430,"y":280,"wires":[["96338683ed833367"]]},{"id":"8227565dedf99476","type":"inject","z":"e1a18ad94b2fa1a2","name":"deveui + data (buffer)","props":[{"p":"token","v":"token","vt":"global"}],"repeat":"","crontab":"","once":false,"onceDelay":0.1,"topic":"","x":200,"y":280,"wires":[["52870be0a52b502c"]]},{"id":"96338683ed833367","type":"http request","z":"e1a18ad94b2fa1a2","name":"post downlink to UG65 API","method":"GET","ret":"txt","paytoqs":"ignore","url":"","tls":"","persist":false,"proxy":"","insecureHTTPParser":false,"authType":"basic","senderr":false,"headers":[],"x":700,"y":280,"wires":[["3e563049f8f6f562"]]},{"id":"543bc12f3cfee0af","type":"debug","z":"e1a18ad94b2fa1a2","name":"","active":true,"tosidebar":true,"console":false,"tostatus":false,"complete":"true","targetType":"full","statusVal":"","statusType":"auto","x":1210,"y":160,"wires":[]},{"id":"3e563049f8f6f562","type":"function","z":"e1a18ad94b2fa1a2","name":"identification function","func":"var prefix = '24E124';/nvar result = [];/nvar obj = JSON.parse(msg.payload);/nfor (var i = 0; i &lt; obj.deviceResult.length; i++) {/n var eui = obj.deviceResult[i].devEUI;/n/n /n if (typeof eui === 'string' &amp;&amp; eui.indexOf(prefix) === 0) {/n result.push(eui);/n }/n}/n/n/n/nmsg.res = result;/n/nreturn msg;","outputs":1,"noerr":0,"initialize":"","finalize":"","libs":[],"x":980,"y":280,"wires":[["543bc12f3cfee0af","8d0aabe9cf05c6f8"]]},{"id":"89bfe8bf04f6af7e","type":"function","z":"e1a18ad94b2fa1a2","name":"Prepare downlink","func":"msg.url = msg.payload;/nglobal.set(/"URL/",msg.url);/n/nmsg.payload = {/n /"confirmed/": true,/n /"fPort/": 85,/n /"data/": /"/2gA/"/n} ;/nglobal.set(/"PAYLOAD/", msg.payload);/n//msg.headers = {};/nmsg.headers = {/"Authorization/":msg.token};/nmsg.headers['content-type'] = 'application/json';/nmsg.rejectUnauthorized=false;/n/n/n/nvar match = msg.url.match(////devices///(.*?)///queue/);/n/nvar devEUI = null; /nif (match &amp;&amp; match[1]) {/n devEUI = match[1];/n}/n/nglobal.set(/"DeviceRetry/",devEUI);/n/n/nreturn msg;","outputs":1,"noerr":0,"initialize":"","finalize":"","libs":[],"x":890,"y":520,"wires":[["df3a649c64cbe59d"]]},{"id":"df3a649c64cbe59d","type":"http request","z":"e1a18ad94b2fa1a2","name":"post downlink to UG65 API","method":"POST","ret":"txt","paytoqs":"ignore","url":"","tls":"","persist":false,"proxy":"","insecureHTTPParser":false,"authType":"","senderr":false,"headers":[],"x":1120,"y":520,"wires":[["7745ad5d2cfe7732"]]},{"id":"8d0aabe9cf05c6f8","type":"function","z":"e1a18ad94b2fa1a2","name":"saving device eui","func":"global.set(/"devices/", msg.res)/nglobal.set(/"myArr/", []);/nreturn msg;","outputs":1,"noerr":0,"initialize":"","finalize":"","libs":[],"x":1270,"y":280,"wires":[[]]},{"id":"adf5a069caef8e22","type":"inject","z":"e1a18ad94b2fa1a2","name":"deveui + data (buffer)","props":[{"p":"token","v":"token","vt":"global"}],"repeat":"","crontab":"","once":false,"onceDelay":0.1,"topic":"","x":160,"y":540,"wires":[["b5180292d7526466"]]},{"id":"b5180292d7526466","type":"function","z":"e1a18ad94b2fa1a2","name":"Constructing HTTP requests","func":"msg.arr = global.get(/"devices/");/nvar template = /"https://127.0.0.1:8080/api/devices/{devEUI}/queue/";/nvar urls = [];/nfor (var i = 0; i &lt; msg.arr.length; i++) {/n urls.push(template.replace(/"{devEUI}/", msg.arr[i]));/n}/nmsg.url = urls/n/n/n/n/n/n/nmsg.payload = urls;/n/n/nreturn msg;","outputs":1,"noerr":0,"initialize":"","finalize":"","libs":[],"x":440,"y":520,"wires":[["f43ca28b8ba3ab00"]]},{"id":"f43ca28b8ba3ab00","type":"split","z":"e1a18ad94b2fa1a2","name":"","splt":"//n","spltType":"str","arraySplt":1,"arraySpltType":"len","stream":false,"addname":"","x":590,"y":420,"wires":[["3540aa2dad8bb36e"]]},{"id":"3540aa2dad8bb36e","type":"delay","z":"e1a18ad94b2fa1a2","name":"","pauseType":"rate","timeout":"10","timeoutUnits":"seconds","rate":"1","nbRateUnits":"10","rateUnits":"second","randomFirst":"1","randomLast":"5","randomUnits":"seconds","drop":false,"allowrate":false,"outputs":1,"x":700,"y":520,"wires":[["89bfe8bf04f6af7e"]]},{"id":"909a05b7977707a1","type":"comment","z":"e1a18ad94b2fa1a2","name":"Obtain the DevEUI of the device that needs to receive downlink commands.","info":"","x":340,"y":220,"wires":[]},{"id":"533a73038d07fced","type":"comment","z":"e1a18ad94b2fa1a2","name":"Bulk dispatch instructions","info":"","x":170,"y":460,"wires":[]},{"id":"37d03282db6f8ac6","type":"function","z":"e1a18ad94b2fa1a2","name":"Prepare downlink","func":"msg.url = /"https://127.0.0.1:8080/api/urpackets/"/nmsg.payload = {} ;/n//msg.headers = {};/nmsg.headers = {/"Authorization/":msg.token};/nmsg.headers['content-type'] = 'application/json';/nmsg.rejectUnauthorized=false;/nreturn msg;","outputs":1,"noerr":0,"initialize":"","finalize":"","libs":[],"x":430,"y":600,"wires":[["5c93cf23e23458de"]]},{"id":"5c93cf23e23458de","type":"http request","z":"e1a18ad94b2fa1a2","name":"post downlink to UG65 API","method":"GET","ret":"txt","paytoqs":"ignore","url":"","tls":"","persist":false,"proxy":"","insecureHTTPParser":false,"authType":"basic","senderr":false,"headers":[],"x":720,"y":600,"wires":[["f30b3b4b8a840986"]]},{"id":"f30b3b4b8a840986","type":"function","z":"e1a18ad94b2fa1a2","name":"device judgement","func":"var jsonStr = msg.payload;/n/n/nvar obj = JSON.parse(jsonStr);/n/n/nvar packets = obj.packets.slice(0, 20);/n/n/nvar result = [];/nfor (var i = 0; i &lt; packets.length; i++) {/n if (packets[i].ack === /"true/") {/n result.push(packets[i].devEUI);/n }/n}/n/nvar uniqueArr = [];/nfor (var i = 0; i &lt; result.length; i++) {/n if (uniqueArr.indexOf(result[i]) === -1) {/n uniqueArr.push(result[i]);/n }/n}/nmsg.result = uniqueArr;/n/nif (uniqueArr.indexOf(global.get(/"DeviceRetry/"))!== -1){/n msg.exist = 1;/n/n}/nelse{/n msg.exist = 0;/n global.get(/"myArr/").push(global.get(/"DeviceRetry/"));/n}/n/n/n/nreturn msg;","outputs":1,"noerr":0,"initialize":"","finalize":"","libs":[],"x":970,"y":600,"wires":[["8fcbde251d4280aa"]]},{"id":"7745ad5d2cfe7732","type":"delay","z":"e1a18ad94b2fa1a2","name":"","pauseType":"delay","timeout":"5","timeoutUnits":"seconds","rate":"1","nbRateUnits":"1","rateUnits":"second","randomFirst":"1","randomLast":"5","randomUnits":"seconds","drop":false,"allowrate":false,"outputs":1,"x":1320,"y":520,"wires":[["37d03282db6f8ac6"]]},{"id":"c734afb8e2101373","type":"inject","z":"e1a18ad94b2fa1a2","name":"","props":[{"p":"payload"},{"p":"topic","vt":"str"}],"repeat":"","crontab":"","once":false,"onceDelay":0.1,"topic":"","payload":"","payloadType":"date","x":130,"y":780,"wires":[["68121e80550f5241"]]},{"id":"68121e80550f5241","type":"function","z":"e1a18ad94b2fa1a2","name":"show failed devices","func":"msg.payload = global.get(/"myArr/");/nreturn msg;","outputs":1,"noerr":0,"initialize":"","finalize":"","libs":[],"x":350,"y":780,"wires":[["40483c389ab1b7a8"]]},{"id":"40483c389ab1b7a8","type":"debug","z":"e1a18ad94b2fa1a2","name":"debug 1","active":true,"tosidebar":true,"console":true,"tostatus":false,"complete":"payload","targetType":"msg","statusVal":"","statusType":"auto","x":550,"y":780,"wires":[]},{"id":"f28f2ad611635a1f","type":"comment","z":"e1a18ad94b2fa1a2","name":"show devices that have not successfully executed the command","info":"","x":270,"y":720,"wires":[]},{"id":"8fcbde251d4280aa","type":"switch","z":"e1a18ad94b2fa1a2","name":"","property":"exist","propertyType":"msg","rules":[{"t":"eq","v":"0","vt":"num"}],"checkall":"true","repair":false,"outputs":1,"x":1150,"y":600,"wires":[["e73dadd323ed50c2"]]},{"id":"e73dadd323ed50c2","type":"function","z":"e1a18ad94b2fa1a2","name":"Prepare downlink","func":"msg.url = global.get(/"URL/");/nmsg.payload = global.get(/"PAYLOAD/");/n//msg.headers = {};/nmsg.headers = { /"Authorization/": msg.token };/nmsg.headers['content-type'] = 'application/json';/nmsg.rejectUnauthorized = false;/n/nreturn msg;","outputs":1,"noerr":0,"initialize":"","finalize":"","libs":[],"x":1310,"y":600,"wires":[["9fc880dd857e70bc"]]},{"id":"9fc880dd857e70bc","type":"http request","z":"e1a18ad94b2fa1a2","name":"post downlink to UG65 API","method":"POST","ret":"txt","paytoqs":"ignore","url":"","tls":"","persist":false,"proxy":"","insecureHTTPParser":false,"authType":"","senderr":false,"headers":[],"x":1000,"y":680,"wires":[[]]}]</td>
+</tr>
+</tbody>
+</table>
+<h2 id="step-3-deploy-and-check-result">Step 3: Deploy and Check Result</h2>
+<ol type="1">
+<li><p>If you want to send the same command to all Milesight sensors on the built-in NS of the current UG gateway, please skip this step. If you only want to send the same command to a specific series of Milesight sensors on the built-in NS of the UG gateway, please use this GitHub link(https://github.com/Milesight-IoT/codec/blob/release/vendors/milesight-iot/devices.json), which contains the deveui prefixes for Milesight sensors. then locate the deveui prefix for the device you wish to control, copy it, and paste it into the “prefix” variable in the “identification function” node of the Node-RED flow. Assign a value to the “prefix” variable, and the Node-RED flow will send commands based on the deveui prefix you entered. Note that you must convert lowercase letters in the deveui prefix to uppercase letters for it to work.</p>
+<p>For example, if I want to send the same command to all Milesight UC50x devices in the built-in NS of the UG gateway, I need to perform the following operations.</p>
+<p>① The deveui prefix for Milesight UC50x found in the GitHub link is 24E124454.</p>
+<p><img src="../assets/node-red/How-to-use-the-Node-Red-function-of-the-Milesight-gateway-to-automatically-issue-commands-in-batches/media/image10.png" style="width:6.22153in;height:3.10417in" alt="IMG_256" /></p>
+<p>② Double-click the identification function node in the node-red flow and change the value of the prefix variable to 24E124454, as this is the device prefix for UC50x.</p>
+<p><img src="../assets/node-red/How-to-use-the-Node-Red-function-of-the-Milesight-gateway-to-automatically-issue-commands-in-batches/media/image11.png" style="width:6.45486in;height:3.80764in" alt="IMG_256" /></p>
+<p><img src="../assets/node-red/How-to-use-the-Node-Red-function-of-the-Milesight-gateway-to-automatically-issue-commands-in-batches/media/image12.png" style="width:6.63889in;height:3.31319in" alt="IMG_256" /></p></li>
+<li><p>Convert the commands you need to send into base64 format, then fill them into the Prepare downlink node in the node-red flow. You can convert the downlink command to base64 format via this link(https://www.base64encode.org/). If the sensor you want to control is a Milesight sensor, you can check the user guide or communication protocol for that sensor on the Milesight official website(https://www.milesight.com/iot/resources/download-center/#documents-am300) to find out which downlink commands it supports.</p>
+<p><img src="../assets/node-red/How-to-use-the-Node-Red-function-of-the-Milesight-gateway-to-automatically-issue-commands-in-batches/media/image13.png" style="width:6.09583in;height:3.50278in" alt="IMG_256" /></p></li>
+<li><p>Click <strong>Deploy</strong> to save all node-red configurations.</p>
+<p><img src="../assets/node-red/How-to-use-the-Node-Red-function-of-the-Milesight-gateway-to-automatically-issue-commands-in-batches/media/image14.png" style="width:4.35in;height:2.09167in" /></p></li>
+<li><p>Click this button to obtain the HTTP API authentication key for the Milesight gateway.</p>
+<p><img src="../assets/node-red/How-to-use-the-Node-Red-function-of-the-Milesight-gateway-to-automatically-issue-commands-in-batches/media/image15.png" style="width:6.21528in;height:3.66458in" alt="IMG_256" /></p></li>
+<li><p>Click this button to obtain the DevEUI of all sensors that need to receive downlink commands.<img src="../assets/node-red/How-to-use-the-Node-Red-function-of-the-Milesight-gateway-to-automatically-issue-commands-in-batches/media/image16.png" style="width:6.18125in;height:3.57778in" alt="IMG_256" /></p></li>
+<li><p>Click the button to send control commands to the corresponding sensors. Since this button will trigger the built-in NS of the gateway to send ACK control commands to all matched sensors, if any device does not return an ACK within 15 seconds during the command delivery process, the built-in NS of the gateway will resend the same command to the sensor.</p>
+<p><img src="../assets/node-red/How-to-use-the-Node-Red-function-of-the-Milesight-gateway-to-automatically-issue-commands-in-batches/media/image17.png" style="width:5.57292in;height:3.17639in" alt="IMG_256" /></p>
+<p>After all the downlink commands have been sent, the two delay nodes in the third flow will display the number 0 below them.</p>
+<p><img src="../assets/node-red/How-to-use-the-Node-Red-function-of-the-Milesight-gateway-to-automatically-issue-commands-in-batches/media/image18.png" style="width:7.89028in;height:4.43333in" alt="IMG_256" /></p></li>
+<li><p>You can click this button to see which devices have not returned an ACK, meaning which devices have not successfully executed the related commands. You can use the devEUI to check whether the device has gone offline from the built-in NS of the Milesight gateway.</p>
+<p><img src="../assets/node-red/How-to-use-the-Node-Red-function-of-the-Milesight-gateway-to-automatically-issue-commands-in-batches/media/image19.png" style="width:6.20278in;height:3.09514in" alt="IMG_256" /></p></li>
+</ol>
+<p><strong>-------END-----</strong></p>
+
+</article>
+<footer class="site-footer">Tech Docs Hub</footer>
+</div>
+<script>
+document.querySelectorAll('article.article-body img').forEach(function(img) {
+  img.addEventListener('click', function() {
+    document.getElementById('lightbox-img').src = this.src;
+    document.getElementById('lightbox').classList.add('active');
+    document.body.style.overflow = 'hidden';
+  });
+});
+function closeLightbox() {
+  document.getElementById('lightbox').classList.remove('active');
+  document.body.style.overflow = '';
+}
+document.addEventListener('keydown', function(e) {
+  if (e.key === 'Escape') closeLightbox();
+});
+</script>
+</body>
+</html>
