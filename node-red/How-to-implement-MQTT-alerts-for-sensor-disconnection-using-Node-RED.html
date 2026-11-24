@@ -1,0 +1,206 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>How to implement MQTT alerts for sensor disconnection using Node-RED · Tech Docs Hub</title>
+<style>
+:root { --accent:#2563eb; --accent-soft:#eff6ff; --text:#1f2937; --muted:#6b7280;
+        --border:#e5e7eb; --bg:#f8fafc; --card:#ffffff; }
+* { box-sizing: border-box; }
+body { margin:0; font-family: "Segoe UI", system-ui, sans-serif;
+       background:var(--bg); color:var(--text); line-height:1.75; }
+a { color:var(--accent); text-decoration:none; }
+a:hover { text-decoration:underline; }
+.container { max-width:960px; margin:0 auto; padding:24px 20px 64px; }
+header.site-header { background:linear-gradient(135deg,#1e3a8a 0%,#2563eb 55%,#3b82f6 100%);
+                     color:#fff; padding:44px 20px; box-shadow:0 4px 20px rgba(30,58,138,.20); }
+header.site-header .container { padding-top:0; padding-bottom:0; }
+header.site-header h1 { margin:0 0 8px; font-size:30px; letter-spacing:-.02em; }
+header.site-header p { margin:0; opacity:.88; font-size:14px; letter-spacing:.01em; }
+.search-box { margin:26px 0 4px; position:relative; }
+.search-box input { width:100%; padding:13px 16px 13px 44px; font-size:15px; border:1px solid var(--border);
+                    border-radius:12px; outline:none; box-shadow:0 1px 3px rgba(0,0,0,.04);
+                    background-color:#fff;
+                    background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%236b7280' stroke-width='2' stroke-linecap='round'%3E%3Ccircle cx='11' cy='11' r='7'/%3E%3Cline x1='16.5' y1='16.5' x2='21' y2='21'/%3E%3C/svg%3E");
+                    background-repeat:no-repeat; background-position:14px center; background-size:18px 18px; }
+.search-box input:focus { border-color:var(--accent); box-shadow:0 0 0 4px var(--accent-soft); }
+/* Category cards — horizontal row, collapsed by default */
+.category-grid { display:grid; grid-template-columns:repeat(4,minmax(0,1fr)); gap:16px; margin-top:28px; }
+.category-card { position:relative; display:flex; flex-direction:column; align-items:flex-start;
+                 gap:9px; width:100%; text-align:left; background:var(--card); border:1px solid var(--border);
+                 border-radius:14px; padding:20px; cursor:pointer; font:inherit; color:inherit;
+                 box-shadow:0 1px 3px rgba(0,0,0,.04); overflow:hidden;
+                 transition:transform .18s ease, box-shadow .18s ease, border-color .18s ease; }
+.category-card::before { content:""; position:absolute; left:0; top:0; bottom:0; width:4px;
+                         background:var(--card-accent,var(--accent)); }
+.category-card:hover { transform:translateY(-3px); border-color:var(--card-accent,var(--accent));
+                       box-shadow:0 10px 24px rgba(0,0,0,.10); }
+.category-card.open { border-color:var(--card-accent,var(--accent));
+                      box-shadow:0 8px 20px rgba(0,0,0,.10); }
+.card-howto { --card-accent:#16a34a; }
+.card-troubleshooting { --card-accent:#dc2626; }
+.card-node-red { --card-accent:#ea580c; }
+.card-python { --card-accent:#2563eb; }
+.cat-card-top { display:flex; align-items:center; justify-content:space-between; width:100%; }
+.cat-dot { width:12px; height:12px; border-radius:50%; background:var(--card-accent,var(--accent));
+           box-shadow:0 0 0 4px color-mix(in srgb, var(--card-accent,var(--accent)) 15%, transparent); }
+.cat-name { font-size:18px; font-weight:700; line-height:1.25; }
+.cat-desc { font-size:12.5px; color:var(--muted); line-height:1.4; min-height:34px; }
+.cat-card-foot { display:flex; align-items:center; justify-content:space-between; width:100%;
+                 margin-top:2px; padding-top:10px; border-top:1px solid var(--border); }
+.chevron { font-size:13px; color:var(--muted); transition:transform .2s ease; }
+.category-card.open .chevron { transform:rotate(180deg); }
+.badge { display:inline-block; font-size:11.5px; font-weight:700; padding:3px 10px;
+         border-radius:999px; letter-spacing:.02em; }
+.badge-howto { background:#dcfce7; color:#15803d; }
+.badge-troubleshooting { background:#fee2e2; color:#b91c1c; }
+.badge-node-red { background:#ffedd5; color:#c2410c; }
+.badge-python { background:#dbeafe; color:#1d4ed8; }
+.count { color:var(--muted); font-size:12px; font-weight:600; }
+/* Article panels — hidden until their card is clicked */
+.category-panels { margin-top:22px; }
+.category-panel { display:none; margin-bottom:18px; background:var(--card); border:1px solid var(--border);
+                  border-radius:14px; padding:6px 18px 18px; box-shadow:0 2px 8px rgba(0,0,0,.04); }
+.category-panel.open { display:block; animation:panelIn .22s ease; }
+@keyframes panelIn { from { opacity:0; transform:translateY(-6px); } to { opacity:1; transform:none; } }
+.panel-title { display:flex; align-items:center; gap:10px; font-size:15px; font-weight:700;
+               padding:14px 0 12px; border-bottom:1px solid var(--border); margin-bottom:14px; }
+.panel-title .count { margin-left:auto; }
+ul.article-list { list-style:none; margin:0; padding:0; display:grid; gap:10px; }
+ul.article-list li { background:#f8fafc; border:1px solid var(--border); border-radius:10px;
+                     padding:14px 18px; transition:transform .15s ease, box-shadow .15s ease; }
+ul.article-list li:hover { transform:translateX(3px); box-shadow:0 4px 14px rgba(0,0,0,.07); }
+ul.article-list .title { font-size:15.5px; font-weight:600; }
+ul.article-list .meta { font-size:12.5px; color:var(--muted); margin-top:4px; }
+.empty { color:var(--muted); font-size:14px; padding:14px 4px; }
+@media (max-width:860px) { .category-grid { grid-template-columns:repeat(2,minmax(0,1fr)); } }
+@media (max-width:520px) { .category-grid { grid-template-columns:1fr; } .cat-desc { min-height:0; } }
+/* Article page */
+.article-nav { margin:18px 0 0; font-size:14px; }
+article.article-body { background:var(--card); border:1px solid var(--border); border-radius:12px;
+                       padding:32px 40px; margin-top:16px; }
+article.article-body img { max-width:100%; height:auto; border:1px solid var(--border);
+                           border-radius:8px; margin:8px 0; cursor:zoom-in; transition:box-shadow .15s ease; }
+article.article-body img:hover { box-shadow:0 4px 16px rgba(0,0,0,.12); }
+article.article-body h1 { font-size:24px; margin-top:0; }
+article.article-body h2 { font-size:20px; border-bottom:1px solid var(--border); padding-bottom:6px; }
+article.article-body h3 { font-size:17px; }
+article.article-body pre { background:#f1f5f9; padding:14px; border-radius:8px; overflow-x:auto; }
+article.article-body code { background:#f1f5f9; padding:2px 6px; border-radius:4px; font-size:.92em; }
+article.article-body pre code { background:none; padding:0; }
+article.article-body table { border-collapse:collapse; width:100%; }
+article.article-body th, article.article-body td { border:1px solid var(--border); padding:8px 12px; }
+article.article-body th { background:var(--accent-soft); }
+article.article-body blockquote { border-left:4px solid var(--accent); margin-left:0;
+                                  padding:4px 16px; color:var(--muted); background:var(--accent-soft); }
+.attachment-link { display:inline-flex; align-items:center; gap:6px; padding:6px 14px; margin:4px 0;
+                   background:var(--accent-soft); border:1px solid var(--accent); border-radius:8px;
+                   font-weight:600; text-decoration:none; }
+.attachment-link:hover { background:#dbeafe; text-decoration:none; }
+.attachment-icon { font-size:16px; }
+.article-end { text-align:center; }
+footer.site-footer { text-align:center; color:var(--muted); font-size:12.5px; margin-top:48px; }
+/* Lightbox */
+.lightbox-overlay { display:none; position:fixed; inset:0; z-index:9999;
+                    background:rgba(0,0,0,.85); cursor:zoom-out; justify-content:center; align-items:center; }
+.lightbox-overlay.active { display:flex; }
+.lightbox-overlay img { max-width:95vw; max-height:92vh; border-radius:6px; box-shadow:0 8px 40px rgba(0,0,0,.4); }
+@media (max-width:640px) { article.article-body { padding:20px 18px; } }
+</style>
+</head>
+<body>
+<div class="lightbox-overlay" id="lightbox" onclick="closeLightbox()">
+  <img id="lightbox-img" src="" alt="">
+</div>
+<div class="container">
+<div class="article-nav"><a href="../index.html">&larr; Back to Home</a> &middot; <span class="badge badge-node-red">Node-RED</span></div>
+<article class="article-body">
+<figure>
+<img src="../assets/node-red/How-to-implement-MQTT-alerts-for-sensor-disconnection-using-Node-RED/media/image4.jpeg" style="width:8.27431in;height:11.70625in" alt="C:/Users/Iris/Desktop/完整word/word模板竖版_英文.jpgword模板竖版_英文" />
+<figcaption><p>How to implement MQTT alerts for sensor disconnection using Node-RED</p></figcaption>
+</figure>
+<table>
+<colgroup>
+<col style="width: 14%" />
+<col style="width: 19%" />
+<col style="width: 43%" />
+<col style="width: 22%" />
+</colgroup>
+<tbody>
+<tr>
+<td><strong>Version</strong></td>
+<td><strong>Update Time</strong></td>
+<td><strong>Description</strong></td>
+<td><strong>Author</strong></td>
+</tr>
+<tr>
+<td>1.0</td>
+<td>Nov 24, 2026</td>
+<td>Initial version</td>
+<td>Charles</td>
+</tr>
+</tbody>
+</table>
+<h1 id="description">Description</h1>
+<p>This article will guide you on how to use the Node-RED feature of the Milesight gateway to monitor the status of sensors built into the NS. Once a sensor changes from online to offline, or from offline to online, your MQTT Broker will receive an MQTT alert message.</p>
+<h1 id="requirement">Requirement</h1>
+<ul>
+<li><p>Milesight Gateway: UG56/UG65/UG67</p></li>
+</ul>
+<h1 id="configuration">Configuration</h1>
+<h2 id="step-1-launch-node-red-and-import-flow-example">Step 1: Launch Node-RED and Import Flow Example</h2>
+<ol type="1">
+<li><p>Go to <strong>App &gt; Node-RED</strong> page to enable Node-RED program and wait for a while to load the program, click <strong>Launch</strong> button to start Node-RED web GUI.</p>
+<p><img src="../assets/node-red/How-to-implement-MQTT-alerts-for-sensor-disconnection-using-Node-RED/media/image5.png" style="width:5.76597in;height:3.75694in" /></p></li>
+<li><p>Log in the Node-RED web GUI. The account information is the same as gateway web GUI.</p>
+<p><img src="../assets/node-red/How-to-implement-MQTT-alerts-for-sensor-disconnection-using-Node-RED/media/image6.png" style="width:5.75972in;height:2.73611in" /></p></li>
+<li><p>Click Import to import the node-red flow example by pasting the content or import the json format file.</p>
+<p><img src="../assets/node-red/How-to-implement-MQTT-alerts-for-sensor-disconnection-using-Node-RED/media/image7.png" style="width:5.76458in;height:3.52431in" /></p></li>
+</ol>
+<p><img src="../assets/node-red/How-to-implement-MQTT-alerts-for-sensor-disconnection-using-Node-RED/media/image8.png" style="width:5.76667in;height:4.8875in" /></p>
+<h2 id="step-2-node-red-configuration">Step 2: Node-RED Configuration</h2>
+<h3 id="flow-structure">Flow structure:</h3>
+<p><img src="../assets/node-red/How-to-implement-MQTT-alerts-for-sensor-disconnection-using-Node-RED/media/image9.png" style="width:5.55556in;height:2.25625in" alt="IMG_256" /></p>
+<p>You need to modify the MQTT Output node in the flow, configuring it with your MQTT Broker address and the corresponding topic — this refers to the node marked /device_status in the diagram two images above.</p>
+<p>Content:</p>
+<table>
+<colgroup>
+<col style="width: 100%" />
+</colgroup>
+<tbody>
+<tr>
+<td>[{"id":"b6310f24ba10bc17","type":"tab","label":"Flow 1","disabled":false,"info":"","env":[]},{"id":"e577acdda98416ea","type":"mqtt out","z":"b6310f24ba10bc17","name":"","topic":"/devcie_status","qos":"","retain":"","respTopic":"","contentType":"","userProps":"","correl":"","expiry":"","broker":"d01f23922e1901be","x":1340,"y":360,"wires":[]},{"id":"35fbb4fd1d34ee45","type":"inject","z":"b6310f24ba10bc17","name":"","props":[{"p":"payload"},{"p":"topic","vt":"str"}],"repeat":"60","crontab":"","once":false,"onceDelay":0.1,"topic":"","payload":"","payloadType":"date","x":320,"y":420,"wires":[["c2615db6a5ef18ae"]]},{"id":"c2615db6a5ef18ae","type":"exec","z":"b6310f24ba10bc17","command":"psql -U postgres -d loraserver_as -c /"select name,status from device;/";","addpay":"","append":"","useSpawn":"false","timer":"","winHide":false,"oldrc":false,"name":"","x":770,"y":400,"wires":[["973462f305fdace2"],[],[]]},{"id":"973462f305fdace2","type":"function","z":"b6310f24ba10bc17","name":"function 2","func":"/nlet oldStatusMap = flow.get(/"sensor_status_map/") || {};/nconst text = msg.payload;/n/n/nconst rows = text.split('//n');/nconst newMap = {};/nconst alerts = [];/n/nfor (const line of rows) {/n/n const m = line.match(/^//s*([^//|]+?)//s*//|//s*(//d+)//s*$/);/n if (!m) continue;/n const name = m[1].trim();/n const status = parseInt(m[2]);/n newMap[name] = status;/n}/n/n/nfor (const name in newMap) {/n const newSt = newMap[name];/n const oldSt = oldStatusMap[name];/n/n/n if (oldSt !== 2 &amp;&amp; newSt === 2) {/n alerts.push({/n sensor: name,/n event: /"online/",/n status: 2,/n ts: new Date().toISOString()/n })/n }/n /n if (oldSt !== 3 &amp;&amp; newSt === 3) {/n alerts.push({/n sensor: name,/n event: /"offline/",/n status: 3,/n ts: new Date().toISOString()/n })/n }/n}/n/n/nflow.set(/"sensor_status_map/", newMap);/n/nif (alerts.length &gt; 0) {/n /n msg.payload = alerts;/n return msg;/n} else {/n /n return null;/n}/n","outputs":1,"noerr":0,"initialize":"","finalize":"","libs":[],"x":1060,"y":580,"wires":[["e577acdda98416ea"]]},{"id":"d01f23922e1901be","type":"mqtt-broker","name":"","broker":"192.168.45.127","port":"1883","clientid":"","autoConnect":true,"usetls":false,"protocolVersion":"4","keepalive":"60","cleansession":true,"birthTopic":"","birthQos":"0","birthPayload":"","birthMsg":{},"closeTopic":"","closeQos":"0","closePayload":"","closeMsg":{},"willTopic":"","willQos":"0","willPayload":"","willMsg":{},"userProps":"","sessionExpiry":""}]</td>
+</tr>
+</tbody>
+</table>
+<h2 id="step-3-deploy-and-check-result">Step 3: Deploy and Check Result</h2>
+<ol type="1">
+<li><p>Click <strong>Deploy</strong> to save all node-red configurations.</p>
+<p><img src="../assets/node-red/How-to-implement-MQTT-alerts-for-sensor-disconnection-using-Node-RED/media/image10.png" style="width:4.35in;height:2.09167in" /></p></li>
+<li><p>Once any sensor built into your NS goes offline or comes online, your MQTT Broker will receive a corresponding message, as shown in the figure below.</p>
+<p><img src="../assets/node-red/How-to-implement-MQTT-alerts-for-sensor-disconnection-using-Node-RED/media/image11.png" style="width:5.7625in;height:3.92431in" alt="IMG_256" /></p></li>
+</ol>
+<p class="article-end"><strong>-------END-----</strong></p>
+
+</article>
+<footer class="site-footer">Tech Docs Hub</footer>
+</div>
+<script>
+document.querySelectorAll('article.article-body img').forEach(function(img) {
+  img.addEventListener('click', function() {
+    document.getElementById('lightbox-img').src = this.src;
+    document.getElementById('lightbox').classList.add('active');
+    document.body.style.overflow = 'hidden';
+  });
+});
+function closeLightbox() {
+  document.getElementById('lightbox').classList.remove('active');
+  document.body.style.overflow = '';
+}
+document.addEventListener('keydown', function(e) {
+  if (e.key === 'Escape') closeLightbox();
+});
+</script>
+</body>
+</html>
