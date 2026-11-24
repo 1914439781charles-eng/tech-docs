@@ -536,6 +536,10 @@ h2.sec { font-size:16px; margin:24px 0 4px; }
     if (fopts.length) macs = macs.concat(decodeMac(fopts, 'FOpts', dir));
     if (fport === 0 && frmPlain.length) macs = macs.concat(decodeMac(frmPlain, 'FRMPayload', dir));
     var micOk = calc ? toHex(calc, false) === toHex(mic, false) : null;
+    if (micOk === false) {
+      rows.push(row('结构诊断', '<span class="bad">MIC 校验失败</span>',
+        '请核对：① Hex 是否完整——标准数据帧 FCnt 固定 3 字节，漏 1 字节会使 FPort / FRMPayload 整体错位；② NwkSKey（LoRaWAN 1.1 需 SNwkSIntKey + FNwkSIntKey）；③ FCnt32 覆盖值；④ 帧方向。若 FPort 与设备配置不符，优先检查 FCnt 是否漏字节。'));
+    }
     return {
       type: 'DATA', frameType: MTYPE[mtypeVal], direction: dir ? 'Downlink' : 'Uplink', version: version,
       phyPayloadLength: bytes.length,
