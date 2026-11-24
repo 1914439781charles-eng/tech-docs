@@ -459,7 +459,10 @@ h2.sec { font-size:16px; margin:24px 0 4px; }
     rows.push(row('帧类型', MTYPE[mtypeVal] + ' · ' + (dir ? 'Downlink 下行' : 'Uplink 上行') + ' · LoRaWAN ' + version));
     rows.push(row('MHDR · 字节 0', '0x' + hx(bytes[0]) + ' / 0b' + bits8(bytes[0]),
                  'MType=' + mtypeVal + ' (' + MTYPE[mtypeVal] + ') · RFU=' + rfu + ' · Major=' + major));
-    rows.push(row('DevAddr · 字节 1-4', toHex(devAddr) + ' · uint32 LE=' + devNum, '二进制 MSB→LSB = ' + bits32(devNum)));
+    var devHex = ('00000000' + (devNum >>> 0).toString(16).toUpperCase()).slice(-8);
+    rows.push(row('DevAddr · 字节 1-4', '0x' + devHex + '（设备/平台写法）',
+                  '空中顺序(LSB first) = ' + toHex(devAddr) + ' · uint32 = ' + devNum + ' / 0x' + devHex +
+                  ' · 二进制 MSB→LSB = ' + bits32(devNum)));
     rows.push(row('FCtrl · 字节 5', '0x' + hx(fctrl) + ' / 0b' + bits8(fctrl),
                  'ADR=' + !!(fctrl&0x80) + ' · ADRACKReq=' + !!(fctrl&0x40) + ' · ACK=' + !!(fctrl&0x20) + ' · ' +
                  (dir ? 'FPending=' + !!(fctrl&0x10) : 'RFU=' + !!(fctrl&0x10)) + ' · FOptsLen=' + foptsLen));
@@ -471,7 +474,8 @@ h2.sec { font-size:16px; margin:24px 0 4px; }
     var fportNote = fport === null ? 'FRMPayload 为空' :
                     (fport === 0 ? 'FPort=0：FRMPayload 为 MAC 命令' :
                      (fport <= 223 ? '应用自定义端口' : (fport === 224 ? 'LoRaWAN 测试端口' : '保留端口')));
-    rows.push(row('FPort · 字节 ' + (9 + foptsLen), fport === null ? '（无）' : fport, fportNote));
+    rows.push(row('FPort · 字节 ' + (9 + foptsLen), fport === null ? '（无）' : fport + ' (0x' + hx(fport) + ')',
+                  fportNote + ' · FPort 为明文单字节，不加密、无字节序；若与配置不符请核对原始 PHYPayload 该字节（区分十进制/十六进制，勿与 FRMPayload 首字节混淆）'));
     rows.push(row('FRMPayload 密文 · 字节 ' + (pos + 1) + '-' + (bytes.length - 5),
                  frmEnc.length ? toHex(frmEnc) : '（无 / 0 字节）', '长度 ' + frmEnc.length + ' 字节'));
 
@@ -536,7 +540,7 @@ h2.sec { font-size:16px; margin:24px 0 4px; }
       type: 'DATA', frameType: MTYPE[mtypeVal], direction: dir ? 'Downlink' : 'Uplink', version: version,
       phyPayloadLength: bytes.length,
       mhdr: { raw: hx(bytes[0]), mtype: mtypeVal, mtypeName: MTYPE[mtypeVal], rfu: rfu, major: major },
-      devAddr: toHex(devAddr, false), devAddrUInt32LE: devNum,
+      devAddr: toHex(devAddr.slice().reverse(), false), devAddrAir: toHex(devAddr, false), devAddrUInt32: devNum,
       fctrl: { raw: hx(fctrl), adr: !!(fctrl&0x80), adrAckReq: !!(fctrl&0x40), ack: !!(fctrl&0x20),
                fPendingOrRfu: !!(fctrl&0x10), fOptsLen: foptsLen },
       fcnt: { frame24: fcntFrame, effective32: fcnt, overridden: fcntOverride !== null },
@@ -618,7 +622,8 @@ h2.sec { font-size:16px; margin:24px 0 4px; }
       row('解密后完整载荷', toHex(dec), 'JoinNonce(3) + NetID(3) + DevAddr(4) + DLSettings(1) + RxDelay(1) + CFList(可选) + MIC(4)'),
       row('JoinNonce / AppNonce · 字节 0-2', toHex(body.slice(0,3)) + ' · ' + joinNonce + ' / 0b' + bits32(joinNonce), '用于派生 NwkSKey / AppSKey'),
       row('NetID · 字节 3-5', toHex(netId) + ' · uint32=' + netIdVal, 'NetID Type=' + (netId[2]>>5) + ' · 显示(反序)=' + toHex(netId.slice().reverse(),false)),
-      row('DevAddr · 字节 6-9', toHex(devAddr) + ' · uint32 LE=' + devNum, '二进制 MSB→LSB = ' + bits32(devNum)),
+      row('DevAddr · 字节 6-9', '0x' + ('00000000' + (devNum >>> 0).toString(16).toUpperCase()).slice(-8) + '（设备/平台写法）',
+          '空中顺序(LSB first) = ' + toHex(devAddr) + ' · uint32 = ' + devNum + ' · 二进制 MSB→LSB = ' + bits32(devNum)),
       row('DLSettings · 字节 10', '0x' + hx(dl) + ' / 0b' + bits8(dl), 'RX1DROffset=' + (dl>>4) + ' · RX2DataRate=' + (dl&15)),
       row('RxDelay · 字节 11', rxDelay + ' 秒', '下行 RX1 接收窗口延迟'),
       row('CFList · 字节 12+', cfList.length ? toHex(cfList) : '（无）', cfRows.length ? cfRows.join(' · ') : ''),
@@ -634,7 +639,7 @@ h2.sec { font-size:16px; margin:24px 0 4px; }
       mhdr: { raw:hx(bytes[0]), mtype:1, mtypeName:'Join Accept', rfu:(bytes[0]>>2)&7, major:bytes[0]&3 },
       ciphertext:toHex(enc,false), decrypted:toHex(dec,false), decryptedBody:toHex(body,false),
       joinNonce:joinNonce, netId:toHex(netId,false), netIdType:netId[2]>>5,
-      devAddr:toHex(devAddr,false), devAddrUInt32LE:devNum,
+      devAddr:toHex(devAddr.slice().reverse(),false), devAddrAir:toHex(devAddr,false), devAddrUInt32:devNum,
       dlSettings:{ raw:hx(dl), rx1DrOffset:dl>>4, rx2DataRate:dl&15 }, rxDelay:rxDelay,
       cfList:toHex(cfList,false), cfListChannels:cfRows,
       mic:toHex(mic,false), micOk:toHex(calc,false)===toHex(mic,false),
