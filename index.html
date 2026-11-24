@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>产品技术方案知识库</title>
+<title>Milesight产品技术方案知识库</title>
 <style>
 :root { --accent:#2563eb; --accent-soft:#eff6ff; --text:#1f2937; --muted:#6b7280;
         --border:#e5e7eb; --bg:#f8fafc; --card:#ffffff; }
@@ -77,7 +77,7 @@ ul.article-list .meta { font-size:12.5px; color:var(--muted); margin-top:4px; }
 @media (max-width:860px) { .category-grid { grid-template-columns:repeat(2,minmax(0,1fr)); } }
 @media (max-width:520px) { .category-grid { grid-template-columns:1fr; } .cat-desc { min-height:0; } }
 /* Article page */
-.article-nav { margin:18px 0 0; font-size:14px; }
+.article-nav { margin:18px 0 0; font-size:14px; padding-top:34px; }
 article.article-body { background:var(--card); border:1px solid var(--border); border-radius:12px;
                        padding:32px 40px; margin-top:16px; }
 article.article-body img { max-width:100%; height:auto; border:1px solid var(--border);
@@ -108,7 +108,7 @@ footer.site-footer { text-align:center; color:var(--muted); font-size:12.5px; ma
 .lightbox-overlay img { max-width:95vw; max-height:92vh; border-radius:6px; box-shadow:0 8px 40px rgba(0,0,0,.4); }
 @media (max-width:640px) { article.article-body { padding:20px 18px; } }
 /* Milesight Fault Tree List — floating shortcut icon */
-.fault-tree-link { position:fixed; left:22px; bottom:22px; z-index:900;
+.fault-tree-link { position:fixed; left:22px; top:14px; bottom:auto; z-index:900;
                    display:inline-flex; align-items:center; gap:9px;
                    padding:9px 14px 9px 11px; border-radius:999px;
                    background:#fff; border:1px solid #bfdbfe; color:#1d4ed8;
@@ -118,12 +118,12 @@ footer.site-footer { text-align:center; color:var(--muted); font-size:12.5px; ma
 .fault-tree-link:hover { transform:translateY(-2px); background:#eff6ff;
                          box-shadow:0 10px 26px rgba(30,58,138,.25); text-decoration:none; }
 .fault-tree-link svg { flex:none; }
-@media (max-width:520px) { .fault-tree-link { padding:10px; left:16px; bottom:16px; } }
+@media (max-width:520px) { .fault-tree-link { padding:10px; left:16px; top:10px; bottom:auto; } }
 </style>
 </head>
 <body>
 <header class="site-header"><div class="container">
-<h1>产品技术方案知识库</h1>
+<h1>Milesight产品技术方案知识库</h1>
 <p>How-to Guides &middot; Troubleshooting &middot; Node-RED &middot; Python Articles</p>
 </div></header>
 <div class="container">
