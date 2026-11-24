@@ -139,6 +139,13 @@ footer.site-footer { text-align:center; color:var(--muted); font-size:12.5px; ma
     border:1px solid var(--border); border-radius:8px; font-family:ui-monospace,Consolas,monospace;
     font-size:13px; background:#fff; color:var(--text); }
 .parser-card textarea { min-height:80px; resize:vertical; line-height:1.6; }
+.input-head { display:flex; align-items:center; justify-content:space-between; gap:12px; margin-bottom:8px; }
+.input-head label { margin-bottom:0; }
+.input-head select { width:auto; min-width:170px; flex:none; }
+.detect-hint { color:var(--muted); font-size:12px; margin-top:6px; min-height:18px; }
+.seg-table { width:100%; border-collapse:collapse; font-size:12.5px; margin-top:10px; }
+.seg-table th, .seg-table td { border:1px solid var(--border); padding:6px 8px; text-align:left; }
+.seg-table th { background:#f8fafc; font-weight:700; }
 .btn-row { display:flex; gap:10px; flex-wrap:wrap; margin:16px 0 6px; }
 button.act { padding:9px 16px; border-radius:8px; border:1px solid var(--border);
              background:#fff; color:var(--text); font:inherit; font-weight:600; cursor:pointer; }
@@ -167,8 +174,16 @@ h2.sec { font-size:16px; margin:24px 0 4px; }
 <div class="container">
 <div class="parser-card">
 <div class="form-row">
-<label for="phy">PHYPayload（十六进制，可含空格 / 0x）</label>
-<textarea id="phy" spellcheck="false" placeholder="例如：40B0000001020304..."></textarea>
+<div class="input-head">
+<label for="phy">LoRaWAN 密文 / PHYPayload（Hex 或 Base64）</label>
+<select id="inputFormat" aria-label="输入格式">
+<option value="auto">自动识别 Hex / Base64</option>
+<option value="hex">Hex 十六进制</option>
+<option value="base64">Base64</option>
+</select>
+</div>
+<textarea id="phy" spellcheck="false" placeholder="粘贴 Hex（可含空格 / 0x）或 Base64 密文，例如 40B0000001020304... 或 QMAAAQ..."></textarea>
+<div class="detect-hint" id="detectHint">输入后将自动识别格式并实时解析</div>
 </div>
 <div class="form-grid">
 <div><label for="version">协议版本</label><select id="version"><option value="1.0.3">LoRaWAN 1.0.x</option><option value="1.1">LoRaWAN 1.1</option></select></div>
@@ -188,7 +203,7 @@ h2.sec { font-size:16px; margin:24px 0 4px; }
 <button type="button" class="act" id="copyBtn">复制 JSON</button>
 </div>
 <div id="result"></div>
-<p class="help">密钥仅在本机浏览器中参与计算，不会上传到服务器。MIC 校验与 FRMPayload 解密均在本地完成。</p>
+<p class="help">输入为完整 LoRaWAN PHYPayload（含 MHDR 与 MIC），支持 Hex（可含空格 / 0x）或 Base64，默认自动识别；URL-safe Base64 也可用。密钥仅在本机浏览器中参与计算，不会上传到服务器。MIC 校验、FRMPayload 与 Join Accept 解密均在本地完成。</p>
 </div>
 </div>
 <script>
@@ -318,6 +333,47 @@ h2.sec { font-size:16px; margin:24px 0 4px; }
   function toHex(a, sep) {
     return a.map(function (b) { return ('0' + b.toString(16)).slice(-2).toUpperCase(); }).join(sep === false ? '' : ' ');
   }
+  function hx(v) { return ('0' + v.toString(16)).slice(-2).toUpperCase(); }
+  function bits8(v) { return ('00000000' + (v & 255).toString(2)).slice(-8); }
+  function bits16(v) { return ('0000000000000000' + (v & 0xFFFF).toString(2)).slice(-16); }
+  function bits32(v) { return ('00000000000000000000000000000000' + (v >>> 0).toString(2)).slice(-32); }
+  function bytesToBase64(a) {
+    var s = ''; for (var i = 0; i < a.length; i++) s += String.fromCharCode(a[i] & 255);
+    return btoa(s);
+  }
+  function base64ToBytes(s) {
+    var t = String(s || '').trim().replace(/[\s\r\n]+/g, '').replace(/-/g, '+').replace(/_/g, '/');
+    while (t.length % 4) t += '=';
+    if (!/^[A-Za-z0-9+/]*={0,2}$/.test(t) || !t.length) throw new Error('输入不是合法的 Base64 字符串');
+    var bin;
+    try { bin = atob(t); } catch (e) { throw new Error('Base64 解码失败：' + e.message); }
+    var out = [];
+    for (var i = 0; i < bin.length; i++) out.push(bin.charCodeAt(i) & 255);
+    return out;
+  }
+  function hexCandidate(s) {
+    var h = String(s || '').trim().replace(/0x/gi, '').replace(/[\s,;:_-]+/g, '');
+    return h.length > 0 && h.length % 2 === 0 && /^[0-9a-fA-F]+$/.test(h);
+  }
+  function base64Candidate(s) {
+    var t = String(s || '').trim().replace(/[\s\r\n]+/g, '').replace(/-/g, '+').replace(/_/g, '/');
+    return t.length > 0 && t.length % 4 === 0 && /^[A-Za-z0-9+/]+={0,2}$/.test(t);
+  }
+  function readInput(raw, fmt) {
+    if (fmt === 'hex') { var b = hexToBytes(raw); return { bytes: b, format: 'Hex' }; }
+    if (fmt === 'base64') { var c = base64ToBytes(raw); return { bytes: c, format: 'Base64' }; }
+    var s = String(raw || '').trim();
+    if (!s) return { bytes: [], format: '空' };
+    var hOk = hexCandidate(s), bOk = base64Candidate(s);
+    if (hOk && bOk) {
+      var hb = hexToBytes(s);
+      if (hb.length >= 12 && hb.length <= 255 && ((hb[0] >> 5) & 7) <= 5) return { bytes: hb, format: 'Hex（自动）' };
+      return { bytes: base64ToBytes(s), format: 'Base64（自动）' };
+    }
+    if (hOk) return { bytes: hexToBytes(s), format: 'Hex（自动）' };
+    if (bOk) return { bytes: base64ToBytes(s), format: 'Base64（自动）' };
+    throw new Error('无法识别输入格式，请手动选择 Hex 或 Base64');
+  }
   function keyFrom(id) { try { var b = hexToBytes(document.getElementById(id).value); return b.length === 16 ? b : null; } catch (e) { return null; } }
   function fcntValue() {
     var s = document.getElementById('fcnt').value.trim();
@@ -326,26 +382,55 @@ h2.sec { font-size:16px; margin:24px 0 4px; }
     return isNaN(n) ? null : (n >>> 0);
   }
   var MTYPE = ['Join Request','Join Accept','Unconfirmed Data Up','Unconfirmed Data Down','Confirmed Data Up','Confirmed Data Down','RFU','Proprietary'];
-  var MAC_NAMES = {
-    2:'LinkCheckAns',3:'LinkADRReq/Ans',4:'DutyCycleReq/Ans',5:'RXParamSetupReq/Ans',
-    6:'DevStatusReq',7:'NewChannelReq/Ans',8:'RXTimingSetupReq/Ans',9:'TXParamSetupReq/Ans',
-    10:'DlChannelReq/Ans',11:'RekeyReq',13:'DeviceTimeAns'
+  var MAC_UP = {
+    2:'LinkCheckReq',3:'LinkADRAns',4:'DutyCycleAns',5:'RXParamSetupAns',6:'DevStatusAns',
+    7:'NewChannelAns',8:'RXTimingSetupAns',9:'TXParamSetupAns',10:'DlChannelAns',
+    11:'RekeyAns',12:'ADRParamSetupAns',13:'DeviceTimeReq',14:'ForceRejoinReq',15:'RejoinParamSetupAns'
   };
-  function decodeMac(bytes, source) {
-    var out = [], i = 0;
+  var MAC_DOWN = {
+    2:'LinkCheckAns',3:'LinkADRReq',4:'DutyCycleReq',5:'RXParamSetupReq',6:'DevStatusReq',
+    7:'NewChannelReq',8:'RXTimingSetupReq',9:'TXParamSetupReq',10:'DlChannelReq',
+    11:'RekeyReq',12:'ADRParamSetupReq',13:'DeviceTimeAns',14:'ForceRejoinReq',15:'RejoinParamSetupReq'
+  };
+  function macFreq(b) { return (b[0] | (b[1] << 8) | (b[2] << 16)) * 100; }
+  function decodeMac(bytes, source, dir) {
+    var out = [], i = 0, names = dir ? MAC_DOWN : MAC_UP;
     while (i < bytes.length) {
-      var cid = bytes[i++], name = MAC_NAMES[cid] || ('未知 CID 0x' + ('0'+cid.toString(16)).slice(-2).toUpperCase());
-      var rest = bytes.slice(i);
-      out.push(source + ': ' + name + '  ' + toHex([cid].concat(rest)));
-      if (!MAC_NAMES[cid]) break;
-      if (cid === 2 && rest.length >= 2) i += 2;
-      else if (cid === 3 && rest.length >= 6) i += 6;
-      else if ((cid === 4 || cid === 6 || cid === 8 || cid === 9 || cid === 11) && rest.length >= 1) i += 1;
-      else if (cid === 5 && rest.length >= 4) i += 4;
-      else if (cid === 7 && rest.length >= 5) i += 5;
-      else if (cid === 10 && rest.length >= 4) i += 4;
-      else if (cid === 13 && rest.length >= 5) i += 5;
-      else { out.push('  参数: ' + toHex(rest)); break; }
+      var cid = bytes[i], all = bytes.slice(i), rest = all.slice(1);
+      var name = names[cid] || ('未知 CID 0x' + hx(cid));
+      var fields = [], step = 1, bad = false;
+      function take(n) {
+        if (rest.length < n) { bad = true; return null; }
+        var b = rest.slice(0, n); rest = rest.slice(n); step += n; return b;
+      }
+      if (cid === 2 && dir) { var b = take(2); if (b) fields.push('Margin=' + (b[0] & 0x7F) + ' dB', 'GwCnt=' + b[1]); }
+      else if (cid === 3 && !dir) { var b = take(1); if (b) fields.push('ChMaskACK=' + !!(b[0]&1), 'DataRateACK=' + !!(b[0]&2), 'PowerACK=' + !!(b[0]&4)); }
+      else if (cid === 3 && dir) { var b = take(4); if (b) fields.push('DataRate=' + (b[0]>>4), 'TXPower=' + (b[0]&15), 'ChMask=0x' + hx(b[2]) + hx(b[1]) + ' (' + bits16(b[1]|b[2]<<8) + ')', 'ChMaskCtrl=' + (b[3]>>4), 'NbTrans=' + (b[3]&15)); }
+      else if (cid === 4 && dir) { var b = take(1); if (b) fields.push('MaxDutyCycle=' + b[0] + ' (≈1/' + Math.pow(2, Math.min(15, b[0]&15)) + ')'); }
+      else if (cid === 5 && dir) { var b = take(5); if (b) fields.push('RX1DROffset=' + (b[0]>>4), 'RX2DataRate=' + (b[0]&15), 'Frequency=' + (macFreq(b.slice(1))/1e6).toFixed(3) + ' MHz'); }
+      else if (cid === 5 && !dir) { var b = take(1); if (b) fields.push('ChannelACK=' + !!(b[0]&1), 'RX1DROffsetACK=' + !!(b[0]&2), 'RX2DataRateACK=' + !!(b[0]&4)); }
+      else if (cid === 6 && !dir) { var b = take(2); if (b) fields.push('Battery=' + b[0], 'Margin=' + (b[1]&0x7F) + ' dB'); }
+      else if (cid === 7 && dir) { var b = take(5); if (b) fields.push('ChIndex=' + b[0], 'Frequency=' + (macFreq(b.slice(1,4))/1e6).toFixed(3) + ' MHz', 'DataRateMin=' + (b[4]&15), 'DataRateMax=' + (b[4]>>4)); }
+      else if (cid === 7 && !dir) { var b = take(1); if (b) fields.push('FrequencyACK=' + !!(b[0]&1), 'DataRateRangeACK=' + !!(b[0]&2)); }
+      else if (cid === 8 && dir) { var b = take(1); if (b) fields.push('RX1Delay=' + b[0] + ' s'); }
+      else if (cid === 9 && dir) { var b = take(1); if (b) fields.push('DownlinkDwellTime=' + (b[0]&1), 'UplinkDwellTime=' + ((b[0]>>1)&1), 'MaxEIRP=' + ((b[0]>>2)&15)); }
+      else if (cid === 10 && dir) { var b = take(4); if (b) fields.push('ChIndex=' + b[0], 'Frequency=' + (macFreq(b.slice(1))/1e6).toFixed(3) + ' MHz'); }
+      else if (cid === 11 && dir) { var b = take(1); if (b) fields.push('RekeyType=' + (b[0]>>4), 'KeyIndex=' + (b[0]&15)); }
+      else if (cid === 12 && dir) { var b = take(1); if (b) fields.push('ADRACKLimit=' + (b[0]>>4), 'ADRACKDelay=' + (b[0]&15)); }
+      else if (cid === 13 && dir) { var b = take(5); if (b) { var sec = (b[0]|b[1]<<8|b[2]<<16|b[3]<<24)>>>0, utc = new Date((sec - 315964800) * 1000); fields.push('GPSEpoch=' + sec, 'UTC≈' + (isNaN(utc.getTime()) ? '-' : utc.toISOString()), 'Fraction=' + b[4] + '/256'); } }
+      else if (cid === 14 && dir) { var b = take(4); if (b) fields.push('RejoinType=' + ((b[0]>>5)&7), 'DataRate=' + ((b[0]>>2)&7), 'Period=' + (b[0]&3), 'MaxCount=' + (b[1]|b[2]<<8), 'RejoinCnt=' + b[3]); }
+      else if (cid === 15 && dir) { var b = take(1); if (b) fields.push('TimeReqPeriod=' + (b[0]>>4), 'MaxTimeReqNb=' + (b[0]&15)); }
+      else if (!names[cid]) { fields.push('原始参数: ' + toHex(rest)); step = all.length; }
+
+      if (bad) fields.push('参数不足');
+      var chunk = bytes.slice(i, i + step);
+      out.push({
+        source: source, cid: '0x' + hx(cid), name: name, bytes: toHex(chunk),
+        fields: fields,
+        text: source + ' · ' + name + ' (CID 0x' + hx(cid) + ')' + (fields.length ? ' · ' + fields.join(' · ') : '') + ' · ' + toHex(chunk)
+      });
+      i += step;
+      if (bad || !names[cid]) break;
     }
     return out;
   }
@@ -359,100 +444,214 @@ h2.sec { font-size:16px; margin:24px 0 4px; }
   }
   function parseData(bytes, dir, version, keys, fcntOverride) {
     if (bytes.length < 13) throw new Error('数据帧长度不足（至少需要 13 字节）');
-    var devAddr = bytes.slice(1, 5), fctrl = bytes[5];
-    var foptsLen = fctrl & 0x0F;
+    var mtypeVal = (bytes[0] >> 5) & 7, rfu = (bytes[0] >> 2) & 7, major = bytes[0] & 3;
+    var devAddr = bytes.slice(1, 5);
+    var devNum = (devAddr[0] | devAddr[1]<<8 | devAddr[2]<<16 | devAddr[3]<<24) >>> 0;
+    var fctrl = bytes[5], foptsLen = fctrl & 0x0F;
     var fcntFrame = bytes[6] | (bytes[7] << 8) | (bytes[8] << 16);
     var fcnt = fcntOverride === null ? fcntFrame : fcntOverride;
     var fopts = bytes.slice(9, 9 + foptsLen);
     var pos = 9 + foptsLen, fport = null, frmEnc = [];
     if (pos < bytes.length - 4) { fport = bytes[pos]; frmEnc = bytes.slice(pos + 1, bytes.length - 4); }
     var mic = bytes.slice(-4), msg = bytes.slice(0, -4);
-    var rows = [
-      row('MType', MTYPE[(bytes[0] >> 5) & 7] + ' (' + ((bytes[0] >> 5) & 7) + ')'),
-      row('Major / RFU', 'Major=' + (bytes[0] & 3) + ' / RFU=' + ((bytes[0] >> 2) & 7)),
-      row('DevAddr', toHex(devAddr) + '  <span class="muted">uint32 LE = ' + ((devAddr[0] | devAddr[1]<<8 | devAddr[2]<<16 | devAddr[3]<<24) >>> 0) + '</span>'),
-      row('FCtrl', '0x' + ('0'+fctrl.toString(16)).slice(-2).toUpperCase(),
-          'ADR=' + !!(fctrl&0x80) + ' · ADRACKReq=' + !!(fctrl&0x40) + ' · ACK=' + !!(fctrl&0x20) + ' · ' + (dir ? 'FPending=' + !!(fctrl&0x10) : 'RFU='+!!(fctrl&0x10)) + ' · FOptsLen=' + foptsLen),
-      row('FCnt', '帧内 24-bit = ' + fcntFrame + (fcntOverride !== null ? ' · 覆盖为 32-bit = ' + fcnt : '')),
-      row('FOpts', fopts.length ? toHex(fopts) : '（无）'),
-      row('FPort', fport === null ? '（无）' : fport),
-      row('FRMPayload（密文）', frmEnc.length ? toHex(frmEnc) : '（无）')
-    ];
-    var frmPlain = [], note = '';
+    var rows = [];
+    rows.push(row('PHYPayload 长度', bytes.length + ' 字节', 'MHDR(1) + MACPayload + MIC(4)'));
+    rows.push(row('帧类型', MTYPE[mtypeVal] + ' · ' + (dir ? 'Downlink 下行' : 'Uplink 上行') + ' · LoRaWAN ' + version));
+    rows.push(row('MHDR · 字节 0', '0x' + hx(bytes[0]) + ' / 0b' + bits8(bytes[0]),
+                 'MType=' + mtypeVal + ' (' + MTYPE[mtypeVal] + ') · RFU=' + rfu + ' · Major=' + major));
+    rows.push(row('DevAddr · 字节 1-4', toHex(devAddr) + ' · uint32 LE=' + devNum, '二进制 MSB→LSB = ' + bits32(devNum)));
+    rows.push(row('FCtrl · 字节 5', '0x' + hx(fctrl) + ' / 0b' + bits8(fctrl),
+                 'ADR=' + !!(fctrl&0x80) + ' · ADRACKReq=' + !!(fctrl&0x40) + ' · ACK=' + !!(fctrl&0x20) + ' · ' +
+                 (dir ? 'FPending=' + !!(fctrl&0x10) : 'RFU=' + !!(fctrl&0x10)) + ' · FOptsLen=' + foptsLen));
+    rows.push(row('FCnt · 字节 6-8', '帧内 24-bit=' + fcntFrame + ' · 32-bit 有效值=' + fcnt +
+                 ' (0x' + ('00000000' + (fcnt>>>0).toString(16).toUpperCase()).slice(-8) + ')',
+                 'AES-CTR 与 MIC 均使用 32-bit FCnt'));
+    rows.push(row('FOpts · 字节 9-' + (8 + foptsLen), fopts.length ? toHex(fopts) : '（无 / 0 字节）',
+                 fopts.length ? '详细解析见下方 MAC 命令' : ''));
+    var fportNote = fport === null ? 'FRMPayload 为空' :
+                    (fport === 0 ? 'FPort=0：FRMPayload 为 MAC 命令' :
+                     (fport <= 223 ? '应用自定义端口' : (fport === 224 ? 'LoRaWAN 测试端口' : '保留端口')));
+    rows.push(row('FPort · 字节 ' + (9 + foptsLen), fport === null ? '（无）' : fport, fportNote));
+    rows.push(row('FRMPayload 密文 · 字节 ' + (pos + 1) + '-' + (bytes.length - 5),
+                 frmEnc.length ? toHex(frmEnc) : '（无 / 0 字节）', '长度 ' + frmEnc.length + ' 字节'));
+
+    var frmPlain = [], note = '', keyName = null;
     if (frmEnc.length) {
       var key = fport === 0 ? (version === '1.1' ? keys.nwksenc : keys.nwkskey) : keys.appskey;
-      if (key) { frmPlain = aesCtr(key, dir, devAddr, fcnt, frmEnc); note = '已使用 ' + (fport === 0 ? 'NwkSKey/NwkSEncKey' : 'AppSKey') + ' 解密'; }
-      else { note = '未提供 ' + (fport === 0 ? 'NwkSKey/NwkSEncKey' : 'AppSKey') + '，无法解密'; }
+      keyName = fport === 0 ? (version === '1.1' ? 'NwkSEncKey' : 'NwkSKey') : 'AppSKey';
+      if (key) { frmPlain = aesCtr(key, dir, devAddr, fcnt, frmEnc); note = '已使用 ' + keyName + ' 解密'; }
+      else { note = '未提供 ' + keyName + '，无法解密'; }
     }
-    rows.push(row('FRMPayload（明文）', frmPlain.length ? toHex(frmPlain) : '（无）', note));
-    if (frmPlain.length && fport !== 0) {
-      var printable = frmPlain.map(function (b) { return (b >= 32 && b < 127) ? String.fromCharCode(b) : '.'; }).join('');
-      rows.push(row('明文 ASCII', printable));
+    rows.push(row('FRMPayload 明文', frmPlain.length ? toHex(frmPlain) : '（无）', note));
+    var ascii = '', utf8 = '';
+    if (frmPlain.length) {
+      ascii = frmPlain.map(function (b) { return (b >= 32 && b < 127) ? String.fromCharCode(b) : '.'; }).join('');
+      try { utf8 = decodeURIComponent(escape(frmPlain.map(function (b) { return String.fromCharCode(b); }).join(''))); }
+      catch (e) { utf8 = '（非合法 UTF-8）'; }
+      rows.push(row('明文 ASCII', ascii));
+      rows.push(row('明文 UTF-8', utf8));
+      rows.push(row('明文十进制', frmPlain.join(' ')));
+      rows.push(row('明文二进制', frmPlain.map(bits8).join(' ')));
+      rows.push(row('明文 Base64', bytesToBase64(frmPlain)));
+      var byteRows = frmPlain.map(function (b, idx) {
+        return '<tr><th>[' + idx + ']</th><td>0x' + hx(b) + ' · ' + b + ' · 0b' + bits8(b) + ' · ' +
+               (b >= 32 && b < 127 ? String.fromCharCode(b) : '.') + '</td></tr>';
+      });
+      rows.push(row('明文逐字节', '<table class="seg-table"><tr><th>索引</th><th>值</th></tr>' + byteRows.join('') + '</table>'));
     }
-    var calc;
+
+    var calc = null, fullS = null, fullF = null, micNote = '';
     if (version === '1.1') {
-      if (!keys.snwksint || !keys.fnwksint) calc = null;
+      if (!keys.snwksint || !keys.fnwksint) micNote = '未提供 SNwkSIntKey / FNwkSIntKey';
       else {
-        var cs = aesCmac(keys.snwksint, micBlock(dir, devAddr, fcnt, msg.length, 1).concat(msg));
-        var cf = aesCmac(keys.fnwksint, micBlock(dir, devAddr, fcnt, msg.length, 0).concat(msg));
-        calc = [cs[0], cs[1], cf[2], cf[3]];
+        fullS = aesCmac(keys.snwksint, micBlock(dir, devAddr, fcnt, msg.length, 1).concat(msg));
+        fullF = aesCmac(keys.fnwksint, micBlock(dir, devAddr, fcnt, msg.length, 0).concat(msg));
+        calc = [fullS[0], fullS[1], fullF[2], fullF[3]];
       }
     } else {
-      calc = keys.nwkskey ? aesCmac(keys.nwkskey, micBlock(dir, devAddr, fcnt, msg.length, 0).concat(msg)).slice(0, 4) : null;
+      if (!keys.nwkskey) micNote = '未提供 NwkSKey';
+      else { fullS = aesCmac(keys.nwkskey, micBlock(dir, devAddr, fcnt, msg.length, 0).concat(msg)); calc = fullS.slice(0, 4); }
     }
-    rows.push(row('MIC', micHtml(calc, mic), 'LoRaWAN ' + version + ' · msg 长度 ' + msg.length + ' 字节'));
+    rows.push(row('MIC · 字节 ' + (bytes.length - 4) + '-' + (bytes.length - 1), micHtml(calc, mic),
+                 'LoRaWAN ' + version + ' · B0 block · msg ' + msg.length + ' 字节' + (micNote ? ' · ' + micNote : '')));
+    if (fullS) rows.push(row('CMAC(S) 全 16 字节', toHex(fullS), version === '1.1' ? '取前 2 字节作为 MIC[0:2]' : '取前 4 字节作为 MIC'));
+    if (fullF) rows.push(row('CMAC(F) 全 16 字节', toHex(fullF), '取后 2 字节作为 MIC[2:4]'));
+
+    var segs = [
+      { field:'MHDR', off:0, len:1, val:bytes.slice(0,1) },
+      { field:'DevAddr', off:1, len:4, val:devAddr },
+      { field:'FCtrl', off:5, len:1, val:[fctrl] },
+      { field:'FCnt', off:6, len:3, val:bytes.slice(6,9) }
+    ];
+    if (foptsLen) segs.push({ field:'FOpts', off:9, len:foptsLen, val:fopts });
+    if (fport !== null) segs.push({ field:'FPort', off:9 + foptsLen, len:1, val:[fport] });
+    if (frmEnc.length) segs.push({ field:'FRMPayload', off:pos + 1, len:frmEnc.length, val:frmEnc });
+    segs.push({ field:'MIC', off:bytes.length - 4, len:4, val:mic });
+
     var macs = [];
-    if (fopts.length) macs = macs.concat(decodeMac(fopts, 'FOpts'));
-    if (fport === 0 && frmPlain.length) macs = macs.concat(decodeMac(frmPlain, 'FRMPayload'));
+    if (fopts.length) macs = macs.concat(decodeMac(fopts, 'FOpts', dir));
+    if (fport === 0 && frmPlain.length) macs = macs.concat(decodeMac(frmPlain, 'FRMPayload', dir));
+    var micOk = calc ? toHex(calc, false) === toHex(mic, false) : null;
     return {
-      type: 'DATA', mtype: MTYPE[(bytes[0] >> 5) & 7], devAddr: toHex(devAddr, false),
-      fcnt: fcnt, fport: fport, mic: toHex(mic, false), micOk: calc ? toHex(calc,false) === toHex(mic,false) : null,
+      type: 'DATA', frameType: MTYPE[mtypeVal], direction: dir ? 'Downlink' : 'Uplink', version: version,
+      phyPayloadLength: bytes.length,
+      mhdr: { raw: hx(bytes[0]), mtype: mtypeVal, mtypeName: MTYPE[mtypeVal], rfu: rfu, major: major },
+      devAddr: toHex(devAddr, false), devAddrUInt32LE: devNum,
+      fctrl: { raw: hx(fctrl), adr: !!(fctrl&0x80), adrAckReq: !!(fctrl&0x40), ack: !!(fctrl&0x20),
+               fPendingOrRfu: !!(fctrl&0x10), fOptsLen: foptsLen },
+      fcnt: { frame24: fcntFrame, effective32: fcnt, overridden: fcntOverride !== null },
+      fopts: toHex(fopts, false), fport: fport, fportMeaning: fportNote,
+      frmPayload: { length: frmEnc.length, ciphertext: toHex(frmEnc, false), plaintext: toHex(frmPlain, false),
+                    ascii: ascii, utf8: utf8, decimal: frmPlain, binary: frmPlain.map(bits8),
+                    base64: frmPlain.length ? bytesToBase64(frmPlain) : '', decrypted: frmPlain.length > 0, key: keyName },
+      mic: toHex(mic, false), micOk: micOk,
+      micDetails: { calculated: calc ? toHex(calc, false) : null, cmacS: fullS ? toHex(fullS, false) : null,
+                    cmacF: fullF ? toHex(fullF, false) : null, note: micNote },
+      segments: segs.map(function (s) { return { field:s.field, offset:s.off, length:s.len, hex:toHex(s.val, false) }; }),
       frmPayloadPlain: toHex(frmPlain, false), rows: rows, macs: macs
     };
   }
   function parseJoinReq(bytes, keys) {
-    if (bytes.length < 23) throw new Error('Join Request 长度应为 23 字节');
+    if (bytes.length !== 23) throw new Error('Join Request 长度应为 23 字节（当前 ' + bytes.length + '）');
     var joinEui = bytes.slice(1, 9), devEui = bytes.slice(9, 17), nonce = bytes.slice(17, 19), mic = bytes.slice(19, 23);
-    var msg = bytes.slice(0, 19);
-    var calc = keys.appkey ? aesCmac(keys.appkey, msg).slice(0, 4) : null;
+    var msg = bytes.slice(0, 19), nonceVal = nonce[0] | nonce[1] << 8;
+    var full = keys.appkey ? aesCmac(keys.appkey, msg) : null;
+    var calc = full ? full.slice(0, 4) : null;
     var rows = [
-      row('MType', 'Join Request'),
-      row('JoinEUI', toHex(joinEui) + ' <span class="muted">显示(反序): ' + toHex(joinEui.slice().reverse(), false) + '</span>'),
-      row('DevEUI', toHex(devEui) + ' <span class="muted">显示(反序): ' + toHex(devEui.slice().reverse(), false) + '</span>'),
-      row('DevNonce', toHex(nonce) + ' · ' + (nonce[0] | nonce[1] << 8)),
-      row('MIC', micHtml(calc, mic), 'AppKey 对 MHDR|JoinEUI|DevEUI|DevNonce 做 CMAC')
+      row('PHYPayload 长度', '23 字节', 'MHDR(1) + JoinEUI(8) + DevEUI(8) + DevNonce(2) + MIC(4)'),
+      row('帧类型', 'Join Request · Uplink 上行'),
+      row('MHDR · 字节 0', '0x' + hx(bytes[0]) + ' / 0b' + bits8(bytes[0]),
+          'MType=0 (Join Request) · RFU=' + ((bytes[0]>>2)&7) + ' · Major=' + (bytes[0]&3)),
+      row('JoinEUI · 字节 1-8', toHex(joinEui), '空中顺序 LSB first · 显示(反序)=' + toHex(joinEui.slice().reverse(), false)),
+      row('DevEUI · 字节 9-16', toHex(devEui), '空中顺序 LSB first · 显示(反序)=' + toHex(devEui.slice().reverse(), false)),
+      row('DevNonce · 字节 17-18', toHex(nonce) + ' · ' + nonceVal + ' / 0b' + bits16(nonceVal), '设备随机数，用于防重放攻击'),
+      row('MIC · 字节 19-22', micHtml(calc, mic), 'AppKey 对 MHDR|JoinEUI|DevEUI|DevNonce 做 CMAC' + (keys.appkey ? '' : '（未提供 AppKey）'))
     ];
-    return { type:'JOIN_REQUEST', joinEui:toHex(joinEui,false), devEui:toHex(devEui,false), devNonce:nonce[0]|nonce[1]<<8, mic:toHex(mic,false), micOk: calc?toHex(calc,false)===toHex(mic,false):null, rows:rows, macs:[] };
+    if (full) rows.push(row('CMAC 全 16 字节', toHex(full), '取前 4 字节作为 MIC'));
+    var segs = [
+      { field:'MHDR', off:0, len:1, val:bytes.slice(0,1) },
+      { field:'JoinEUI', off:1, len:8, val:joinEui },
+      { field:'DevEUI', off:9, len:8, val:devEui },
+      { field:'DevNonce', off:17, len:2, val:nonce },
+      { field:'MIC', off:19, len:4, val:mic }
+    ];
+    return {
+      type:'JOIN_REQUEST', frameType:'Join Request', direction:'Uplink', version:'-', phyPayloadLength:23,
+      mhdr: { raw:hx(bytes[0]), mtype:0, mtypeName:'Join Request', rfu:(bytes[0]>>2)&7, major:bytes[0]&3 },
+      joinEui:toHex(joinEui,false), joinEuiDisplay:toHex(joinEui.slice().reverse(),false),
+      devEui:toHex(devEui,false), devEuiDisplay:toHex(devEui.slice().reverse(),false),
+      devNonce:nonceVal, mic:toHex(mic,false), micOk: calc ? toHex(calc,false)===toHex(mic,false) : null,
+      micDetails: { calculated:calc?toHex(calc,false):null, cmacS:full?toHex(full,false):null,
+                    note: keys.appkey ? '' : '未提供 AppKey' },
+      segments: segs.map(function(s){ return {field:s.field,offset:s.off,length:s.len,hex:toHex(s.val,false)}; }),
+      rows:rows, macs:[]
+    };
   }
   function parseJoinAcc(bytes, keys) {
-    var enc = bytes.slice(1, -4), mic = bytes.slice(-4), dec = [];
-    if (!keys.appkey) throw new Error('解析 Join Accept 必须提供 AppKey');
-    var w = expandKey(keys.appkey);
+    if (bytes.length !== 17 && bytes.length !== 33) throw new Error('Join Accept 长度应为 17 或 33 字节（当前 ' + bytes.length + '）');
+    if (!keys.appkey) throw new Error('解析 Join Accept 必须提供 AppKey（16 字节 Hex）');
+    var enc = bytes.slice(1), dec = [], w = expandKey(keys.appkey);
     for (var i = 0; i < enc.length; i += 16) {
       var b = enc.slice(i, i + 16); while (b.length < 16) b.push(0);
-      dec = dec.concat(decryptBlock(b, w));
+      dec = dec.concat(encryptBlock(b, w));
     }
     dec = dec.slice(0, enc.length);
-    var calc = aesCmac(keys.appkey, [bytes[0]].concat(dec)).slice(0, 4);
+    var mic = dec.slice(-4), body = dec.slice(0, -4);
+    var full = aesCmac(keys.appkey, [bytes[0]].concat(body));
+    var calc = full.slice(0, 4);
+    var joinNonce = body[0] | body[1]<<8 | body[2]<<16;
+    var netId = body.slice(3, 6), netIdVal = netId[0] | netId[1]<<8 | netId[2]<<16;
+    var devAddr = body.slice(6, 10), devNum = (devAddr[0]|devAddr[1]<<8|devAddr[2]<<16|devAddr[3]<<24)>>>0;
+    var dl = body[10], rxDelay = body[11], cfList = body.length > 12 ? body.slice(12) : [];
+    var cfRows = [];
+    for (var c = 0; c + 3 < cfList.length && c < 15; c += 3) {
+      var freq = (cfList[c] | cfList[c+1]<<8 | cfList[c+2]<<16) * 100;
+      cfRows.push('Ch' + (c/3+1) + ' = ' + (freq/1e6).toFixed(3) + ' MHz');
+    }
+    if (cfList.length >= 16) cfRows.push('CFListType=' + cfList[15]);
     var rows = [
-      row('MType', 'Join Accept'),
-      row('密文', toHex(enc)),
-      row('解密后', toHex(dec)),
-      row('JoinNonce', toHex(dec.slice(0, 3)) + ' · ' + (dec[0] | dec[1]<<8 | dec[2]<<16)),
-      row('NetID', toHex(dec.slice(3, 6))),
-      row('DevAddr', toHex(dec.slice(6, 10))),
-      row('DLSettings', '0x' + ('0'+dec[10].toString(16)).slice(-2).toUpperCase(), 'RX1DROffset=' + (dec[10]>>4) + ' · RX2DataRate=' + (dec[10]&15)),
-      row('RxDelay', dec[11]),
-      row('CFList', dec.length > 12 ? toHex(dec.slice(12)) : '（无）'),
-      row('MIC', micHtml(calc, mic))
+      row('PHYPayload 长度', bytes.length + ' 字节', 'MHDR(1) + 加密载荷(' + enc.length + '，含 MIC)'),
+      row('帧类型', 'Join Accept · Downlink 下行'),
+      row('MHDR · 字节 0', '0x' + hx(bytes[0]) + ' / 0b' + bits8(bytes[0]),
+          'MType=1 (Join Accept) · RFU=' + ((bytes[0]>>2)&7) + ' · Major=' + (bytes[0]&3)),
+      row('加密载荷（密文）', toHex(enc), 'MIC 与载荷一起加密；设备侧用 AES 加密运算解密'),
+      row('解密后完整载荷', toHex(dec), 'JoinNonce(3) + NetID(3) + DevAddr(4) + DLSettings(1) + RxDelay(1) + CFList(可选) + MIC(4)'),
+      row('JoinNonce / AppNonce · 字节 0-2', toHex(body.slice(0,3)) + ' · ' + joinNonce + ' / 0b' + bits32(joinNonce), '用于派生 NwkSKey / AppSKey'),
+      row('NetID · 字节 3-5', toHex(netId) + ' · uint32=' + netIdVal, 'NetID Type=' + (netId[2]>>5) + ' · 显示(反序)=' + toHex(netId.slice().reverse(),false)),
+      row('DevAddr · 字节 6-9', toHex(devAddr) + ' · uint32 LE=' + devNum, '二进制 MSB→LSB = ' + bits32(devNum)),
+      row('DLSettings · 字节 10', '0x' + hx(dl) + ' / 0b' + bits8(dl), 'RX1DROffset=' + (dl>>4) + ' · RX2DataRate=' + (dl&15)),
+      row('RxDelay · 字节 11', rxDelay + ' 秒', '下行 RX1 接收窗口延迟'),
+      row('CFList · 字节 12+', cfList.length ? toHex(cfList) : '（无）', cfRows.length ? cfRows.join(' · ') : ''),
+      row('MIC（解密后末 4 字节）', micHtml(calc, mic), 'AppKey CMAC(MHDR | 解密后载荷(不含 MIC))')
     ];
-    return { type:'JOIN_ACCEPT', devAddr:toHex(dec.slice(6,10),false), joinNonce:dec[0]|dec[1]<<8|dec[2]<<16, mic:toHex(mic,false), micOk:toHex(calc,false)===toHex(mic,false), rows:rows, macs:[] };
+    rows.push(row('CMAC 全 16 字节', toHex(full), '取前 4 字节作为 MIC'));
+    var segs = [
+      { field:'MHDR', off:0, len:1, val:bytes.slice(0,1) },
+      { field:'加密载荷(含 MIC)', off:1, len:enc.length, val:enc }
+    ];
+    return {
+      type:'JOIN_ACCEPT', frameType:'Join Accept', direction:'Downlink', version:'-', phyPayloadLength:bytes.length,
+      mhdr: { raw:hx(bytes[0]), mtype:1, mtypeName:'Join Accept', rfu:(bytes[0]>>2)&7, major:bytes[0]&3 },
+      ciphertext:toHex(enc,false), decrypted:toHex(dec,false), decryptedBody:toHex(body,false),
+      joinNonce:joinNonce, netId:toHex(netId,false), netIdType:netId[2]>>5,
+      devAddr:toHex(devAddr,false), devAddrUInt32LE:devNum,
+      dlSettings:{ raw:hx(dl), rx1DrOffset:dl>>4, rx2DataRate:dl&15 }, rxDelay:rxDelay,
+      cfList:toHex(cfList,false), cfListChannels:cfRows,
+      mic:toHex(mic,false), micOk:toHex(calc,false)===toHex(mic,false),
+      micDetails:{ calculated:toHex(calc,false), cmacS:toHex(full,false), note:'' },
+      segments: segs.map(function(s){ return {field:s.field,offset:s.off,length:s.len,hex:toHex(s.val,false)}; }),
+      rows:rows, macs:[]
+    };
   }
   function parse() {
     var out = document.getElementById('result');
+    var hint = document.getElementById('detectHint');
+    var raw = document.getElementById('phy').value;
     try {
-      var bytes = hexToBytes(document.getElementById('phy').value);
-      if (!bytes.length) { out.innerHTML = ''; return; }
+      var input = readInput(raw, document.getElementById('inputFormat').value);
+      var bytes = input.bytes;
+      if (!bytes.length) { out.innerHTML = ''; hint.textContent = '输入后将自动识别格式并实时解析'; return; }
+      hint.textContent = '识别为 ' + input.format + ' · ' + bytes.length + ' 字节 · Hex: ' + toHex(bytes, false);
       var version = document.getElementById('version').value;
       var dir = parseInt(document.getElementById('direction').value, 10);
       var keys = { nwkskey:keyFrom('nwkskey'), nwksenc:keyFrom('nwkskey'), appskey:keyFrom('appskey'), appkey:keyFrom('appkey'), snwksint:keyFrom('snwksint'), fnwksint:keyFrom('fnwksint') };
@@ -461,19 +660,31 @@ h2.sec { font-size:16px; margin:24px 0 4px; }
       else if (mtype === 1) data = parseJoinAcc(bytes, keys);
       else if (mtype >= 2 && mtype <= 5) data = parseData(bytes, dir, version, keys, fcntValue());
       else throw new Error('不支持的 MType: ' + mtype);
+      data.input = { format: input.format, raw: raw.trim(), hex: toHex(bytes, false), length: bytes.length };
       var html = '<h2 class="sec">解析结果</h2><table class="kv-table">' + data.rows.join('') + '</table>';
-      if (data.macs.length) html += '<h2 class="sec">MAC 命令</h2><table class="kv-table">' + data.macs.map(function(m){ return '<tr><td>' + m + '</td></tr>'; }).join('') + '</table>';
+      if (data.segments && data.segments.length) {
+        html += '<h2 class="sec">字节分段</h2><table class="seg-table"><tr><th>字段</th><th>偏移</th><th>长度</th><th>Hex</th></tr>' +
+          data.segments.map(function (s) { return '<tr><td>' + s.field + '</td><td>' + s.offset + '</td><td>' + s.length + '</td><td>' + s.hex + '</td></tr>'; }).join('') + '</table>';
+      }
+      if (data.macs.length) {
+        html += '<h2 class="sec">MAC 命令（' + data.macs.length + ' 条）</h2><table class="kv-table">' +
+          data.macs.map(function (m) { return '<tr><th>' + m.source + ' · ' + m.name + '</th><td>CID ' + m.cid + ' · 原始 ' + m.bytes +
+            (m.fields.length ? '<div class="muted">' + m.fields.join(' · ') + '</div>' : '') + '</td></tr>'; }).join('') + '</table>';
+      }
       var json = JSON.stringify(data, function (k, v) { return k === 'rows' || k === 'macs' ? undefined : v; }, 2);
-      html += '<h2 class="sec">结构化数据</h2><pre class="json" id="jsonOut">' + json + '</pre>';
+      html += '<h2 class="sec">结构化数据（全部字段）</h2><pre class="json" id="jsonOut">' + json + '</pre>';
       out.innerHTML = html;
     } catch (e) {
       out.innerHTML = '<p class="error">解析失败：' + (e.message || e) + '</p>';
+      hint.textContent = '解析失败，请检查输入';
     }
   }
   document.getElementById('parseBtn').addEventListener('click', parse);
   document.getElementById('phy').addEventListener('input', parse);
+  document.getElementById('inputFormat').addEventListener('change', parse);
   document.getElementById('clearBtn').addEventListener('click', function () {
     document.getElementById('phy').value = ''; document.getElementById('result').innerHTML = '';
+    document.getElementById('detectHint').textContent = '输入后将自动识别格式并实时解析';
   });
   document.getElementById('copyBtn').addEventListener('click', function () {
     var el = document.getElementById('jsonOut'); if (!el) return;
@@ -485,7 +696,9 @@ h2.sec { font-size:16px; margin:24px 0 4px; }
     var pt = hexToBytes('00112233445566778899AABBCCDDEEFF');
     var ct = encryptBlock(pt, expandKey(k));
     var cm = aesCmac(hexToBytes('2B7E151628AED2A6ABF7158809CF4F3C'), []);
-    document.title = 'AES=' + toHex(ct, false) + ' CMAC=' + toHex(cm, false);
+    var b64 = bytesToBase64(pt);
+    var b64ok = toHex(base64ToBytes(b64), false) === toHex(pt, false);
+    document.title = 'AES=' + toHex(ct, false) + ' CMAC=' + toHex(cm, false) + ' B64=' + b64ok;
   }
 })();
 </script>
