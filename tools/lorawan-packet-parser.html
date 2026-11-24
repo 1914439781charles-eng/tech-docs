@@ -1,0 +1,491 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>LoRaWAN数据包解析 · Milesight产品技术方案知识库</title>
+<style>
+:root { --accent:#2563eb; --accent-soft:#eff6ff; --text:#1f2937; --muted:#6b7280;
+        --border:#e5e7eb; --bg:#f8fafc; --card:#ffffff; }
+* { box-sizing: border-box; }
+body { margin:0; font-family: "Segoe UI", system-ui, sans-serif;
+       background:var(--bg); color:var(--text); line-height:1.75; }
+a { color:var(--accent); text-decoration:none; }
+a:hover { text-decoration:underline; }
+.container { max-width:960px; margin:0 auto; padding:24px 20px 64px; }
+header.site-header { background:linear-gradient(135deg,#1e3a8a 0%,#2563eb 55%,#3b82f6 100%);
+                     color:#fff; padding:44px 20px; box-shadow:0 4px 20px rgba(30,58,138,.20); }
+header.site-header .container { padding-top:0; padding-bottom:0; }
+header.site-header h1 { margin:0 0 8px; font-size:30px; letter-spacing:-.02em; }
+header.site-header p { margin:0; opacity:.88; font-size:14px; letter-spacing:.01em; }
+.search-box { margin:26px 0 4px; position:relative; }
+.search-box input { width:100%; padding:13px 16px 13px 44px; font-size:15px; border:1px solid var(--border);
+                    border-radius:12px; outline:none; box-shadow:0 1px 3px rgba(0,0,0,.04);
+                    background-color:#fff;
+                    background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%236b7280' stroke-width='2' stroke-linecap='round'%3E%3Ccircle cx='11' cy='11' r='7'/%3E%3Cline x1='16.5' y1='16.5' x2='21' y2='21'/%3E%3C/svg%3E");
+                    background-repeat:no-repeat; background-position:14px center; background-size:18px 18px; }
+.search-box input:focus { border-color:var(--accent); box-shadow:0 0 0 4px var(--accent-soft); }
+/* Category cards — horizontal row, collapsed by default */
+.category-grid { display:grid; grid-template-columns:repeat(4,minmax(0,1fr)); gap:16px; margin-top:28px; }
+.category-card { position:relative; display:flex; flex-direction:column; align-items:flex-start;
+                 gap:9px; width:100%; text-align:left; background:var(--card); border:1px solid var(--border);
+                 border-radius:14px; padding:20px; cursor:pointer; font:inherit; color:inherit;
+                 box-shadow:0 1px 3px rgba(0,0,0,.04); overflow:hidden;
+                 transition:transform .18s ease, box-shadow .18s ease, border-color .18s ease; }
+.category-card::before { content:""; position:absolute; left:0; top:0; bottom:0; width:4px;
+                         background:var(--card-accent,var(--accent)); }
+.category-card:hover { transform:translateY(-3px); border-color:var(--card-accent,var(--accent));
+                       box-shadow:0 10px 24px rgba(0,0,0,.10); }
+.category-card.open { border-color:var(--card-accent,var(--accent));
+                      box-shadow:0 8px 20px rgba(0,0,0,.10); }
+.card-howto { --card-accent:#16a34a; }
+.card-troubleshooting { --card-accent:#dc2626; }
+.card-node-red { --card-accent:#ea580c; }
+.card-python { --card-accent:#2563eb; }
+.cat-card-top { display:flex; align-items:center; justify-content:space-between; width:100%; }
+.cat-dot { width:12px; height:12px; border-radius:50%; background:var(--card-accent,var(--accent));
+           box-shadow:0 0 0 4px color-mix(in srgb, var(--card-accent,var(--accent)) 15%, transparent); }
+.cat-name { font-size:18px; font-weight:700; line-height:1.25; }
+.cat-desc { font-size:12.5px; color:var(--muted); line-height:1.4; min-height:34px; }
+.cat-card-foot { display:flex; align-items:center; justify-content:space-between; width:100%;
+                 margin-top:2px; padding-top:10px; border-top:1px solid var(--border); }
+.chevron { font-size:13px; color:var(--muted); transition:transform .2s ease; }
+.category-card.open .chevron { transform:rotate(180deg); }
+.badge { display:inline-block; font-size:11.5px; font-weight:700; padding:3px 10px;
+         border-radius:999px; letter-spacing:.02em; }
+.badge-howto { background:#dcfce7; color:#15803d; }
+.badge-troubleshooting { background:#fee2e2; color:#b91c1c; }
+.badge-node-red { background:#ffedd5; color:#c2410c; }
+.badge-python { background:#dbeafe; color:#1d4ed8; }
+.count { color:var(--muted); font-size:12px; font-weight:600; }
+/* Article panels — hidden until their card is clicked */
+.category-panels { margin-top:22px; }
+.category-panel { display:none; margin-bottom:18px; background:var(--card); border:1px solid var(--border);
+                  border-radius:14px; padding:6px 18px 18px; box-shadow:0 2px 8px rgba(0,0,0,.04); }
+.category-panel.open { display:block; animation:panelIn .22s ease; }
+@keyframes panelIn { from { opacity:0; transform:translateY(-6px); } to { opacity:1; transform:none; } }
+.panel-title { display:flex; align-items:center; gap:10px; font-size:15px; font-weight:700;
+               padding:14px 0 12px; border-bottom:1px solid var(--border); margin-bottom:14px; }
+.panel-title .count { margin-left:auto; }
+ul.article-list { list-style:none; margin:0; padding:0; display:grid; gap:10px; }
+ul.article-list li { background:#f8fafc; border:1px solid var(--border); border-radius:10px;
+                     padding:14px 18px; transition:transform .15s ease, box-shadow .15s ease; }
+ul.article-list li:hover { transform:translateX(3px); box-shadow:0 4px 14px rgba(0,0,0,.07); }
+ul.article-list .title { font-size:15.5px; font-weight:600; }
+ul.article-list .meta { font-size:12.5px; color:var(--muted); margin-top:4px; }
+.empty { color:var(--muted); font-size:14px; padding:14px 4px; }
+@media (max-width:860px) { .category-grid { grid-template-columns:repeat(2,minmax(0,1fr)); } }
+@media (max-width:520px) { .category-grid { grid-template-columns:1fr; } .cat-desc { min-height:0; } }
+/* Article page */
+.article-nav { margin:18px 0 0; font-size:14px; padding-top:130px; }
+article.article-body { background:var(--card); border:1px solid var(--border); border-radius:12px;
+                       padding:32px 40px; margin-top:16px; }
+article.article-body img { max-width:100%; height:auto; border:1px solid var(--border);
+                           border-radius:8px; margin:8px 0; cursor:zoom-in; transition:box-shadow .15s ease; }
+article.article-body img:hover { box-shadow:0 4px 16px rgba(0,0,0,.12); }
+article.article-body h1 { font-size:24px; margin-top:0; }
+article.article-body h2 { font-size:20px; border-bottom:1px solid var(--border); padding-bottom:6px; }
+article.article-body h3 { font-size:17px; }
+article.article-body pre { background:#f1f5f9; padding:14px; border-radius:8px; overflow-x:auto; }
+article.article-body code { background:#f1f5f9; padding:2px 6px; border-radius:4px; font-size:.92em; }
+article.article-body pre code { background:none; padding:0; }
+article.article-body table { border-collapse:collapse; width:100%; }
+article.article-body th, article.article-body td { border:1px solid var(--border); padding:8px 12px; }
+article.article-body th { background:var(--accent-soft); }
+article.article-body blockquote { border-left:4px solid var(--accent); margin-left:0;
+                                  padding:4px 16px; color:var(--muted); background:var(--accent-soft); }
+.attachment-link { display:inline-flex; align-items:center; gap:6px; padding:6px 14px; margin:4px 0;
+                   background:var(--accent-soft); border:1px solid var(--accent); border-radius:8px;
+                   font-weight:600; text-decoration:none; }
+.attachment-link:hover { background:#dbeafe; text-decoration:none; }
+/* Top-left shortcut icons: Fault Tree + Protocol Converter + LoRaWAN Parser (stacked vertically) */
+.fault-tree-link, .protocol-link, .lorawan-link { position:fixed; left:22px; top:14px; bottom:auto; z-index:900;
+                   display:inline-flex; align-items:center; gap:9px;
+                   padding:9px 14px 9px 11px; border-radius:999px;
+                   background:#fff; border:1px solid #bfdbfe; color:#1d4ed8;
+                   box-shadow:0 6px 20px rgba(30,58,138,.18);
+                   font-size:13px; font-weight:700; line-height:1; text-decoration:none;
+                   transition:transform .18s ease, box-shadow .18s ease, background .18s ease; }
+.protocol-link { top:52px; }
+.lorawan-link { top:90px; }
+/* Home page: fault tree icon aligns horizontally with the search box */
+body.home .fault-tree-link { top:224px; }
+body.home .protocol-link { top:265px; }
+body.home .lorawan-link { top:306px; }
+.fault-tree-link:hover, .protocol-link:hover, .lorawan-link:hover { transform:translateY(-2px); background:#eff6ff;
+                         box-shadow:0 10px 26px rgba(30,58,138,.25); text-decoration:none; }
+.fault-tree-link svg, .protocol-link svg, .lorawan-link svg { flex:none; }
+@media (max-width:520px) {
+  .fault-tree-link, .protocol-link, .lorawan-link { padding:10px; left:16px; }
+}
+.attachment-icon { font-size:16px; }
+.article-end { text-align:center; }
+footer.site-footer { text-align:center; color:var(--muted); font-size:12.5px; margin-top:48px; }
+/* Lightbox */
+.lightbox-overlay { display:none; position:fixed; inset:0; z-index:9999;
+                    background:rgba(0,0,0,.85); cursor:zoom-out; justify-content:center; align-items:center; }
+.lightbox-overlay.active { display:flex; }
+.lightbox-overlay img { max-width:95vw; max-height:92vh; border-radius:6px; box-shadow:0 8px 40px rgba(0,0,0,.4); }
+@media (max-width:640px) { article.article-body { padding:20px 18px; } }
+
+.parser-card { background:var(--card); border:1px solid var(--border); border-radius:14px;
+               padding:24px; box-shadow:0 2px 10px rgba(0,0,0,.05); }
+.parser-card label { display:block; font-weight:700; font-size:13px; margin-bottom:6px; }
+.form-row { margin-bottom:16px; }
+.form-grid { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:14px; }
+.parser-card input, .parser-card select, .parser-card textarea { width:100%; padding:9px 11px;
+    border:1px solid var(--border); border-radius:8px; font-family:ui-monospace,Consolas,monospace;
+    font-size:13px; background:#fff; color:var(--text); }
+.parser-card textarea { min-height:80px; resize:vertical; line-height:1.6; }
+.btn-row { display:flex; gap:10px; flex-wrap:wrap; margin:16px 0 6px; }
+button.act { padding:9px 16px; border-radius:8px; border:1px solid var(--border);
+             background:#fff; color:var(--text); font:inherit; font-weight:600; cursor:pointer; }
+button.act:hover { background:var(--accent-soft); border-color:var(--accent); }
+button.act.primary { background:var(--accent); border-color:var(--accent); color:#fff; }
+button.act.primary:hover { background:#1d4ed8; }
+.kv-table { width:100%; border-collapse:collapse; font-size:13px; margin-top:12px; }
+.kv-table th, .kv-table td { border:1px solid var(--border); padding:8px 10px; vertical-align:top; }
+.kv-table th { width:190px; background:#f8fafc; text-align:left; font-weight:700; }
+.kv-table .muted { color:var(--muted); font-size:11.5px; margin-top:3px; }
+.ok { color:#15803d; font-weight:700; }
+.bad { color:#b91c1c; font-weight:700; }
+pre.json { background:#f8fafc; border:1px solid var(--border); border-radius:8px;
+           padding:12px; overflow-x:auto; font-size:12px; }
+.help { color:var(--muted); font-size:12.5px; margin-top:16px; }
+h2.sec { font-size:16px; margin:24px 0 4px; }
+.error { color:#b91c1c; font-weight:600; }
+@media (max-width:720px) { .form-grid { grid-template-columns:1fr; } }
+</style>
+</head>
+<body>
+<header class="site-header"><div class="container">
+<h1>LoRaWAN数据包解析</h1>
+<p><a href="../index.html" style="color:#fff;text-decoration:underline">&larr; 返回知识库</a> &middot; PHYPayload / MIC / 解密 / MAC 命令</p>
+</div></header>
+<div class="container">
+<div class="parser-card">
+<div class="form-row">
+<label for="phy">PHYPayload（十六进制，可含空格 / 0x）</label>
+<textarea id="phy" spellcheck="false" placeholder="例如：40B0000001020304..."></textarea>
+</div>
+<div class="form-grid">
+<div><label for="version">协议版本</label><select id="version"><option value="1.0.3">LoRaWAN 1.0.x</option><option value="1.1">LoRaWAN 1.1</option></select></div>
+<div><label for="direction">帧方向</label><select id="direction"><option value="0">Uplink 上行</option><option value="1">Downlink 下行</option></select></div>
+</div>
+<div class="form-grid" style="margin-top:14px">
+<div><label for="nwkskey">NwkSKey / NwkSEncKey</label><input id="nwkskey" type="text" placeholder="16 字节 Hex"></div>
+<div><label for="appskey">AppSKey</label><input id="appskey" type="text" placeholder="16 字节 Hex"></div>
+<div><label for="appkey">AppKey（Join 帧用）</label><input id="appkey" type="text" placeholder="16 字节 Hex"></div>
+<div><label for="snwksint">SNwkSIntKey（1.1 MIC）</label><input id="snwksint" type="text" placeholder="16 字节 Hex"></div>
+<div><label for="fnwksint">FNwkSIntKey（1.1 MIC）</label><input id="fnwksint" type="text" placeholder="16 字节 Hex"></div>
+<div><label for="fcnt">FCnt32 覆盖（可选）</label><input id="fcnt" type="text" placeholder="十进制或 0x 开头"></div>
+</div>
+<div class="btn-row">
+<button type="button" class="act primary" id="parseBtn">解析数据包</button>
+<button type="button" class="act" id="clearBtn">清空</button>
+<button type="button" class="act" id="copyBtn">复制 JSON</button>
+</div>
+<div id="result"></div>
+<p class="help">密钥仅在本机浏览器中参与计算，不会上传到服务器。MIC 校验与 FRMPayload 解密均在本地完成。</p>
+</div>
+</div>
+<script>
+(function () {
+  function rotl(v, n) { return ((v << n) | (v >> (8 - n))) & 0xFF; }
+  function gmul(a, b) {
+    var p = 0;
+    for (var i = 0; i < 8; i++) {
+      if (b & 1) p ^= a;
+      var hi = a & 0x80;
+      a = (a << 1) & 0xFF;
+      if (hi) a ^= 0x1B;
+      b >>= 1;
+    }
+    return p;
+  }
+  var SBOX = new Array(256), INV = new Array(256);
+  (function () {
+    for (var i = 0; i < 256; i++) {
+      var inv = 0;
+      if (i) { for (var x = 1; x < 256; x++) { if (gmul(i, x) === 1) { inv = x; break; } } }
+      var s = inv ^ rotl(inv, 1) ^ rotl(inv, 2) ^ rotl(inv, 3) ^ rotl(inv, 4) ^ 0x63;
+      SBOX[i] = s; INV[s] = i;
+    }
+  })();
+  function expandKey(key) {
+    var w = [];
+    for (var i = 0; i < 4; i++) w[i] = [key[4 * i], key[4 * i + 1], key[4 * i + 2], key[4 * i + 3]];
+    var rcon = 1;
+    for (i = 4; i < 44; i++) {
+      var t = w[i - 1].slice();
+      if (i % 4 === 0) {
+        t = [t[1], t[2], t[3], t[0]];
+        for (var j = 0; j < 4; j++) t[j] = SBOX[t[j]];
+        t[0] ^= rcon; rcon = gmul(rcon, 2);
+      }
+      w[i] = [w[i - 4][0] ^ t[0], w[i - 4][1] ^ t[1], w[i - 4][2] ^ t[2], w[i - 4][3] ^ t[3]];
+    }
+    return w;
+  }
+  function addRoundKey(s, w, r) { for (var i = 0; i < 16; i++) s[i] ^= w[r * 4 + (i >> 2)][i & 3]; }
+  function subBytes(s) { for (var i = 0; i < 16; i++) s[i] = SBOX[s[i]]; }
+  function invSubBytes(s) { for (var i = 0; i < 16; i++) s[i] = INV[s[i]]; }
+  function shiftRows(s) {
+    var t = s.slice();
+    s[1]=t[5]; s[5]=t[9]; s[9]=t[13]; s[13]=t[1];
+    s[2]=t[10]; s[6]=t[14]; s[10]=t[2]; s[14]=t[6];
+    s[3]=t[15]; s[7]=t[3]; s[11]=t[7]; s[15]=t[11];
+  }
+  function invShiftRows(s) {
+    var t = s.slice();
+    s[1]=t[13]; s[5]=t[1]; s[9]=t[5]; s[13]=t[9];
+    s[2]=t[10]; s[6]=t[14]; s[10]=t[2]; s[14]=t[6];
+    s[3]=t[7]; s[7]=t[11]; s[11]=t[15]; s[15]=t[3];
+  }
+  function mixColumns(s) {
+    for (var c = 0; c < 4; c++) {
+      var i = 4 * c, a0=s[i], a1=s[i+1], a2=s[i+2], a3=s[i+3];
+      s[i]   = gmul(a0,2) ^ gmul(a1,3) ^ a2 ^ a3;
+      s[i+1] = a0 ^ gmul(a1,2) ^ gmul(a2,3) ^ a3;
+      s[i+2] = a0 ^ a1 ^ gmul(a2,2) ^ gmul(a3,3);
+      s[i+3] = gmul(a0,3) ^ a1 ^ a2 ^ gmul(a3,2);
+    }
+  }
+  function invMixColumns(s) {
+    for (var c = 0; c < 4; c++) {
+      var i = 4 * c, a0=s[i], a1=s[i+1], a2=s[i+2], a3=s[i+3];
+      s[i]   = gmul(a0,14) ^ gmul(a1,11) ^ gmul(a2,13) ^ gmul(a3,9);
+      s[i+1] = gmul(a0,9) ^ gmul(a1,14) ^ gmul(a2,11) ^ gmul(a3,13);
+      s[i+2] = gmul(a0,13) ^ gmul(a1,9) ^ gmul(a2,14) ^ gmul(a3,11);
+      s[i+3] = gmul(a0,11) ^ gmul(a1,13) ^ gmul(a2,9) ^ gmul(a3,14);
+    }
+  }
+  function encryptBlock(block, w) {
+    var s = block.slice();
+    addRoundKey(s, w, 0);
+    for (var r = 1; r < 10; r++) { subBytes(s); shiftRows(s); mixColumns(s); addRoundKey(s, w, r); }
+    subBytes(s); shiftRows(s); addRoundKey(s, w, 10);
+    return s;
+  }
+  function decryptBlock(block, w) {
+    var s = block.slice();
+    addRoundKey(s, w, 10);
+    for (var r = 9; r >= 1; r--) { invShiftRows(s); invSubBytes(s); addRoundKey(s, w, r); invMixColumns(s); }
+    invShiftRows(s); invSubBytes(s); addRoundKey(s, w, 0);
+    return s;
+  }
+  function xorBytes(a, b) { var o = []; for (var i = 0; i < a.length; i++) o.push(a[i] ^ b[i]); return o; }
+  function leftShift(b) {
+    var r = b.slice(), carry = r[0] & 0x80;
+    for (var i = 0; i < 15; i++) r[i] = ((r[i] << 1) & 0xFF) | (r[i + 1] >> 7);
+    r[15] = ((r[15] << 1) & 0xFF) ^ (carry ? 0x87 : 0);
+    return r;
+  }
+  function aesCmac(key, msg) {
+    var w = expandKey(key), L = encryptBlock([0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0], w);
+    var K1 = leftShift(L), K2 = leftShift(K1);
+    var n = Math.ceil(msg.length / 16), last;
+    if (n === 0) { n = 1; last = [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0]; last[0] = 0x80; last = xorBytes(last, K2); }
+    else if (msg.length % 16 === 0) last = xorBytes(msg.slice((n - 1) * 16), K1);
+    else { last = msg.slice((n - 1) * 16).concat([0x80]); while (last.length < 16) last.push(0); last = xorBytes(last, K2); }
+    var x = [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0], y;
+    for (var i = 0; i < n - 1; i++) { y = xorBytes(x, msg.slice(i * 16, i * 16 + 16)); x = encryptBlock(y, w); }
+    return encryptBlock(xorBytes(x, last), w);
+  }
+  function u32Bytes(n) { return [n & 255, (n >>> 8) & 255, (n >>> 16) & 255, (n >>> 24) & 255]; }
+  function aesCtr(key, dir, devAddr, fcnt, data) {
+    if (!data.length) return [];
+    var w = expandKey(key), out = [], k = Math.ceil(data.length / 16);
+    for (var i = 1; i <= k; i++) {
+      var a = [0x01,0,0,0,0,dir].concat(devAddr, u32Bytes(fcnt), [0, i]);
+      var s = encryptBlock(a, w);
+      for (var j = 0; j < 16 && (i - 1) * 16 + j < data.length; j++) out.push(data[(i - 1) * 16 + j] ^ s[j]);
+    }
+    return out;
+  }
+  function micBlock(dir, devAddr, fcnt, len, tail) {
+    return [0x49,0,0,0,0,dir].concat(devAddr, u32Bytes(fcnt), [tail === undefined ? 0 : tail, len & 255]);
+  }
+  function hexToBytes(s) {
+    var h = String(s || '').trim().replace(/0x/gi, '').replace(/[\s,;:]+/g, '');
+    if (h.length % 2) h = '0' + h;
+    if (!/^[0-9a-fA-F]*$/.test(h)) throw new Error('输入包含非法十六进制字符');
+    var a = []; for (var i = 0; i < h.length; i += 2) a.push(parseInt(h.substr(i, 2), 16));
+    return a;
+  }
+  function toHex(a, sep) {
+    return a.map(function (b) { return ('0' + b.toString(16)).slice(-2).toUpperCase(); }).join(sep === false ? '' : ' ');
+  }
+  function keyFrom(id) { try { var b = hexToBytes(document.getElementById(id).value); return b.length === 16 ? b : null; } catch (e) { return null; } }
+  function fcntValue() {
+    var s = document.getElementById('fcnt').value.trim();
+    if (!s) return null;
+    var n = /^0x/i.test(s) ? parseInt(s, 16) : parseInt(s, 10);
+    return isNaN(n) ? null : (n >>> 0);
+  }
+  var MTYPE = ['Join Request','Join Accept','Unconfirmed Data Up','Unconfirmed Data Down','Confirmed Data Up','Confirmed Data Down','RFU','Proprietary'];
+  var MAC_NAMES = {
+    2:'LinkCheckAns',3:'LinkADRReq/Ans',4:'DutyCycleReq/Ans',5:'RXParamSetupReq/Ans',
+    6:'DevStatusReq',7:'NewChannelReq/Ans',8:'RXTimingSetupReq/Ans',9:'TXParamSetupReq/Ans',
+    10:'DlChannelReq/Ans',11:'RekeyReq',13:'DeviceTimeAns'
+  };
+  function decodeMac(bytes, source) {
+    var out = [], i = 0;
+    while (i < bytes.length) {
+      var cid = bytes[i++], name = MAC_NAMES[cid] || ('未知 CID 0x' + ('0'+cid.toString(16)).slice(-2).toUpperCase());
+      var rest = bytes.slice(i);
+      out.push(source + ': ' + name + '  ' + toHex([cid].concat(rest)));
+      if (!MAC_NAMES[cid]) break;
+      if (cid === 2 && rest.length >= 2) i += 2;
+      else if (cid === 3 && rest.length >= 6) i += 6;
+      else if ((cid === 4 || cid === 6 || cid === 8 || cid === 9 || cid === 11) && rest.length >= 1) i += 1;
+      else if (cid === 5 && rest.length >= 4) i += 4;
+      else if (cid === 7 && rest.length >= 5) i += 5;
+      else if (cid === 10 && rest.length >= 4) i += 4;
+      else if (cid === 13 && rest.length >= 5) i += 5;
+      else { out.push('  参数: ' + toHex(rest)); break; }
+    }
+    return out;
+  }
+  function row(k, v, note) {
+    return '<tr><th>' + k + '</th><td>' + v + (note ? '<div class="muted">' + note + '</div>' : '') + '</td></tr>';
+  }
+  function micHtml(calc, provided) {
+    if (!calc) return '<span class="bad">未提供密钥，无法校验 MIC</span>';
+    var ok = toHex(calc, false) === toHex(provided, false);
+    return '<span class="' + (ok ? 'ok' : 'bad') + '">' + (ok ? '校验通过' : '校验失败') + '</span> · 计算值 ' + toHex(calc) + ' · 帧内 ' + toHex(provided);
+  }
+  function parseData(bytes, dir, version, keys, fcntOverride) {
+    if (bytes.length < 13) throw new Error('数据帧长度不足（至少需要 13 字节）');
+    var devAddr = bytes.slice(1, 5), fctrl = bytes[5];
+    var foptsLen = fctrl & 0x0F;
+    var fcntFrame = bytes[6] | (bytes[7] << 8) | (bytes[8] << 16);
+    var fcnt = fcntOverride === null ? fcntFrame : fcntOverride;
+    var fopts = bytes.slice(9, 9 + foptsLen);
+    var pos = 9 + foptsLen, fport = null, frmEnc = [];
+    if (pos < bytes.length - 4) { fport = bytes[pos]; frmEnc = bytes.slice(pos + 1, bytes.length - 4); }
+    var mic = bytes.slice(-4), msg = bytes.slice(0, -4);
+    var rows = [
+      row('MType', MTYPE[(bytes[0] >> 5) & 7] + ' (' + ((bytes[0] >> 5) & 7) + ')'),
+      row('Major / RFU', 'Major=' + (bytes[0] & 3) + ' / RFU=' + ((bytes[0] >> 2) & 7)),
+      row('DevAddr', toHex(devAddr) + '  <span class="muted">uint32 LE = ' + ((devAddr[0] | devAddr[1]<<8 | devAddr[2]<<16 | devAddr[3]<<24) >>> 0) + '</span>'),
+      row('FCtrl', '0x' + ('0'+fctrl.toString(16)).slice(-2).toUpperCase(),
+          'ADR=' + !!(fctrl&0x80) + ' · ADRACKReq=' + !!(fctrl&0x40) + ' · ACK=' + !!(fctrl&0x20) + ' · ' + (dir ? 'FPending=' + !!(fctrl&0x10) : 'RFU='+!!(fctrl&0x10)) + ' · FOptsLen=' + foptsLen),
+      row('FCnt', '帧内 24-bit = ' + fcntFrame + (fcntOverride !== null ? ' · 覆盖为 32-bit = ' + fcnt : '')),
+      row('FOpts', fopts.length ? toHex(fopts) : '（无）'),
+      row('FPort', fport === null ? '（无）' : fport),
+      row('FRMPayload（密文）', frmEnc.length ? toHex(frmEnc) : '（无）')
+    ];
+    var frmPlain = [], note = '';
+    if (frmEnc.length) {
+      var key = fport === 0 ? (version === '1.1' ? keys.nwksenc : keys.nwkskey) : keys.appskey;
+      if (key) { frmPlain = aesCtr(key, dir, devAddr, fcnt, frmEnc); note = '已使用 ' + (fport === 0 ? 'NwkSKey/NwkSEncKey' : 'AppSKey') + ' 解密'; }
+      else { note = '未提供 ' + (fport === 0 ? 'NwkSKey/NwkSEncKey' : 'AppSKey') + '，无法解密'; }
+    }
+    rows.push(row('FRMPayload（明文）', frmPlain.length ? toHex(frmPlain) : '（无）', note));
+    if (frmPlain.length && fport !== 0) {
+      var printable = frmPlain.map(function (b) { return (b >= 32 && b < 127) ? String.fromCharCode(b) : '.'; }).join('');
+      rows.push(row('明文 ASCII', printable));
+    }
+    var calc;
+    if (version === '1.1') {
+      if (!keys.snwksint || !keys.fnwksint) calc = null;
+      else {
+        var cs = aesCmac(keys.snwksint, micBlock(dir, devAddr, fcnt, msg.length, 1).concat(msg));
+        var cf = aesCmac(keys.fnwksint, micBlock(dir, devAddr, fcnt, msg.length, 0).concat(msg));
+        calc = [cs[0], cs[1], cf[2], cf[3]];
+      }
+    } else {
+      calc = keys.nwkskey ? aesCmac(keys.nwkskey, micBlock(dir, devAddr, fcnt, msg.length, 0).concat(msg)).slice(0, 4) : null;
+    }
+    rows.push(row('MIC', micHtml(calc, mic), 'LoRaWAN ' + version + ' · msg 长度 ' + msg.length + ' 字节'));
+    var macs = [];
+    if (fopts.length) macs = macs.concat(decodeMac(fopts, 'FOpts'));
+    if (fport === 0 && frmPlain.length) macs = macs.concat(decodeMac(frmPlain, 'FRMPayload'));
+    return {
+      type: 'DATA', mtype: MTYPE[(bytes[0] >> 5) & 7], devAddr: toHex(devAddr, false),
+      fcnt: fcnt, fport: fport, mic: toHex(mic, false), micOk: calc ? toHex(calc,false) === toHex(mic,false) : null,
+      frmPayloadPlain: toHex(frmPlain, false), rows: rows, macs: macs
+    };
+  }
+  function parseJoinReq(bytes, keys) {
+    if (bytes.length < 23) throw new Error('Join Request 长度应为 23 字节');
+    var joinEui = bytes.slice(1, 9), devEui = bytes.slice(9, 17), nonce = bytes.slice(17, 19), mic = bytes.slice(19, 23);
+    var msg = bytes.slice(0, 19);
+    var calc = keys.appkey ? aesCmac(keys.appkey, msg).slice(0, 4) : null;
+    var rows = [
+      row('MType', 'Join Request'),
+      row('JoinEUI', toHex(joinEui) + ' <span class="muted">显示(反序): ' + toHex(joinEui.slice().reverse(), false) + '</span>'),
+      row('DevEUI', toHex(devEui) + ' <span class="muted">显示(反序): ' + toHex(devEui.slice().reverse(), false) + '</span>'),
+      row('DevNonce', toHex(nonce) + ' · ' + (nonce[0] | nonce[1] << 8)),
+      row('MIC', micHtml(calc, mic), 'AppKey 对 MHDR|JoinEUI|DevEUI|DevNonce 做 CMAC')
+    ];
+    return { type:'JOIN_REQUEST', joinEui:toHex(joinEui,false), devEui:toHex(devEui,false), devNonce:nonce[0]|nonce[1]<<8, mic:toHex(mic,false), micOk: calc?toHex(calc,false)===toHex(mic,false):null, rows:rows, macs:[] };
+  }
+  function parseJoinAcc(bytes, keys) {
+    var enc = bytes.slice(1, -4), mic = bytes.slice(-4), dec = [];
+    if (!keys.appkey) throw new Error('解析 Join Accept 必须提供 AppKey');
+    var w = expandKey(keys.appkey);
+    for (var i = 0; i < enc.length; i += 16) {
+      var b = enc.slice(i, i + 16); while (b.length < 16) b.push(0);
+      dec = dec.concat(decryptBlock(b, w));
+    }
+    dec = dec.slice(0, enc.length);
+    var calc = aesCmac(keys.appkey, [bytes[0]].concat(dec)).slice(0, 4);
+    var rows = [
+      row('MType', 'Join Accept'),
+      row('密文', toHex(enc)),
+      row('解密后', toHex(dec)),
+      row('JoinNonce', toHex(dec.slice(0, 3)) + ' · ' + (dec[0] | dec[1]<<8 | dec[2]<<16)),
+      row('NetID', toHex(dec.slice(3, 6))),
+      row('DevAddr', toHex(dec.slice(6, 10))),
+      row('DLSettings', '0x' + ('0'+dec[10].toString(16)).slice(-2).toUpperCase(), 'RX1DROffset=' + (dec[10]>>4) + ' · RX2DataRate=' + (dec[10]&15)),
+      row('RxDelay', dec[11]),
+      row('CFList', dec.length > 12 ? toHex(dec.slice(12)) : '（无）'),
+      row('MIC', micHtml(calc, mic))
+    ];
+    return { type:'JOIN_ACCEPT', devAddr:toHex(dec.slice(6,10),false), joinNonce:dec[0]|dec[1]<<8|dec[2]<<16, mic:toHex(mic,false), micOk:toHex(calc,false)===toHex(mic,false), rows:rows, macs:[] };
+  }
+  function parse() {
+    var out = document.getElementById('result');
+    try {
+      var bytes = hexToBytes(document.getElementById('phy').value);
+      if (!bytes.length) { out.innerHTML = ''; return; }
+      var version = document.getElementById('version').value;
+      var dir = parseInt(document.getElementById('direction').value, 10);
+      var keys = { nwkskey:keyFrom('nwkskey'), nwksenc:keyFrom('nwkskey'), appskey:keyFrom('appskey'), appkey:keyFrom('appkey'), snwksint:keyFrom('snwksint'), fnwksint:keyFrom('fnwksint') };
+      var mtype = (bytes[0] >> 5) & 7, data;
+      if (mtype === 0) data = parseJoinReq(bytes, keys);
+      else if (mtype === 1) data = parseJoinAcc(bytes, keys);
+      else if (mtype >= 2 && mtype <= 5) data = parseData(bytes, dir, version, keys, fcntValue());
+      else throw new Error('不支持的 MType: ' + mtype);
+      var html = '<h2 class="sec">解析结果</h2><table class="kv-table">' + data.rows.join('') + '</table>';
+      if (data.macs.length) html += '<h2 class="sec">MAC 命令</h2><table class="kv-table">' + data.macs.map(function(m){ return '<tr><td>' + m + '</td></tr>'; }).join('') + '</table>';
+      var json = JSON.stringify(data, function (k, v) { return k === 'rows' || k === 'macs' ? undefined : v; }, 2);
+      html += '<h2 class="sec">结构化数据</h2><pre class="json" id="jsonOut">' + json + '</pre>';
+      out.innerHTML = html;
+    } catch (e) {
+      out.innerHTML = '<p class="error">解析失败：' + (e.message || e) + '</p>';
+    }
+  }
+  document.getElementById('parseBtn').addEventListener('click', parse);
+  document.getElementById('phy').addEventListener('input', parse);
+  document.getElementById('clearBtn').addEventListener('click', function () {
+    document.getElementById('phy').value = ''; document.getElementById('result').innerHTML = '';
+  });
+  document.getElementById('copyBtn').addEventListener('click', function () {
+    var el = document.getElementById('jsonOut'); if (!el) return;
+    if (navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(el.textContent);
+    else { var r = document.createRange(); r.selectNodeContents(el); window.getSelection().removeAllRanges(); window.getSelection().addRange(r); document.execCommand('copy'); }
+  });
+  if (location.search.indexOf('selftest') >= 0) {
+    var k = hexToBytes('000102030405060708090A0B0C0D0E0F');
+    var pt = hexToBytes('00112233445566778899AABBCCDDEEFF');
+    var ct = encryptBlock(pt, expandKey(k));
+    var cm = aesCmac(hexToBytes('2B7E151628AED2A6ABF7158809CF4F3C'), []);
+    document.title = 'AES=' + toHex(ct, false) + ' CMAC=' + toHex(cm, false);
+  }
+})();
+</script>
+</body>
+</html>

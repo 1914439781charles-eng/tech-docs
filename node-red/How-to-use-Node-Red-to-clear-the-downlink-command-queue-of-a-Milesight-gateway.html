@@ -77,7 +77,7 @@ ul.article-list .meta { font-size:12.5px; color:var(--muted); margin-top:4px; }
 @media (max-width:860px) { .category-grid { grid-template-columns:repeat(2,minmax(0,1fr)); } }
 @media (max-width:520px) { .category-grid { grid-template-columns:1fr; } .cat-desc { min-height:0; } }
 /* Article page */
-.article-nav { margin:18px 0 0; font-size:14px; padding-top:76px; }
+.article-nav { margin:18px 0 0; font-size:14px; padding-top:130px; }
 article.article-body { background:var(--card); border:1px solid var(--border); border-radius:12px;
                        padding:32px 40px; margin-top:16px; }
 article.article-body img { max-width:100%; height:auto; border:1px solid var(--border);
@@ -107,8 +107,8 @@ footer.site-footer { text-align:center; color:var(--muted); font-size:12.5px; ma
 .lightbox-overlay.active { display:flex; }
 .lightbox-overlay img { max-width:95vw; max-height:92vh; border-radius:6px; box-shadow:0 8px 40px rgba(0,0,0,.4); }
 @media (max-width:640px) { article.article-body { padding:20px 18px; } }
-/* Top-left shortcut icons: Fault Tree + Protocol Converter (stacked vertically) */
-.fault-tree-link, .protocol-link { position:fixed; left:22px; top:14px; bottom:auto; z-index:900;
+/* Top-left shortcut icons: Fault Tree + Protocol Converter + LoRaWAN Parser (stacked vertically) */
+.fault-tree-link, .protocol-link, .lorawan-link { position:fixed; left:22px; top:14px; bottom:auto; z-index:900;
                    display:inline-flex; align-items:center; gap:9px;
                    padding:9px 14px 9px 11px; border-radius:999px;
                    background:#fff; border:1px solid #bfdbfe; color:#1d4ed8;
@@ -116,14 +116,16 @@ footer.site-footer { text-align:center; color:var(--muted); font-size:12.5px; ma
                    font-size:13px; font-weight:700; line-height:1; text-decoration:none;
                    transition:transform .18s ease, box-shadow .18s ease, background .18s ease; }
 .protocol-link { top:52px; }
+.lorawan-link { top:90px; }
 /* Home page: fault tree icon aligns horizontally with the search box */
 body.home .fault-tree-link { top:224px; }
 body.home .protocol-link { top:265px; }
-.fault-tree-link:hover, .protocol-link:hover { transform:translateY(-2px); background:#eff6ff;
+body.home .lorawan-link { top:306px; }
+.fault-tree-link:hover, .protocol-link:hover, .lorawan-link:hover { transform:translateY(-2px); background:#eff6ff;
                          box-shadow:0 10px 26px rgba(30,58,138,.25); text-decoration:none; }
-.fault-tree-link svg, .protocol-link svg { flex:none; }
+.fault-tree-link svg, .protocol-link svg, .lorawan-link svg { flex:none; }
 @media (max-width:520px) {
-  .fault-tree-link, .protocol-link { padding:10px; left:16px; }
+  .fault-tree-link, .protocol-link, .lorawan-link { padding:10px; left:16px; }
 }
 </style>
 </head>
@@ -174,5 +176,6 @@ document.addEventListener('keydown', function(e) {
 </script>
 <a class="fault-tree-link" href="https://1914439781charles-eng.github.io/fault-tree-center/" target="_blank" rel="noopener noreferrer" title="Milesight问题排查故障树" aria-label="Milesight问题排查故障树"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="9" y="3" width="6" height="4" rx="1"/><rect x="3" y="17" width="6" height="4" rx="1"/><rect x="15" y="17" width="6" height="4" rx="1"/><path d="M12 7v5M6 17v-5h12v5"/></svg><span>Milesight问题排查故障树</span></a>
 <a class="protocol-link" href="https://1914439781charles-eng.github.io/tech-docs/tools/protocol-converter.html" title="协议转换" aria-label="协议转换"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 8h13l-3-3M20 16H7l3 3"/></svg><span>协议转换</span></a>
+<a class="lorawan-link" href="https://1914439781charles-eng.github.io/tech-docs/tools/lorawan-packet-parser.html" title="LoRaWAN数据包解析" aria-label="LoRaWAN数据包解析"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 12h3l2-6 4 12 2-6h5"/></svg><span>LoRaWAN数据包解析</span></a>
 </body>
 </html>
