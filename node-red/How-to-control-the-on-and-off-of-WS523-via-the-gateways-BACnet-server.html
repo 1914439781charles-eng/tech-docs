@@ -77,7 +77,7 @@ ul.article-list .meta { font-size:12.5px; color:var(--muted); margin-top:4px; }
 @media (max-width:860px) { .category-grid { grid-template-columns:repeat(2,minmax(0,1fr)); } }
 @media (max-width:520px) { .category-grid { grid-template-columns:1fr; } .cat-desc { min-height:0; } }
 /* Article page */
-.article-nav { margin:18px 0 0; font-size:14px; padding-top:34px; }
+.article-nav { margin:18px 0 0; font-size:14px; padding-top:76px; }
 article.article-body { background:var(--card); border:1px solid var(--border); border-radius:12px;
                        padding:32px 40px; margin-top:16px; }
 article.article-body img { max-width:100%; height:auto; border:1px solid var(--border);
@@ -107,24 +107,23 @@ footer.site-footer { text-align:center; color:var(--muted); font-size:12.5px; ma
 .lightbox-overlay.active { display:flex; }
 .lightbox-overlay img { max-width:95vw; max-height:92vh; border-radius:6px; box-shadow:0 8px 40px rgba(0,0,0,.4); }
 @media (max-width:640px) { article.article-body { padding:20px 18px; } }
-/* Top-left shortcut icons: Fault Tree + Protocol Converter */
-.fault-tree-link, .protocol-link { position:fixed; top:14px; bottom:auto; z-index:900;
+/* Top-left shortcut icons: Fault Tree + Protocol Converter (stacked vertically) */
+.fault-tree-link, .protocol-link { position:fixed; left:22px; top:14px; bottom:auto; z-index:900;
                    display:inline-flex; align-items:center; gap:9px;
                    padding:9px 14px 9px 11px; border-radius:999px;
                    background:#fff; border:1px solid #bfdbfe; color:#1d4ed8;
                    box-shadow:0 6px 20px rgba(30,58,138,.18);
                    font-size:13px; font-weight:700; line-height:1; text-decoration:none;
                    transition:transform .18s ease, box-shadow .18s ease, background .18s ease; }
-.fault-tree-link { left:22px; }
-.protocol-link { left:230px; }
+.protocol-link { top:52px; }
+/* Home page: fault tree icon aligns horizontally with the search box */
+body.home .fault-tree-link { top:224px; }
+body.home .protocol-link { top:265px; }
 .fault-tree-link:hover, .protocol-link:hover { transform:translateY(-2px); background:#eff6ff;
                          box-shadow:0 10px 26px rgba(30,58,138,.25); text-decoration:none; }
 .fault-tree-link svg, .protocol-link svg { flex:none; }
 @media (max-width:520px) {
   .fault-tree-link, .protocol-link { padding:10px; left:16px; }
-  .fault-tree-link { top:10px; }
-  .protocol-link { top:52px; }
-  .article-nav { padding-top:76px; }
 }
 </style>
 </head>
