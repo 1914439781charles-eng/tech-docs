@@ -188,6 +188,8 @@ h2.sec { font-size:16px; margin:24px 0 4px; }
 <div class="form-grid">
 <div><label for="version">协议版本</label><select id="version"><option value="1.0.3">LoRaWAN 1.0.x</option><option value="1.1">LoRaWAN 1.1</option></select></div>
 <div><label for="direction">帧方向</label><select id="direction"><option value="0">Uplink 上行</option><option value="1">Downlink 下行</option></select></div>
+<div><label for="fcntLen">FCnt 长度</label><select id="fcntLen"><option value="auto">自动检测（推荐）</option><option value="3">3 字节（标准 LoRaWAN）</option><option value="2">2 字节（Milesight 私有）</option></select></div>
+<div><label for="fcnt">FCnt32 覆盖（可选）</label><input id="fcnt" type="text" placeholder="十进制或 0x 开头"></div>
 </div>
 <div class="form-grid" style="margin-top:14px">
 <div><label for="nwkskey">NwkSKey / NwkSEncKey</label><input id="nwkskey" type="text" placeholder="16 字节 Hex"></div>
@@ -195,7 +197,6 @@ h2.sec { font-size:16px; margin:24px 0 4px; }
 <div><label for="appkey">AppKey（Join 帧用）</label><input id="appkey" type="text" placeholder="16 字节 Hex"></div>
 <div><label for="snwksint">SNwkSIntKey（1.1 MIC）</label><input id="snwksint" type="text" placeholder="16 字节 Hex"></div>
 <div><label for="fnwksint">FNwkSIntKey（1.1 MIC）</label><input id="fnwksint" type="text" placeholder="16 字节 Hex"></div>
-<div><label for="fcnt">FCnt32 覆盖（可选）</label><input id="fcnt" type="text" placeholder="十进制或 0x 开头"></div>
 </div>
 <div class="btn-row">
 <button type="button" class="act primary" id="parseBtn">解析数据包</button>
@@ -203,7 +204,7 @@ h2.sec { font-size:16px; margin:24px 0 4px; }
 <button type="button" class="act" id="copyBtn">复制 JSON</button>
 </div>
 <div id="result"></div>
-<p class="help">输入为完整 LoRaWAN PHYPayload（含 MHDR 与 MIC），支持 Hex（可含空格 / 0x）或 Base64，默认自动识别；URL-safe Base64 也可用。密钥仅在本机浏览器中参与计算，不会上传到服务器。MIC 校验、FRMPayload 与 Join Accept 解密均在本地完成。</p>
+<p class="help">输入为完整 LoRaWAN PHYPayload（含 MHDR 与 MIC），支持 Hex（可含空格 / 0x）或 Base64，默认自动识别；URL-safe Base64 也可用。FCnt 长度默认自动检测（3 字节标准 LoRaWAN / 2 字节 Milesight 私有格式），也可手动指定。密钥仅在本机浏览器中参与计算，不会上传到服务器。MIC 校验、FRMPayload 与 Join Accept 解密均在本地完成。</p>
 </div>
 </div>
 <script>
@@ -442,16 +443,26 @@ h2.sec { font-size:16px; margin:24px 0 4px; }
     var ok = toHex(calc, false) === toHex(provided, false);
     return '<span class="' + (ok ? 'ok' : 'bad') + '">' + (ok ? '校验通过' : '校验失败') + '</span> · 计算值 ' + toHex(calc) + ' · 帧内 ' + toHex(provided);
   }
-  function parseData(bytes, dir, version, keys, fcntOverride) {
+  function parseData(bytes, dir, version, keys, fcntOverride, fcntLenMode) {
     if (bytes.length < 13) throw new Error('数据帧长度不足（至少需要 13 字节）');
     var mtypeVal = (bytes[0] >> 5) & 7, rfu = (bytes[0] >> 2) & 7, major = bytes[0] & 3;
     var devAddr = bytes.slice(1, 5);
     var devNum = (devAddr[0] | devAddr[1]<<8 | devAddr[2]<<16 | devAddr[3]<<24) >>> 0;
     var fctrl = bytes[5], foptsLen = fctrl & 0x0F;
-    var fcntFrame = bytes[6] | (bytes[7] << 8) | (bytes[8] << 16);
+    function fcntFrom(len) { var v = 0; for (var i = 0; i < len; i++) v |= bytes[6 + i] << (8 * i); return v >>> 0; }
+    var fcntLen = 3, fcntAuto = false;
+    if (fcntLenMode === '2') fcntLen = 2;
+    else if (fcntLenMode === '3') fcntLen = 3;
+    else if (version !== '1.1' && keys.nwkskey && bytes.length >= 12) {
+      var micGivenHex = toHex(bytes.slice(-4), false), msgAll = bytes.slice(0, -4);
+      var ok3 = toHex(aesCmac(keys.nwkskey, micBlock(dir, devAddr, fcntFrom(3), msgAll.length, 0).concat(msgAll)).slice(0, 4), false) === micGivenHex;
+      var ok2 = toHex(aesCmac(keys.nwkskey, micBlock(dir, devAddr, fcntFrom(2), msgAll.length, 0).concat(msgAll)).slice(0, 4), false) === micGivenHex;
+      if (!ok3 && ok2) { fcntLen = 2; fcntAuto = true; }
+    }
+    var fcntFrame = fcntFrom(fcntLen);
     var fcnt = fcntOverride === null ? fcntFrame : fcntOverride;
-    var fopts = bytes.slice(9, 9 + foptsLen);
-    var pos = 9 + foptsLen, fport = null, frmEnc = [];
+    var fopts = bytes.slice(6 + fcntLen, 6 + fcntLen + foptsLen);
+    var pos = 6 + fcntLen + foptsLen, fport = null, frmEnc = [];
     if (pos < bytes.length - 4) { fport = bytes[pos]; frmEnc = bytes.slice(pos + 1, bytes.length - 4); }
     var mic = bytes.slice(-4), msg = bytes.slice(0, -4);
     var rows = [];
@@ -466,15 +477,17 @@ h2.sec { font-size:16px; margin:24px 0 4px; }
     rows.push(row('FCtrl · 字节 5', '0x' + hx(fctrl) + ' / 0b' + bits8(fctrl),
                  'ADR=' + !!(fctrl&0x80) + ' · ADRACKReq=' + !!(fctrl&0x40) + ' · ACK=' + !!(fctrl&0x20) + ' · ' +
                  (dir ? 'FPending=' + !!(fctrl&0x10) : 'RFU=' + !!(fctrl&0x10)) + ' · FOptsLen=' + foptsLen));
-    rows.push(row('FCnt · 字节 6-8', '帧内 24-bit=' + fcntFrame + ' · 32-bit 有效值=' + fcnt +
+    rows.push(row('FCnt · 字节 6-' + (5 + fcntLen) + '（' + fcntLen + ' 字节）',
+                 '帧内 ' + (fcntLen * 8) + '-bit=' + fcntFrame + ' · 32-bit 有效值=' + fcnt +
                  ' (0x' + ('00000000' + (fcnt>>>0).toString(16).toUpperCase()).slice(-8) + ')',
-                 'AES-CTR 与 MIC 均使用 32-bit FCnt'));
-    rows.push(row('FOpts · 字节 9-' + (8 + foptsLen), fopts.length ? toHex(fopts) : '（无 / 0 字节）',
+                 'AES-CTR 与 MIC 均使用 32-bit FCnt' +
+                 (fcntLen === 2 ? (fcntAuto ? ' · 自动检测到 2 字节 FCnt（Milesight 私有格式）' : ' · 按 2 字节 FCnt 解析（非标准）') : '')));
+    rows.push(row('FOpts · 字节 ' + (6 + fcntLen) + '-' + (5 + fcntLen + foptsLen), fopts.length ? toHex(fopts) : '（无 / 0 字节）',
                  fopts.length ? '详细解析见下方 MAC 命令' : ''));
     var fportNote = fport === null ? 'FRMPayload 为空' :
                     (fport === 0 ? 'FPort=0：FRMPayload 为 MAC 命令' :
                      (fport <= 223 ? '应用自定义端口' : (fport === 224 ? 'LoRaWAN 测试端口' : '保留端口')));
-    rows.push(row('FPort · 字节 ' + (9 + foptsLen), fport === null ? '（无）' : fport + ' (0x' + hx(fport) + ')',
+    rows.push(row('FPort · 字节 ' + pos, fport === null ? '（无）' : fport + ' (0x' + hx(fport) + ')',
                   fportNote + ' · FPort 为明文单字节，不加密、无字节序；若与配置不符请核对原始 PHYPayload 该字节（区分十进制/十六进制，勿与 FRMPayload 首字节混淆）'));
     rows.push(row('FRMPayload 密文 · 字节 ' + (pos + 1) + '-' + (bytes.length - 5),
                  frmEnc.length ? toHex(frmEnc) : '（无 / 0 字节）', '长度 ' + frmEnc.length + ' 字节'));
@@ -525,10 +538,10 @@ h2.sec { font-size:16px; margin:24px 0 4px; }
       { field:'MHDR', off:0, len:1, val:bytes.slice(0,1) },
       { field:'DevAddr', off:1, len:4, val:devAddr },
       { field:'FCtrl', off:5, len:1, val:[fctrl] },
-      { field:'FCnt', off:6, len:3, val:bytes.slice(6,9) }
+      { field:'FCnt', off:6, len:fcntLen, val:bytes.slice(6, 6 + fcntLen) }
     ];
     if (foptsLen) segs.push({ field:'FOpts', off:9, len:foptsLen, val:fopts });
-    if (fport !== null) segs.push({ field:'FPort', off:9 + foptsLen, len:1, val:[fport] });
+    if (fport !== null) segs.push({ field:'FPort', off:pos, len:1, val:[fport] });
     if (frmEnc.length) segs.push({ field:'FRMPayload', off:pos + 1, len:frmEnc.length, val:frmEnc });
     segs.push({ field:'MIC', off:bytes.length - 4, len:4, val:mic });
 
@@ -547,7 +560,7 @@ h2.sec { font-size:16px; margin:24px 0 4px; }
       devAddr: toHex(devAddr.slice().reverse(), false), devAddrAir: toHex(devAddr, false), devAddrUInt32: devNum,
       fctrl: { raw: hx(fctrl), adr: !!(fctrl&0x80), adrAckReq: !!(fctrl&0x40), ack: !!(fctrl&0x20),
                fPendingOrRfu: !!(fctrl&0x10), fOptsLen: foptsLen },
-      fcnt: { frame24: fcntFrame, effective32: fcnt, overridden: fcntOverride !== null },
+      fcnt: { length: fcntLen, frame: fcntFrame, effective32: fcnt, overridden: fcntOverride !== null, autoDetected: fcntAuto },
       fopts: toHex(fopts, false), fport: fport, fportMeaning: fportNote,
       frmPayload: { length: frmEnc.length, ciphertext: toHex(frmEnc, false), plaintext: toHex(frmPlain, false),
                     ascii: ascii, utf8: utf8, decimal: frmPlain, binary: frmPlain.map(bits8),
@@ -663,11 +676,12 @@ h2.sec { font-size:16px; margin:24px 0 4px; }
       hint.textContent = '识别为 ' + input.format + ' · ' + bytes.length + ' 字节 · Hex: ' + toHex(bytes, false);
       var version = document.getElementById('version').value;
       var dir = parseInt(document.getElementById('direction').value, 10);
+      var fcntLenMode = document.getElementById('fcntLen').value;
       var keys = { nwkskey:keyFrom('nwkskey'), nwksenc:keyFrom('nwkskey'), appskey:keyFrom('appskey'), appkey:keyFrom('appkey'), snwksint:keyFrom('snwksint'), fnwksint:keyFrom('fnwksint') };
       var mtype = (bytes[0] >> 5) & 7, data;
       if (mtype === 0) data = parseJoinReq(bytes, keys);
       else if (mtype === 1) data = parseJoinAcc(bytes, keys);
-      else if (mtype >= 2 && mtype <= 5) data = parseData(bytes, dir, version, keys, fcntValue());
+      else if (mtype >= 2 && mtype <= 5) data = parseData(bytes, dir, version, keys, fcntValue(), fcntLenMode);
       else throw new Error('不支持的 MType: ' + mtype);
       data.input = { format: input.format, raw: raw.trim(), hex: toHex(bytes, false), length: bytes.length };
       var html = '<h2 class="sec">解析结果</h2><table class="kv-table">' + data.rows.join('') + '</table>';
