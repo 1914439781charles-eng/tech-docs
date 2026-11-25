@@ -95,6 +95,16 @@ article.article-body { background:var(--card); border:1px solid var(--border); b
 article.article-body img { max-width:100%; height:auto !important; border:1px solid var(--border);
                            border-radius:8px; margin:8px 0; cursor:zoom-in; transition:box-shadow .15s ease; }
 article.article-body img:hover { box-shadow:0 4px 16px rgba(0,0,0,.12); }
+/* Word 封面: docx 原底图 + 按原坐标定位的文字, 还原 Word 里的封面排版 */
+figure.doc-cover { margin:0 0 26px; }
+.cover-page { position:relative; width:100%; max-width:680px; margin:0 auto; background:#fff;
+              overflow:hidden; container-type:inline-size; border:1px solid var(--border);
+              border-radius:8px; box-shadow:0 4px 18px rgba(15,23,42,.08); }
+.cover-page .art { position:absolute; display:block; max-width:none; height:auto !important;
+                   margin:0; border:0; border-radius:0; box-shadow:none; cursor:default; }
+.cover-page .art:hover { box-shadow:none; }
+.cover-page .tx { position:absolute; line-height:1; white-space:pre; margin:0; padding:0;
+                  font-family:Arial,"Segoe UI",system-ui,sans-serif; }
 article.article-body h1 { font-size:24px; margin-top:0; }
 article.article-body h2 { font-size:20px; border-bottom:1px solid var(--border); padding-bottom:6px; }
 article.article-body h3 { font-size:17px; }
@@ -166,30 +176,13 @@ footer.site-footer { text-align:center; color:var(--muted); font-size:12.5px; ma
 <div class="container">
 <div class="article-nav"><a href="../index.html">&larr; Back to Home</a> &middot; <span class="badge badge-node-red">Node-RED</span><a class="docx-download" href="../downloads/node-red/How-to-use-Node-Red-to-clear-the-downlink-command-queue-of-a-Milesight-gateway.docx" download="How to use Node-Red to clear the downlink command queue of a Milesight gateway.docx" title="下载原始 Word 文档"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3v12m0 0l-4.5-4.5M12 15l4.5-4.5"/><path d="M4 20h16"/></svg><span>下载 Word 文档</span></a></div>
 <article class="article-body">
-<figure>
-<img src="../assets/node-red/How-to-use-Node-Red-to-clear-the-downlink-command-queue-of-a-Milesight-gateway/media/image4.png" style="width:8.27847in;height:11.70972in" alt="D:/桌面/15(英文）.png15(英文）" />
-<figcaption><p>How to use Node-Red to clear the downlink command queue of a Milesight gateway</p></figcaption>
-</figure>
-<p>Step 1: Enable the Node-Red feature on the Milesight gateway.</p>
-<p><img src="../assets/node-red/How-to-use-Node-Red-to-clear-the-downlink-command-queue-of-a-Milesight-gateway/media/image5.png" style="width:5.95556in;height:2.93958in" alt="IMG_256" /></p>
-<p>Step 2: Click this link(<a href="https://resource.milesight-iot.com/Support/Charles/flows (CLEAR).json">flows (CLEAR).json</a>) to download the node flow file (JSON file), and then import this JSON file into Node-Red.</p>
-<p><img src="../assets/node-red/How-to-use-Node-Red-to-clear-the-downlink-command-queue-of-a-Milesight-gateway/media/image6.png" style="width:5.80208in;height:2.86389in" alt="IMG_257" /></p>
-<p><img src="../assets/node-red/How-to-use-Node-Red-to-clear-the-downlink-command-queue-of-a-Milesight-gateway/media/image7.png" style="width:5.14375in;height:2.53889in" alt="IMG_258" /></p>
-<p><img src="../assets/node-red/How-to-use-Node-Red-to-clear-the-downlink-command-queue-of-a-Milesight-gateway/media/image8.png" style="width:11.21042in;height:5.46944in" alt="IMG_259" /></p>
-<p><img src="../assets/node-red/How-to-use-Node-Red-to-clear-the-downlink-command-queue-of-a-Milesight-gateway/media/image9.png" style="width:5.81597in;height:2.87083in" alt="IMG_260" /></p>
-<p>Step 3: Obtain the HTTP API Token and specify the device's DevEUI.</p>
-<p><img src="../assets/node-red/How-to-use-Node-Red-to-clear-the-downlink-command-queue-of-a-Milesight-gateway/media/image10.png" style="width:10.00903in;height:4.94028in" alt="IMG_261" /></p>
-<p><img src="../assets/node-red/How-to-use-Node-Red-to-clear-the-downlink-command-queue-of-a-Milesight-gateway/media/image11.png" style="width:6.04375in;height:2.98333in" alt="IMG_262" /></p>
-<p>It is worth noting that the HTTP API Token is valid for 24 hours. You can click the button again to obtain a new token after the current one expires.</p>
-<p>Step 4: When you want to delete the downlink command queue for the sensor device specified by the current DevEUI, you just need to click the button shown in the picture below.</p>
-<p><img src="../assets/node-red/How-to-use-Node-Red-to-clear-the-downlink-command-queue-of-a-Milesight-gateway/media/image12.png" style="width:5.55in;height:2.73958in" alt="IMG_263" /></p>
-<p class="article-end"><strong>_END_</strong></p>
+<figure class="doc-cover"><div class="cover-page" style="aspect-ratio:11906/16838"><img class="art" src="../assets/node-red/How-to-use-Node-Red-to-clear-the-downlink-command-queue-of-a-Milesight-gateway/art-d202fcd3.png" alt="" style="left:0.000%;top:0.006%;width:100.126%"><span class="tx" style="left:10.627%;top:17.340%;font-size:4.032cqw;color:#5b9bd5">How to use Node-Red to clear the </span><span class="tx" style="left:10.627%;top:22.896%;font-size:4.035cqw;color:#5b9bd5">downlink </span><span class="tx" style="left:33.622%;top:22.896%;font-size:4.035cqw;color:#5b9bd5">command </span><span class="tx" style="left:58.405%;top:22.896%;font-size:4.035cqw;color:#5b9bd5">queue </span><span class="tx" style="left:75.899%;top:22.896%;font-size:4.035cqw;color:#5b9bd5">of </span><span class="tx" style="left:85.125%;top:22.896%;font-size:4.035cqw;color:#5b9bd5">a </span><span class="tx" style="left:10.627%;top:28.462%;font-size:4.032cqw;color:#5b9bd5">Milesight gateway </span></div></figure><p>Step 1: Enable the Node-Red feature on the Milesight gateway.</p><p><img src="../assets/node-red/How-to-use-Node-Red-to-clear-the-downlink-command-queue-of-a-Milesight-gateway/media/image5.png" style="width:5.95556in;height:2.93958in" alt="IMG_256" /></p><p>Step 2: Click this link(<a href="https://resource.milesight-iot.com/Support/Charles/flows (CLEAR).json">flows (CLEAR).json</a>) to download the node flow file (JSON file), and then import this JSON file into Node-Red.</p><p><img src="../assets/node-red/How-to-use-Node-Red-to-clear-the-downlink-command-queue-of-a-Milesight-gateway/media/image6.png" style="width:5.80208in;height:2.86389in" alt="IMG_257" /></p><p><img src="../assets/node-red/How-to-use-Node-Red-to-clear-the-downlink-command-queue-of-a-Milesight-gateway/media/image7.png" style="width:5.14375in;height:2.53889in" alt="IMG_258" /></p><p><img src="../assets/node-red/How-to-use-Node-Red-to-clear-the-downlink-command-queue-of-a-Milesight-gateway/media/image8.png" style="width:11.21042in;height:5.46944in" alt="IMG_259" /></p><p><img src="../assets/node-red/How-to-use-Node-Red-to-clear-the-downlink-command-queue-of-a-Milesight-gateway/media/image9.png" style="width:5.81597in;height:2.87083in" alt="IMG_260" /></p><p>Step 3: Obtain the HTTP API Token and specify the device's DevEUI.</p><p><img src="../assets/node-red/How-to-use-Node-Red-to-clear-the-downlink-command-queue-of-a-Milesight-gateway/media/image10.png" style="width:10.00903in;height:4.94028in" alt="IMG_261" /></p><p><img src="../assets/node-red/How-to-use-Node-Red-to-clear-the-downlink-command-queue-of-a-Milesight-gateway/media/image11.png" style="width:6.04375in;height:2.98333in" alt="IMG_262" /></p><p>It is worth noting that the HTTP API Token is valid for 24 hours. You can click the button again to obtain a new token after the current one expires.</p><p>Step 4: When you want to delete the downlink command queue for the sensor device specified by the current DevEUI, you just need to click the button shown in the picture below.</p><p><img src="../assets/node-red/How-to-use-Node-Red-to-clear-the-downlink-command-queue-of-a-Milesight-gateway/media/image12.png" style="width:5.55in;height:2.73958in" alt="IMG_263" /></p><p class="article-end"><strong>_END_</strong></p>
 
 </article>
 <footer class="site-footer">Milesight产品技术方案知识库</footer>
 </div>
 <script>
-document.querySelectorAll('article.article-body img').forEach(function(img) {
+document.querySelectorAll('article.article-body img:not(.art)').forEach(function(img) {
   img.addEventListener('click', function() {
     document.getElementById('lightbox-img').src = this.src;
     document.getElementById('lightbox').classList.add('active');

@@ -95,6 +95,16 @@ article.article-body { background:var(--card); border:1px solid var(--border); b
 article.article-body img { max-width:100%; height:auto !important; border:1px solid var(--border);
                            border-radius:8px; margin:8px 0; cursor:zoom-in; transition:box-shadow .15s ease; }
 article.article-body img:hover { box-shadow:0 4px 16px rgba(0,0,0,.12); }
+/* Word 封面: docx 原底图 + 按原坐标定位的文字, 还原 Word 里的封面排版 */
+figure.doc-cover { margin:0 0 26px; }
+.cover-page { position:relative; width:100%; max-width:680px; margin:0 auto; background:#fff;
+              overflow:hidden; container-type:inline-size; border:1px solid var(--border);
+              border-radius:8px; box-shadow:0 4px 18px rgba(15,23,42,.08); }
+.cover-page .art { position:absolute; display:block; max-width:none; height:auto !important;
+                   margin:0; border:0; border-radius:0; box-shadow:none; cursor:default; }
+.cover-page .art:hover { box-shadow:none; }
+.cover-page .tx { position:absolute; line-height:1; white-space:pre; margin:0; padding:0;
+                  font-family:Arial,"Segoe UI",system-ui,sans-serif; }
 article.article-body h1 { font-size:24px; margin-top:0; }
 article.article-body h2 { font-size:20px; border-bottom:1px solid var(--border); padding-bottom:6px; }
 article.article-body h3 { font-size:17px; }
@@ -166,119 +176,18 @@ footer.site-footer { text-align:center; color:var(--muted); font-size:12.5px; ma
 <div class="container">
 <div class="article-nav"><a href="../index.html">&larr; Back to Home</a> &middot; <span class="badge badge-node-red">Node-RED</span><a class="docx-download" href="../downloads/node-red/How-to-store-sensor-data-into-a-MySQL-database-using-Node-Red.docx" download="How to store sensor data into a MySQL database using Node-Red.docx" title="下载原始 Word 文档"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3v12m0 0l-4.5-4.5M12 15l4.5-4.5"/><path d="M4 20h16"/></svg><span>下载 Word 文档</span></a></div>
 <article class="article-body">
-<figure>
-<img src="../assets/node-red/How-to-store-sensor-data-into-a-MySQL-database-using-Node-Red/media/image4.png" style="width:8.27847in;height:11.70972in" alt="D:/桌面/15(英文）.png15(英文）" />
-<figcaption><p><strong>How to store sensor data into a MySQL database using Node-Red</strong></p></figcaption>
-</figure>
-<h1 id="description">Description</h1>
-<p>Node-RED is a programming tool for wiring together hardware devices, APIs and online services  in new and interesting ways. It provides a brower-based editor that makes it easy to wire together flows using the wide range of nodes in the palette that can be deployed to its runtime in a single-click.This article will explain how to save sensot data into MySQL database using Node-Red. </p>
-<h1 id="requirement">Requirement</h1>
-<p>1. Any Milesight device with node-red embedded can be used. Here, we will use the <strong>UG65 </strong>gateway as an example.</p>
-<p>2. Employ a MySQL database, version 5.6.34 or above, ensuring its seamless functionality.</p>
-<p>3. Ensure successful network integration of one or many LoRaWAN devices with the UG65, transmitting data consistently. Here, we exemplify the UC501 LoRaWAN device.</p>
-<h1 id="configuration">Configuration</h1>
-<h2 id="device-internet-connectivity">1. Device Internet Connectivity </h2>
-<p>Firstly, ensure that your UG65 gateway device is capable of connecting to the internet. For specific instructions. </p>
-<p>Please refer to the following link: <a href="https://support.milesight-iot.com/support/solutions/articles/73000514278-how-to-connect-milesight-gateway-to-the-internet">How to Connect Milesight Gateway to the Internet</a></p>
-<h2 id="access-the-node-red-dashboard">2. Access the Node-RED Dashboard</h2>
-<p>Typically, navigate to https://[Your_Device_IP_Address]/node-red, and log in using the admin credentials.</p>
-<p> </p>
-<p><img src="../assets/node-red/How-to-store-sensor-data-into-a-MySQL-database-using-Node-Red/media/image5.png" style="width:5.74097in;height:3.62639in" alt="IMG_256" /></p>
-<h2 id="plugin-installation-procedure">3. Plugin Installation Procedure</h2>
-<p>Navigate to the "Manage palette" option in the Node-RED menu bar. </p>
-<p><img src="../assets/node-red/How-to-store-sensor-data-into-a-MySQL-database-using-Node-Red/media/image6.png" style="width:5.71597in;height:2.87361in" alt="IMG_257" /></p>
-<p>Search for the MySQL plugin, specifically, "node-red-node-mysql". </p>
-<p>Click on "install" and allow approximately 3-5 minutes for the system to execute the installation process automatically. </p>
-<p><img src="../assets/node-red/How-to-store-sensor-data-into-a-MySQL-database-using-Node-Red/media/image7.png" style="width:5.72569in;height:2.87847in" alt="IMG_258" /></p>
-<p>Upon completion, verify the presence of the plugin by typing "mysql" into the plugin search bar. </p>
-<p>If the plugin is not visible, consider restarting your gateway device for optimal functionality. </p>
-<p><img src="../assets/node-red/How-to-store-sensor-data-into-a-MySQL-database-using-Node-Red/media/image8.png" style="width:5.81667in;height:2.92431in" alt="IMG_259" /></p>
-<h2 id="database-preparation">4. Database Preparation</h2>
-<p>Prepare the database in accordance with the specific scenario, such as the utilization of <strong>UC501 </strong>sensors in this instance. </p>
-<p>Log in to your MySQL database and execute the following statement to create the database.</p>
-<p>CREATE DATABASE milesight_db CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;</p>
-<p>Then create the database table with the following SQL statements.</p>
-<p>CREATE TABLE t_sensor_uc_501_data (</p>
-<p>row_id INT AUTO_INCREMENT PRIMARY KEY,</p>
-<p>gpio_1 VARCHAR(10) DEFAULT 'no data',</p>
-<p>gpio_2 VARCHAR(10) DEFAULT 'no data',</p>
-<p>adc_1 INT DEFAULT 0,</p>
-<p>adc_1_min INT DEFAULT 0,</p>
-<p>adc_1_max INT DEFAULT 0,</p>
-<p>adc_1_avg INT DEFAULT 0,</p>
-<p>adc_2 INT DEFAULT 0,</p>
-<p>adc_2_min INT DEFAULT 0,</p>
-<p>adc_2_max INT DEFAULT 0,</p>
-<p>adc_2_avg INT DEFAULT 0,</p>
-<p>rec_ts TIMESTAMP DEFAULT CURRENT_TIMESTAMP</p>
-<p>) AUTO_INCREMENT=0;</p>
-<p>Ensure alignment between the predefined data structure and the configuration within Node-RED to prevent any potential data insertion errors. </p>
-<h2 id="flow-creation">5. Flow Creation</h2>
-<p>Follow these steps to create the flow sequence:</p>
-<ol type="1">
+<figure class="doc-cover"><div class="cover-page" style="aspect-ratio:11906/16838"><img class="art" src="../assets/node-red/How-to-store-sensor-data-into-a-MySQL-database-using-Node-Red/art-abc39806.png" alt="" style="left:0.000%;top:0.006%;width:100.126%"><span class="tx" style="left:10.627%;top:16.756%;font-size:4.032cqw;color:#2c66a5;font-weight:700">How to store sensor data into a MySQL </span><span class="tx" style="left:10.627%;top:20.462%;font-size:4.032cqw;color:#2c66a5;font-weight:700">database using Node-Red</span></div></figure><h1 id="description">Description</h1><p>Node-RED is a programming tool for wiring together hardware devices, APIs and online services  in new and interesting ways. It provides a brower-based editor that makes it easy to wire together flows using the wide range of nodes in the palette that can be deployed to its runtime in a single-click.This article will explain how to save sensot data into MySQL database using Node-Red. </p><h1 id="requirement">Requirement</h1><p>1. Any Milesight device with node-red embedded can be used. Here, we will use the <strong>UG65 </strong>gateway as an example.</p><p>2. Employ a MySQL database, version 5.6.34 or above, ensuring its seamless functionality.</p><p>3. Ensure successful network integration of one or many LoRaWAN devices with the UG65, transmitting data consistently. Here, we exemplify the UC501 LoRaWAN device.</p><h1 id="configuration">Configuration</h1><h2 id="device-internet-connectivity">1. Device Internet Connectivity </h2><p>Firstly, ensure that your UG65 gateway device is capable of connecting to the internet. For specific instructions. </p><p>Please refer to the following link: <a href="https://support.milesight-iot.com/support/solutions/articles/73000514278-how-to-connect-milesight-gateway-to-the-internet">How to Connect Milesight Gateway to the Internet</a></p><h2 id="access-the-node-red-dashboard">2. Access the Node-RED Dashboard</h2><p>Typically, navigate to https://[Your_Device_IP_Address]/node-red, and log in using the admin credentials.</p><p> </p><p><img src="../assets/node-red/How-to-store-sensor-data-into-a-MySQL-database-using-Node-Red/media/image5.png" style="width:5.74097in;height:3.62639in" alt="IMG_256" /></p><h2 id="plugin-installation-procedure">3. Plugin Installation Procedure</h2><p>Navigate to the "Manage palette" option in the Node-RED menu bar. </p><p><img src="../assets/node-red/How-to-store-sensor-data-into-a-MySQL-database-using-Node-Red/media/image6.png" style="width:5.71597in;height:2.87361in" alt="IMG_257" /></p><p>Search for the MySQL plugin, specifically, "node-red-node-mysql". </p><p>Click on "install" and allow approximately 3-5 minutes for the system to execute the installation process automatically. </p><p><img src="../assets/node-red/How-to-store-sensor-data-into-a-MySQL-database-using-Node-Red/media/image7.png" style="width:5.72569in;height:2.87847in" alt="IMG_258" /></p><p>Upon completion, verify the presence of the plugin by typing "mysql" into the plugin search bar. </p><p>If the plugin is not visible, consider restarting your gateway device for optimal functionality. </p><p><img src="../assets/node-red/How-to-store-sensor-data-into-a-MySQL-database-using-Node-Red/media/image8.png" style="width:5.81667in;height:2.92431in" alt="IMG_259" /></p><h2 id="database-preparation">4. Database Preparation</h2><p>Prepare the database in accordance with the specific scenario, such as the utilization of <strong>UC501 </strong>sensors in this instance. </p><p>Log in to your MySQL database and execute the following statement to create the database.</p><p>CREATE DATABASE milesight_db CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;</p><p>Then create the database table with the following SQL statements.</p><p>CREATE TABLE t_sensor_uc_501_data (</p><p>row_id INT AUTO_INCREMENT PRIMARY KEY,</p><p>gpio_1 VARCHAR(10) DEFAULT 'no data',</p><p>gpio_2 VARCHAR(10) DEFAULT 'no data',</p><p>adc_1 INT DEFAULT 0,</p><p>adc_1_min INT DEFAULT 0,</p><p>adc_1_max INT DEFAULT 0,</p><p>adc_1_avg INT DEFAULT 0,</p><p>adc_2 INT DEFAULT 0,</p><p>adc_2_min INT DEFAULT 0,</p><p>adc_2_max INT DEFAULT 0,</p><p>adc_2_avg INT DEFAULT 0,</p><p>rec_ts TIMESTAMP DEFAULT CURRENT_TIMESTAMP</p><p>) AUTO_INCREMENT=0;</p><p>Ensure alignment between the predefined data structure and the configuration within Node-RED to prevent any potential data insertion errors. </p><h2 id="flow-creation">5. Flow Creation</h2><p>Follow these steps to create the flow sequence:</p><ol type="1">
 <li><p>Begin by adding a "LoRa Input" node (rename it to "<strong>LoRa Data Input</strong>").</p></li>
 <li><p>Next, include a "Device Filter" node (rename it to "<strong>Get data from UC501-868M device</strong>").</p></li>
 <li><p>Integrate two "Function" nodes (rename them to "<strong>Decode sensor data</strong>" and "<strong>Generate SQL commands</strong>" respectively).</p></li>
 <li><p>Lastly, incorporate a "MySQL" node plugin (rename it to "<strong>MySQL Connector Node</strong>"). Ensure proper configuration of connections between the plugins, adhering to the diagram provided below.</p></li>
-</ol>
-<p><img src="../assets/node-red/How-to-store-sensor-data-into-a-MySQL-database-using-Node-Red/media/image9.png" style="width:5.70069in;height:2.86597in" alt="IMG_260" /></p>
-<p>Next, let's go through the specific configurations of each plugin: </p>
-<p><strong>1) LoRa Data Input</strong>: This serves as the entry point for all LoRaWAN data streams mounted on gateway devices.</p>
-<p><img src="../assets/node-red/How-to-store-sensor-data-into-a-MySQL-database-using-Node-Red/media/image10.png" style="width:5.70069in;height:2.86528in" alt="IMG_261" /></p>
-<p><strong>2) Get data from UC501-868M device</strong>: Filters data streams from your desired devices using their Device EUIs. </p>
-<p><img src="../assets/node-red/How-to-store-sensor-data-into-a-MySQL-database-using-Node-Red/media/image11.png" style="width:5.74792in;height:2.88958in" alt="IMG_262" /></p>
-<p><strong>3) Decode sensor data</strong>: Write decoder code specific to your devices to decode the data. If your LoRaWAN devices are products of Milesight, you can generally obtain the decoder code from <a href="https://github.com/Milesight-IoT/SensorDecoders">Milesight IoT Sensor Decoders</a>. </p>
-<p>However, you'll need to modify the code syntax into <strong>TypeScript </strong>format for use in Node-RED.</p>
-<p><img src="../assets/node-red/How-to-store-sensor-data-into-a-MySQL-database-using-Node-Red/media/image12.png" style="width:5.74931in;height:2.89028in" alt="IMG_263" /></p>
-<p><strong>4) Generate SQL commands</strong>: This plugin is pivotal in the entire flow. Here, you can assemble SQL statements as needed, keeping only the fields you want to insert into the database and deleting those you don't need. For instance, in the case shown in the diagram, I don't need "modbus_chn_1_alarm" and "modbus_chn_2_alarm", so I can refer to the code example and delete them.</p>
-<p><img src="../assets/node-red/How-to-store-sensor-data-into-a-MySQL-database-using-Node-Red/media/image13.png" style="width:5.69583in;height:2.86319in" alt="IMG_264" /></p>
-<p>var data = msg.payload;</p>
-<p>delete data.modbus_chn_1_alarm;</p>
-<p>delete data.modbus_chn_2_alarm;</p>
-<p>msg.topic = "INSERT INTO t_sensor_uc_501_data (gpio_1, gpio_2, adc_1, adc_1_min, adc_1_max, adc_1_avg, adc_2, adc_2_min, adc_2_max, adc_2_avg) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";</p>
-<p>msg.payload = [</p>
-<p>    data.gpio_1,</p>
-<p>    data.gpio_2,</p>
-<p>    data.adc_1,</p>
-<p>    data.adc_1_min,</p>
-<p>    data.adc_1_max,</p>
-<p>    data.adc_1_avg,</p>
-<p>    data.adc_2,</p>
-<p>    data.adc_2_min,</p>
-<p>    data.adc_2_max,</p>
-<p>    data.adc_2_avg</p>
-<p>];</p>
-<p>return msg;</p>
-<p><strong>5) MySQL Connector Node</strong>: This is the critical node for the entire flow. During the initial setup, you need to configure the connection details for your target MySQL database, including the database address, port number, username, password, database name, and character set. It is important to note that this configuration is required only during the first setup.</p>
-<p><img src="../assets/node-red/How-to-store-sensor-data-into-a-MySQL-database-using-Node-Red/media/image14.png" style="width:5.74306in;height:2.88681in" alt="IMG_265" /></p>
-<p>For subsequent uses, you can simply select the previously configured settings from a dropdown menu, without re-entering the database parameters each time. </p>
-<p><img src="../assets/node-red/How-to-store-sensor-data-into-a-MySQL-database-using-Node-Red/media/image15.png" style="width:5.76389in;height:2.89722in" alt="IMG_266" /></p>
-<h2 id="start-the-flow-process-and-check-the-data">6. Start the Flow Process and Check the Data</h2>
-<p>After configuring the parameters for all the nodes above, click "<strong>Deploy</strong>" in the upper right corner. </p>
-<p>The flow process will start automatically. Observe the log output of the debug plugin to check if there are any errors in the previous configuration. </p>
-<p>Generally, the log prompts are as follows: </p>
-<p><img src="../assets/node-red/How-to-store-sensor-data-into-a-MySQL-database-using-Node-Red/media/image16.png" style="width:5.78819in;height:2.90972in" alt="IMG_267" /></p>
-<p>Next, use a database connection tool or command-line interface to connect to the MySQL database and verify that the data has been correctly imported.</p>
-<p><img src="../assets/node-red/How-to-store-sensor-data-into-a-MySQL-database-using-Node-Red/media/image17.png" style="width:5.74583in;height:2.82778in" alt="IMG_268" /></p>
-<p>Upon inspection, we can confirm that the sensor data has been automatically stored in the database. </p>
-<p>This concludes our tutorial on storing sensor data in a database. </p>
-<p>For your convenience, I will export the backup file of the flow process used in this demonstration as a text file and attach it at <a href="http://resource.milesight-iot.com/Support/lockon/LoRa-To-MySQL.json"><u>here</u></a>. This will allow readers to import it into the Node-RED system for their own use.</p>
-<p> </p>
-<h1 id="frequently-asked-questions">Frequently Asked Questions</h1>
-<p><strong>Question 1:</strong></p>
-<p><strong>Hello, my database version is different from yours. Can I still use this guide as a reference?</strong></p>
-<p><strong>Answer 1:</strong> </p>
-<p>Yes, you can. While there are differences between major MySQL versions, such as case sensitivity for table names and field type definitions, you will need to make specific adjustments based on your version. This article provides a comprehensive overview of the entire process, but you should modify the relevant SQL statements to suit your actual situation.</p>
-<p><strong>Question 2:</strong></p>
-<p><strong>Hello, I am unable to install the MySQL plugin for Node-RED. How should I proceed?</strong></p>
-<p><strong>Answer 2:</strong> </p>
-<p>Installing plugins for Node-RED requires an internet connection. Please ensure that your device is connected to the internet. For detailed troubleshooting steps, please refer to the guide at <a href="https://support.milesight-iot.com/support/solutions/articles/73000514278-how-to-connect-milesight-gateway-to-the-internet">Milesight Support</a> and follow the instructions provided.</p>
+</ol><p><img src="../assets/node-red/How-to-store-sensor-data-into-a-MySQL-database-using-Node-Red/media/image9.png" style="width:5.70069in;height:2.86597in" alt="IMG_260" /></p><p>Next, let's go through the specific configurations of each plugin: </p><p><strong>1) LoRa Data Input</strong>: This serves as the entry point for all LoRaWAN data streams mounted on gateway devices.</p><p><img src="../assets/node-red/How-to-store-sensor-data-into-a-MySQL-database-using-Node-Red/media/image10.png" style="width:5.70069in;height:2.86528in" alt="IMG_261" /></p><p><strong>2) Get data from UC501-868M device</strong>: Filters data streams from your desired devices using their Device EUIs. </p><p><img src="../assets/node-red/How-to-store-sensor-data-into-a-MySQL-database-using-Node-Red/media/image11.png" style="width:5.74792in;height:2.88958in" alt="IMG_262" /></p><p><strong>3) Decode sensor data</strong>: Write decoder code specific to your devices to decode the data. If your LoRaWAN devices are products of Milesight, you can generally obtain the decoder code from <a href="https://github.com/Milesight-IoT/SensorDecoders">Milesight IoT Sensor Decoders</a>. </p><p>However, you'll need to modify the code syntax into <strong>TypeScript </strong>format for use in Node-RED.</p><p><img src="../assets/node-red/How-to-store-sensor-data-into-a-MySQL-database-using-Node-Red/media/image12.png" style="width:5.74931in;height:2.89028in" alt="IMG_263" /></p><p><strong>4) Generate SQL commands</strong>: This plugin is pivotal in the entire flow. Here, you can assemble SQL statements as needed, keeping only the fields you want to insert into the database and deleting those you don't need. For instance, in the case shown in the diagram, I don't need "modbus_chn_1_alarm" and "modbus_chn_2_alarm", so I can refer to the code example and delete them.</p><p><img src="../assets/node-red/How-to-store-sensor-data-into-a-MySQL-database-using-Node-Red/media/image13.png" style="width:5.69583in;height:2.86319in" alt="IMG_264" /></p><p>var data = msg.payload;</p><p>delete data.modbus_chn_1_alarm;</p><p>delete data.modbus_chn_2_alarm;</p><p>msg.topic = "INSERT INTO t_sensor_uc_501_data (gpio_1, gpio_2, adc_1, adc_1_min, adc_1_max, adc_1_avg, adc_2, adc_2_min, adc_2_max, adc_2_avg) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";</p><p>msg.payload = [</p><p>    data.gpio_1,</p><p>    data.gpio_2,</p><p>    data.adc_1,</p><p>    data.adc_1_min,</p><p>    data.adc_1_max,</p><p>    data.adc_1_avg,</p><p>    data.adc_2,</p><p>    data.adc_2_min,</p><p>    data.adc_2_max,</p><p>    data.adc_2_avg</p><p>];</p><p>return msg;</p><p><strong>5) MySQL Connector Node</strong>: This is the critical node for the entire flow. During the initial setup, you need to configure the connection details for your target MySQL database, including the database address, port number, username, password, database name, and character set. It is important to note that this configuration is required only during the first setup.</p><p><img src="../assets/node-red/How-to-store-sensor-data-into-a-MySQL-database-using-Node-Red/media/image14.png" style="width:5.74306in;height:2.88681in" alt="IMG_265" /></p><p>For subsequent uses, you can simply select the previously configured settings from a dropdown menu, without re-entering the database parameters each time. </p><p><img src="../assets/node-red/How-to-store-sensor-data-into-a-MySQL-database-using-Node-Red/media/image15.png" style="width:5.76389in;height:2.89722in" alt="IMG_266" /></p><h2 id="start-the-flow-process-and-check-the-data">6. Start the Flow Process and Check the Data</h2><p>After configuring the parameters for all the nodes above, click "<strong>Deploy</strong>" in the upper right corner. </p><p>The flow process will start automatically. Observe the log output of the debug plugin to check if there are any errors in the previous configuration. </p><p>Generally, the log prompts are as follows: </p><p><img src="../assets/node-red/How-to-store-sensor-data-into-a-MySQL-database-using-Node-Red/media/image16.png" style="width:5.78819in;height:2.90972in" alt="IMG_267" /></p><p>Next, use a database connection tool or command-line interface to connect to the MySQL database and verify that the data has been correctly imported.</p><p><img src="../assets/node-red/How-to-store-sensor-data-into-a-MySQL-database-using-Node-Red/media/image17.png" style="width:5.74583in;height:2.82778in" alt="IMG_268" /></p><p>Upon inspection, we can confirm that the sensor data has been automatically stored in the database. </p><p>This concludes our tutorial on storing sensor data in a database. </p><p>For your convenience, I will export the backup file of the flow process used in this demonstration as a text file and attach it at <a href="http://resource.milesight-iot.com/Support/lockon/LoRa-To-MySQL.json"><u>here</u></a>. This will allow readers to import it into the Node-RED system for their own use.</p><p> </p><h1 id="frequently-asked-questions">Frequently Asked Questions</h1><p><strong>Question 1:</strong></p><p><strong>Hello, my database version is different from yours. Can I still use this guide as a reference?</strong></p><p><strong>Answer 1:</strong> </p><p>Yes, you can. While there are differences between major MySQL versions, such as case sensitivity for table names and field type definitions, you will need to make specific adjustments based on your version. This article provides a comprehensive overview of the entire process, but you should modify the relevant SQL statements to suit your actual situation.</p><p><strong>Question 2:</strong></p><p><strong>Hello, I am unable to install the MySQL plugin for Node-RED. How should I proceed?</strong></p><p><strong>Answer 2:</strong> </p><p>Installing plugins for Node-RED requires an internet connection. Please ensure that your device is connected to the internet. For detailed troubleshooting steps, please refer to the guide at <a href="https://support.milesight-iot.com/support/solutions/articles/73000514278-how-to-connect-milesight-gateway-to-the-internet">Milesight Support</a> and follow the instructions provided.</p>
 
 </article>
 <footer class="site-footer">Milesight产品技术方案知识库</footer>
 </div>
 <script>
-document.querySelectorAll('article.article-body img').forEach(function(img) {
+document.querySelectorAll('article.article-body img:not(.art)').forEach(function(img) {
   img.addEventListener('click', function() {
     document.getElementById('lightbox-img').src = this.src;
     document.getElementById('lightbox').classList.add('active');

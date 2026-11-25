@@ -95,6 +95,16 @@ article.article-body { background:var(--card); border:1px solid var(--border); b
 article.article-body img { max-width:100%; height:auto !important; border:1px solid var(--border);
                            border-radius:8px; margin:8px 0; cursor:zoom-in; transition:box-shadow .15s ease; }
 article.article-body img:hover { box-shadow:0 4px 16px rgba(0,0,0,.12); }
+/* Word 封面: docx 原底图 + 按原坐标定位的文字, 还原 Word 里的封面排版 */
+figure.doc-cover { margin:0 0 26px; }
+.cover-page { position:relative; width:100%; max-width:680px; margin:0 auto; background:#fff;
+              overflow:hidden; container-type:inline-size; border:1px solid var(--border);
+              border-radius:8px; box-shadow:0 4px 18px rgba(15,23,42,.08); }
+.cover-page .art { position:absolute; display:block; max-width:none; height:auto !important;
+                   margin:0; border:0; border-radius:0; box-shadow:none; cursor:default; }
+.cover-page .art:hover { box-shadow:none; }
+.cover-page .tx { position:absolute; line-height:1; white-space:pre; margin:0; padding:0;
+                  font-family:Arial,"Segoe UI",system-ui,sans-serif; }
 article.article-body h1 { font-size:24px; margin-top:0; }
 article.article-body h2 { font-size:20px; border-bottom:1px solid var(--border); padding-bottom:6px; }
 article.article-body h3 { font-size:17px; }
@@ -166,11 +176,7 @@ footer.site-footer { text-align:center; color:var(--muted); font-size:12.5px; ma
 <div class="container">
 <div class="article-nav"><a href="../index.html">&larr; Back to Home</a> &middot; <span class="badge badge-node-red">Node-RED</span><a class="docx-download" href="../downloads/node-red/How-to-Use-Node-RED-to-Read-Object-Values-from-a-Gateway-BACnet-Server.docx" download="How to Use Node-RED to Read Object Values from a Gateway BACnet Server.docx" title="下载原始 Word 文档"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3v12m0 0l-4.5-4.5M12 15l4.5-4.5"/><path d="M4 20h16"/></svg><span>下载 Word 文档</span></a></div>
 <article class="article-body">
-<p>How to Use Node-RED to Read Object Values from a Gateway BACnet Server</p>
-<figure>
-<img src="../assets/node-red/How-to-Use-Node-RED-to-Read-Object-Values-from-a-Gateway-BACnet-Server/media/image4.jpeg" style="width:8.27431in;height:11.70625in" alt="C:/Users/Iris/Desktop/完整word/word模板竖版_英文.jpgword模板竖版_英文" />
-</figure>
-<table>
+<figure class="doc-cover"><div class="cover-page" style="aspect-ratio:11906/16838"><img class="art" src="../assets/node-red/How-to-Use-Node-RED-to-Read-Object-Values-from-a-Gateway-BACnet-Server/art-d79db8e8.jpeg" alt="" style="left:0.017%;top:0.000%;width:100.076%"><span class="tx" style="left:8.023%;top:63.634%;font-size:4.374cqw;color:#2c66a5">How to Use Node-RED to Read Object Values </span><span class="tx" style="left:19.476%;top:69.192%;font-size:4.374cqw;color:#2c66a5">from a Gateway BACnet Server </span></div></figure><table>
 <colgroup>
 <col style="width: 14%" />
 <col style="width: 19%" />
@@ -191,34 +197,17 @@ footer.site-footer { text-align:center; color:var(--muted); font-size:12.5px; ma
 <td>Aurora</td>
 </tr>
 </tbody>
-</table>
-<h1 id="description">Description</h1>
-<p>This article will describe how to Use Node-RED to Read Object Values from a Gateway BACnet Server.</p>
-<h1 id="requirement">Requirement</h1>
-<ul>
+</table><h1 id="description">Description</h1><p>This article will describe how to Use Node-RED to Read Object Values from a Gateway BACnet Server.</p><h1 id="requirement">Requirement</h1><ul>
 <li><p>Milesight gateway</p></li>
 <li><p>Milesight sensor</p>
 <p><strong>Workflow:</strong><img src="../assets/node-red/How-to-Use-Node-RED-to-Read-Object-Values-from-a-Gateway-BACnet-Server/media/image5.png" style="width:5.7625in;height:1.31319in" /></p></li>
-</ul>
-<h2 id="step-1">Step 1: </h2>
-<h2 id="install-the-node-red-contrib-bacnet-module-on-the-gateway.">Install the node-red-contrib-bacnet module on the gateway.</h2>
-<h2 id="section"><img src="../assets/node-red/How-to-Use-Node-RED-to-Read-Object-Values-from-a-Gateway-BACnet-Server/media/image6.png" style="width:5.76736in;height:2.45347in" /></h2>
-<p><strong>Step2：In the BACnet-Read node, please configure the Type, Property ID, as well as the device and client information.</strong></p>
-<p><img src="../assets/node-red/How-to-Use-Node-RED-to-Read-Object-Values-from-a-Gateway-BACnet-Server/media/image7.jpeg" style="width:5.75208in;height:1.80347in" alt="IMG_256" /></p>
-<p><img src="../assets/node-red/How-to-Use-Node-RED-to-Read-Object-Values-from-a-Gateway-BACnet-Server/media/image8.jpeg" style="width:5.74861in;height:2.37986in" alt="IMG_256" /></p>
-<p><img src="../assets/node-red/How-to-Use-Node-RED-to-Read-Object-Values-from-a-Gateway-BACnet-Server/media/image9.png" style="width:5.76597in;height:3.52361in" /></p>
-<p><img src="../assets/node-red/How-to-Use-Node-RED-to-Read-Object-Values-from-a-Gateway-BACnet-Server/media/image10.png" style="width:5.76597in;height:2.95278in" alt="IMG_256" /></p>
-<p><img src="../assets/node-red/How-to-Use-Node-RED-to-Read-Object-Values-from-a-Gateway-BACnet-Server/media/image11.png" style="width:5.75972in;height:2.23889in" alt="111dc925-14c0-4ea7-a63f-8360e8b01504" /></p>
-<p><img src="../assets/node-red/How-to-Use-Node-RED-to-Read-Object-Values-from-a-Gateway-BACnet-Server/media/image12.png" style="width:5.75833in;height:0.92986in" alt="IMG_256" /></p>
-<p><strong>Json:</strong></p>
-<p>[{"id":"b0277587648f3d0a","type":"tab","label":"Flow 1","disabled":false,"info":"","env":[]},{"id":"1ed0f54dcd3c25a0","type":"BACnet-Read","z":"b0277587648f3d0a","name":"","objectType":"","instance":"","propertyId":"","device":"","server":"","multipleRead":false,"x":480,"y":280,"wires":[["b948d115a98aadee"]]},{"id":"e8587ebfe23ec87a","type":"inject","z":"b0277587648f3d0a","name":"","props":[{"p":"payload"},{"p":"topic","vt":"str"}],"repeat":"","crontab":"","once":false,"onceDelay":0.1,"topic":"","payload":"","payloadType":"date","x":200,"y":280,"wires":[["1ed0f54dcd3c25a0"]]},{"id":"b948d115a98aadee","type":"debug","z":"b0277587648f3d0a","name":"debug 1","active":true,"tosidebar":true,"console":false,"tostatus":false,"complete":"false","statusVal":"","statusType":"auto","x":760,"y":280,"wires":[]}]</p>
-<p class="article-end"><strong>--end</strong></p>
+</ul><h2 id="step-1">Step 1: </h2><h2 id="install-the-node-red-contrib-bacnet-module-on-the-gateway.">Install the node-red-contrib-bacnet module on the gateway.</h2><h2 id="section"><img src="../assets/node-red/How-to-Use-Node-RED-to-Read-Object-Values-from-a-Gateway-BACnet-Server/media/image6.png" style="width:5.76736in;height:2.45347in" /></h2><p><strong>Step2：In the BACnet-Read node, please configure the Type, Property ID, as well as the device and client information.</strong></p><p><img src="../assets/node-red/How-to-Use-Node-RED-to-Read-Object-Values-from-a-Gateway-BACnet-Server/media/image7.jpeg" style="width:5.75208in;height:1.80347in" alt="IMG_256" /></p><p><img src="../assets/node-red/How-to-Use-Node-RED-to-Read-Object-Values-from-a-Gateway-BACnet-Server/media/image8.jpeg" style="width:5.74861in;height:2.37986in" alt="IMG_256" /></p><p><img src="../assets/node-red/How-to-Use-Node-RED-to-Read-Object-Values-from-a-Gateway-BACnet-Server/media/image9.png" style="width:5.76597in;height:3.52361in" /></p><p><img src="../assets/node-red/How-to-Use-Node-RED-to-Read-Object-Values-from-a-Gateway-BACnet-Server/media/image10.png" style="width:5.76597in;height:2.95278in" alt="IMG_256" /></p><p><img src="../assets/node-red/How-to-Use-Node-RED-to-Read-Object-Values-from-a-Gateway-BACnet-Server/media/image11.png" style="width:5.75972in;height:2.23889in" alt="111dc925-14c0-4ea7-a63f-8360e8b01504" /></p><p><img src="../assets/node-red/How-to-Use-Node-RED-to-Read-Object-Values-from-a-Gateway-BACnet-Server/media/image12.png" style="width:5.75833in;height:0.92986in" alt="IMG_256" /></p><p><strong>Json:</strong></p><p>[{"id":"b0277587648f3d0a","type":"tab","label":"Flow 1","disabled":false,"info":"","env":[]},{"id":"1ed0f54dcd3c25a0","type":"BACnet-Read","z":"b0277587648f3d0a","name":"","objectType":"","instance":"","propertyId":"","device":"","server":"","multipleRead":false,"x":480,"y":280,"wires":[["b948d115a98aadee"]]},{"id":"e8587ebfe23ec87a","type":"inject","z":"b0277587648f3d0a","name":"","props":[{"p":"payload"},{"p":"topic","vt":"str"}],"repeat":"","crontab":"","once":false,"onceDelay":0.1,"topic":"","payload":"","payloadType":"date","x":200,"y":280,"wires":[["1ed0f54dcd3c25a0"]]},{"id":"b948d115a98aadee","type":"debug","z":"b0277587648f3d0a","name":"debug 1","active":true,"tosidebar":true,"console":false,"tostatus":false,"complete":"false","statusVal":"","statusType":"auto","x":760,"y":280,"wires":[]}]</p><p class="article-end"><strong>--end</strong></p>
 
 </article>
 <footer class="site-footer">Milesight产品技术方案知识库</footer>
 </div>
 <script>
-document.querySelectorAll('article.article-body img').forEach(function(img) {
+document.querySelectorAll('article.article-body img:not(.art)').forEach(function(img) {
   img.addEventListener('click', function() {
     document.getElementById('lightbox-img').src = this.src;
     document.getElementById('lightbox').classList.add('active');

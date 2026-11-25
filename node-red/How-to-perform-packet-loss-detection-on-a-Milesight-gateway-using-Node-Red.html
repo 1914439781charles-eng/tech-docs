@@ -95,6 +95,16 @@ article.article-body { background:var(--card); border:1px solid var(--border); b
 article.article-body img { max-width:100%; height:auto !important; border:1px solid var(--border);
                            border-radius:8px; margin:8px 0; cursor:zoom-in; transition:box-shadow .15s ease; }
 article.article-body img:hover { box-shadow:0 4px 16px rgba(0,0,0,.12); }
+/* Word 封面: docx 原底图 + 按原坐标定位的文字, 还原 Word 里的封面排版 */
+figure.doc-cover { margin:0 0 26px; }
+.cover-page { position:relative; width:100%; max-width:680px; margin:0 auto; background:#fff;
+              overflow:hidden; container-type:inline-size; border:1px solid var(--border);
+              border-radius:8px; box-shadow:0 4px 18px rgba(15,23,42,.08); }
+.cover-page .art { position:absolute; display:block; max-width:none; height:auto !important;
+                   margin:0; border:0; border-radius:0; box-shadow:none; cursor:default; }
+.cover-page .art:hover { box-shadow:none; }
+.cover-page .tx { position:absolute; line-height:1; white-space:pre; margin:0; padding:0;
+                  font-family:Arial,"Segoe UI",system-ui,sans-serif; }
 article.article-body h1 { font-size:24px; margin-top:0; }
 article.article-body h2 { font-size:20px; border-bottom:1px solid var(--border); padding-bottom:6px; }
 article.article-body h3 { font-size:17px; }
@@ -166,11 +176,7 @@ footer.site-footer { text-align:center; color:var(--muted); font-size:12.5px; ma
 <div class="container">
 <div class="article-nav"><a href="../index.html">&larr; Back to Home</a> &middot; <span class="badge badge-node-red">Node-RED</span><a class="docx-download" href="../downloads/node-red/How-to-perform-packet-loss-detection-on-a-Milesight-gateway-using-Node-Red.docx" download="How to perform packet loss detection on a Milesight gateway using Node-Red.docx" title="下载原始 Word 文档"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3v12m0 0l-4.5-4.5M12 15l4.5-4.5"/><path d="M4 20h16"/></svg><span>下载 Word 文档</span></a></div>
 <article class="article-body">
-<figure>
-<img src="../assets/node-red/How-to-perform-packet-loss-detection-on-a-Milesight-gateway-using-Node-Red/media/image1.jpeg" style="width:8.27431in;height:11.70625in" alt="C:/Users/Iris/Desktop/完整word/word模板竖版_英文.jpgword模板竖版_英文" />
-<figcaption><p>How to perform packet loss detection on a Milesight gateway using Node-Red</p></figcaption>
-</figure>
-<table>
+<figure class="doc-cover"><div class="cover-page" style="aspect-ratio:11906/16838"><img class="art" src="../assets/node-red/How-to-perform-packet-loss-detection-on-a-Milesight-gateway-using-Node-Red/art-59c950ff.jpeg" alt="" style="left:0.017%;top:0.000%;width:100.076%"><span class="tx" style="left:16.292%;top:61.587%;font-size:6.047cqw;color:#2c66a5">How to perform packet loss </span><span class="tx" style="left:9.458%;top:67.146%;font-size:6.047cqw;color:#2c66a5">detection on a Milesight gateway </span><span class="tx" style="left:30.648%;top:72.705%;font-size:6.047cqw;color:#2c66a5">using Node-Red </span></div></figure><table>
 <colgroup>
 <col style="width: 14%" />
 <col style="width: 19%" />
@@ -193,34 +199,16 @@ footer.site-footer { text-align:center; color:var(--muted); font-size:12.5px; ma
 <td>Charles</td>
 </tr>
 </tbody>
-</table>
-<h1 id="description">Description</h1>
-<p>For LoRaWAN sensors deployed in harsh environments or located far from the gateway, users may observe data packet loss issues on the built-in Network Server (NS) of the Milesight gateway. This article will guide you on how to use Node-Red on the Milesight gateway to automatically query missing data when data packet loss occurs with LoRaWAN sensors.</p>
-<h1 id="requirement">Requirement</h1>
-<ul>
+</table><h1 id="description">Description</h1><p>For LoRaWAN sensors deployed in harsh environments or located far from the gateway, users may observe data packet loss issues on the built-in Network Server (NS) of the Milesight gateway. This article will guide you on how to use Node-Red on the Milesight gateway to automatically query missing data when data packet loss occurs with LoRaWAN sensors.</p><h1 id="requirement">Requirement</h1><ul>
 <li><p>Milesight Gateway: UG56/UG65/UG67</p></li>
 <li><p>LoRaWAN sensors that support querying historical data (using the Milesight EM300-DI as an example in this article)</p></li>
-</ul>
-<h1 id="configuration">Configuration</h1>
-<h2 id="step-1-launch-node-red-and-import-flow-example">Step 1: Launch Node-RED and Import Flow Example</h2>
-<ol type="1">
+</ul><h1 id="configuration">Configuration</h1><h2 id="step-1-launch-node-red-and-import-flow-example">Step 1: Launch Node-RED and Import Flow Example</h2><ol type="1">
 <li><p>Go to <strong>App &gt; Node-RED</strong> page to enable Node-RED program and wait for a while to load the program, click <strong>Launch</strong> button to start Node-RED web GUI.</p></li>
-</ol>
-<p><img src="../assets/node-red/How-to-perform-packet-loss-detection-on-a-Milesight-gateway-using-Node-Red/media/image4.png" style="width:5.76597in;height:3.75694in" /></p>
-<ol start="2" type="1">
+</ol><p><img src="../assets/node-red/How-to-perform-packet-loss-detection-on-a-Milesight-gateway-using-Node-Red/media/image4.png" style="width:5.76597in;height:3.75694in" /></p><ol start="2" type="1">
 <li><p>Log in the Node-RED web GUI. The account information is the same as gateway web GUI.</p></li>
-</ol>
-<p><img src="../assets/node-red/How-to-perform-packet-loss-detection-on-a-Milesight-gateway-using-Node-Red/media/image5.png" style="width:5.75972in;height:2.73611in" /></p>
-<ol start="3" type="1">
+</ol><p><img src="../assets/node-red/How-to-perform-packet-loss-detection-on-a-Milesight-gateway-using-Node-Red/media/image5.png" style="width:5.75972in;height:2.73611in" /></p><ol start="3" type="1">
 <li><p>Click Import to import the node-red flow example by pasting the content or import the json format file.</p></li>
-</ol>
-<p><img src="../assets/node-red/How-to-perform-packet-loss-detection-on-a-Milesight-gateway-using-Node-Red/media/image6.png" style="width:5.76458in;height:3.52431in" /></p>
-<p><img src="../assets/node-red/How-to-perform-packet-loss-detection-on-a-Milesight-gateway-using-Node-Red/media/image7.png" style="width:5.76667in;height:4.8875in" /></p>
-<h2 id="step-2-node-red-configuration">Step 2: Node-RED Configuration</h2>
-<h3 id="flow-structure">Flow structure:</h3>
-<p><img src="../assets/node-red/How-to-perform-packet-loss-detection-on-a-Milesight-gateway-using-Node-Red/media/image8.png" style="width:5.80625in;height:1.75208in" alt="IMG_256" /></p>
-<p>Content:</p>
-<table>
+</ol><p><img src="../assets/node-red/How-to-perform-packet-loss-detection-on-a-Milesight-gateway-using-Node-Red/media/image6.png" style="width:5.76458in;height:3.52431in" /></p><p><img src="../assets/node-red/How-to-perform-packet-loss-detection-on-a-Milesight-gateway-using-Node-Red/media/image7.png" style="width:5.76667in;height:4.8875in" /></p><h2 id="step-2-node-red-configuration">Step 2: Node-RED Configuration</h2><h3 id="flow-structure">Flow structure:</h3><p><img src="../assets/node-red/How-to-perform-packet-loss-detection-on-a-Milesight-gateway-using-Node-Red/media/image8.png" style="width:5.80625in;height:1.75208in" alt="IMG_256" /></p><p>Content:</p><table>
 <colgroup>
 <col style="width: 100%" />
 </colgroup>
@@ -231,28 +219,13 @@ footer.site-footer { text-align:center; color:var(--muted); font-size:12.5px; ma
 </thead>
 <tbody>
 </tbody>
-</table>
-<p><strong>Step 3:</strong> Please ensure that your LoRaWAN sensor has enabled the historical data query function and refer to this article(https://support.milesight-iot.com/a/solutions/articles/73000514280) for instructions on connecting your sensor to the built-in Network Server (NS) of the Milesight gateway.</p>
-<p><strong>Step 4: Node-Red flow configuration</strong></p>
-<p>① Double-click the Device Filter node, then enter the Device EUI of your LoRaWAN sensor that has already been added to the built-in Network Server (NS) of the Milesight gateway.</p>
-<p><img src="../assets/node-red/How-to-perform-packet-loss-detection-on-a-Milesight-gateway-using-Node-Red/media/image9.png" style="width:6.29444in;height:1.58681in" alt="IMG_256" /></p>
-<p>② Double-click the Function node named "Determine if packet loss has occurred by fcnt", and modify msg.report_interval to the data reporting interval of your sensor, in seconds.</p>
-<p><img src="../assets/node-red/How-to-perform-packet-loss-detection-on-a-Milesight-gateway-using-Node-Red/media/image10.png" style="width:5.71528in;height:3.19236in" alt="IMG_256" /></p>
-<p>③ Since the historical data query command for the Milesight EM300-DI consists of "fd6c" plus the start time and end time, I double-clicked the Function node named "Calculate the start and end time of packet loss" and assigned the corresponding value to the msg.TimeCommand variable.</p>
-<p><img src="../assets/node-red/How-to-perform-packet-loss-detection-on-a-Milesight-gateway-using-Node-Red/media/image11.png" style="width:6.38472in;height:3.69444in" alt="IMG_256" /></p>
-<p>④Double-click the Function node named "Send downlink commands to the gateway via MQTT API", and fill in the device EUI in the MQTT topic with the device EUI of your LoRaWAN sensor, and set the fport to the port number your LoRaWAN sensor uses to receive LoRaWAN commands.</p>
-<p><img src="../assets/node-red/How-to-perform-packet-loss-detection-on-a-Milesight-gateway-using-Node-Red/media/image12.png" style="width:5.76389in;height:3.16389in" alt="IMG_256" /></p>
-<h2 id="step-5-deploy-and-check-result">Step 5: Deploy and Check Result</h2>
-<p><img src="../assets/node-red/How-to-perform-packet-loss-detection-on-a-Milesight-gateway-using-Node-Red/media/image13.png" style="width:4.35in;height:2.09167in" /></p>
-<p><strong>Step 6:</strong> Double-click the Function node named "Send downlink commands to the gateway via MQTT API", and fill in the device EUI in the MQTT topic with the device EUI of your LoRaWAN sensor, and set the fport to the port number your LoRaWAN sensor uses to receive LoRaWAN commands.</p>
-<p><img src="../assets/node-red/How-to-perform-packet-loss-detection-on-a-Milesight-gateway-using-Node-Red/media/image14.png" style="width:6.60972in;height:3.27708in" alt="IMG_256" /></p>
-<p class="article-end"><strong>-------END-----</strong></p>
+</table><p><strong>Step 3:</strong> Please ensure that your LoRaWAN sensor has enabled the historical data query function and refer to this article(https://support.milesight-iot.com/a/solutions/articles/73000514280) for instructions on connecting your sensor to the built-in Network Server (NS) of the Milesight gateway.</p><p><strong>Step 4: Node-Red flow configuration</strong></p><p>① Double-click the Device Filter node, then enter the Device EUI of your LoRaWAN sensor that has already been added to the built-in Network Server (NS) of the Milesight gateway.</p><p><img src="../assets/node-red/How-to-perform-packet-loss-detection-on-a-Milesight-gateway-using-Node-Red/media/image9.png" style="width:6.29444in;height:1.58681in" alt="IMG_256" /></p><p>② Double-click the Function node named "Determine if packet loss has occurred by fcnt", and modify msg.report_interval to the data reporting interval of your sensor, in seconds.</p><p><img src="../assets/node-red/How-to-perform-packet-loss-detection-on-a-Milesight-gateway-using-Node-Red/media/image10.png" style="width:5.71528in;height:3.19236in" alt="IMG_256" /></p><p>③ Since the historical data query command for the Milesight EM300-DI consists of "fd6c" plus the start time and end time, I double-clicked the Function node named "Calculate the start and end time of packet loss" and assigned the corresponding value to the msg.TimeCommand variable.</p><p><img src="../assets/node-red/How-to-perform-packet-loss-detection-on-a-Milesight-gateway-using-Node-Red/media/image11.png" style="width:6.38472in;height:3.69444in" alt="IMG_256" /></p><p>④Double-click the Function node named "Send downlink commands to the gateway via MQTT API", and fill in the device EUI in the MQTT topic with the device EUI of your LoRaWAN sensor, and set the fport to the port number your LoRaWAN sensor uses to receive LoRaWAN commands.</p><p><img src="../assets/node-red/How-to-perform-packet-loss-detection-on-a-Milesight-gateway-using-Node-Red/media/image12.png" style="width:5.76389in;height:3.16389in" alt="IMG_256" /></p><h2 id="step-5-deploy-and-check-result">Step 5: Deploy and Check Result</h2><p><img src="../assets/node-red/How-to-perform-packet-loss-detection-on-a-Milesight-gateway-using-Node-Red/media/image13.png" style="width:4.35in;height:2.09167in" /></p><p><strong>Step 6:</strong> Double-click the Function node named "Send downlink commands to the gateway via MQTT API", and fill in the device EUI in the MQTT topic with the device EUI of your LoRaWAN sensor, and set the fport to the port number your LoRaWAN sensor uses to receive LoRaWAN commands.</p><p><img src="../assets/node-red/How-to-perform-packet-loss-detection-on-a-Milesight-gateway-using-Node-Red/media/image14.png" style="width:6.60972in;height:3.27708in" alt="IMG_256" /></p><p class="article-end"><strong>-------END-----</strong></p>
 
 </article>
 <footer class="site-footer">Milesight产品技术方案知识库</footer>
 </div>
 <script>
-document.querySelectorAll('article.article-body img').forEach(function(img) {
+document.querySelectorAll('article.article-body img:not(.art)').forEach(function(img) {
   img.addEventListener('click', function() {
     document.getElementById('lightbox-img').src = this.src;
     document.getElementById('lightbox').classList.add('active');

@@ -95,6 +95,16 @@ article.article-body { background:var(--card); border:1px solid var(--border); b
 article.article-body img { max-width:100%; height:auto !important; border:1px solid var(--border);
                            border-radius:8px; margin:8px 0; cursor:zoom-in; transition:box-shadow .15s ease; }
 article.article-body img:hover { box-shadow:0 4px 16px rgba(0,0,0,.12); }
+/* Word 封面: docx 原底图 + 按原坐标定位的文字, 还原 Word 里的封面排版 */
+figure.doc-cover { margin:0 0 26px; }
+.cover-page { position:relative; width:100%; max-width:680px; margin:0 auto; background:#fff;
+              overflow:hidden; container-type:inline-size; border:1px solid var(--border);
+              border-radius:8px; box-shadow:0 4px 18px rgba(15,23,42,.08); }
+.cover-page .art { position:absolute; display:block; max-width:none; height:auto !important;
+                   margin:0; border:0; border-radius:0; box-shadow:none; cursor:default; }
+.cover-page .art:hover { box-shadow:none; }
+.cover-page .tx { position:absolute; line-height:1; white-space:pre; margin:0; padding:0;
+                  font-family:Arial,"Segoe UI",system-ui,sans-serif; }
 article.article-body h1 { font-size:24px; margin-top:0; }
 article.article-body h2 { font-size:20px; border-bottom:1px solid var(--border); padding-bottom:6px; }
 article.article-body h3 { font-size:17px; }
@@ -166,11 +176,7 @@ footer.site-footer { text-align:center; color:var(--muted); font-size:12.5px; ma
 <div class="container">
 <div class="article-nav"><a href="../index.html">&larr; Back to Home</a> &middot; <span class="badge badge-troubleshooting">Troubleshooting</span><a class="docx-download" href="../downloads/troubleshooting/Troubleshooting-the-issue-where-the-SG50-fails-to-power-up-normally-using-solar-panel.docx" download="Troubleshooting the issue where the SG50 fails to power up normally using solar panel.docx" title="下载原始 Word 文档"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3v12m0 0l-4.5-4.5M12 15l4.5-4.5"/><path d="M4 20h16"/></svg><span>下载 Word 文档</span></a></div>
 <article class="article-body">
-<p>Troubleshooting the issue where the SG50 fails to power up normally using solar panel</p>
-<figure>
-<img src="../assets/troubleshooting/Troubleshooting-the-issue-where-the-SG50-fails-to-power-up-normally-using-solar-panel/media/image4.jpeg" style="width:8.27431in;height:11.70625in" alt="C:/Users/Iris/Desktop/完整word/word模板竖版_英文.jpgword模板竖版_英文" />
-</figure>
-<table>
+<figure class="doc-cover"><div class="cover-page" style="aspect-ratio:11906/16838"><img class="art" src="../assets/troubleshooting/Troubleshooting-the-issue-where-the-SG50-fails-to-power-up-normally-using-solar-panel/art-5b73f3ba.jpeg" alt="" style="left:0.017%;top:0.000%;width:100.076%"><span class="tx" style="left:8.753%;top:61.539%;font-size:4.374cqw;color:#2c66a5">Troubleshooting the issue where the SG50 </span><span class="tx" style="left:13.490%;top:67.098%;font-size:4.374cqw;color:#2c66a5">fails to power up normally using solar </span><span class="tx" style="left:44.719%;top:72.656%;font-size:4.374cqw;color:#2c66a5">panel </span></div></figure><table>
 <colgroup>
 <col style="width: 14%" />
 <col style="width: 19%" />
@@ -191,32 +197,13 @@ footer.site-footer { text-align:center; color:var(--muted); font-size:12.5px; ma
 <td>Charles</td>
 </tr>
 </tbody>
-</table>
-<h1 id="description">Description</h1>
-<p>If your SG50 fails to start up normally via the solar panel, please follow the seven steps below to troubleshoot and share the result of each step with Milesight technical support.</p>
-<h1 id="checklist">Checklist</h1>
-<p><strong>Step 1:</strong> Use a multimeter to measure the voltage at these two points on the SG50’s internal battery and share the reading with Milesight.</p>
-<p><img src="../assets/troubleshooting/Troubleshooting-the-issue-where-the-SG50-fails-to-power-up-normally-using-solar-panel/media/image5.png" style="width:4.90417in;height:3.27153in" alt="IMG_256" /></p>
-<p><strong>Step 2:</strong> Unplug and replug the M12 connector between the SG50 and the solar panel, then place the solar panel in a well-lit sunny area. Check whether the SG50 powers on automatically within 1 hours.</p>
-<p><strong>Step 3:</strong> We suspect the solar panel of this SG50 cannot output the normal voltage under sunlight. The M12 connector on the SG50 solar panel has 4 pins. Pin 1 and Pin 2 convert solar energy into electrical power to charge the built-in battery of the SG50. Please place the solar panel in a sunny location, measure the voltage between Pin 1 and Pin 2 of its M12 connector using a multimeter, and share the reading with Milesight.</p>
-<p><img src="../assets/troubleshooting/Troubleshooting-the-issue-where-the-SG50-fails-to-power-up-normally-using-solar-panel/media/image6.png" style="width:4.57361in;height:4.10417in" alt="IMG_256" /></p>
-<p><strong>Step 4:</strong> If you disconnect the M12 connector between the SG50 and the solar panel, then power the SG50 using a 5V/1A Type‑C USB power supply, will the device LED light up and function normally?</p>
-<p><img src="../assets/troubleshooting/Troubleshooting-the-issue-where-the-SG50-fails-to-power-up-normally-using-solar-panel/media/image7.png" style="width:5.53125in;height:1.92708in" alt="IMG_256" /></p>
-<p>If you are able to power on the SG50 via USB‑C, connect the solar panel to the SG50 at this point and wait for 15 minutes, then download the gateway logs from this SG50 and send them to Milesight for analysis.</p>
-<p><img src="../assets/troubleshooting/Troubleshooting-the-issue-where-the-SG50-fails-to-power-up-normally-using-solar-panel/media/image8.png" style="width:5.30208in;height:2.84375in" alt="IMG_256" /></p>
-<p><strong>Step 5:</strong> While charging the mainboard with a 5V/1A USB‑C cable, please use a multimeter to check the voltage value between these two test points.</p>
-<p><img src="../assets/troubleshooting/Troubleshooting-the-issue-where-the-SG50-fails-to-power-up-normally-using-solar-panel/media/image9.png" style="width:5.15764in;height:3.25903in" alt="IMG_256" /></p>
-<p><img src="../assets/troubleshooting/Troubleshooting-the-issue-where-the-SG50-fails-to-power-up-normally-using-solar-panel/media/image10.png" style="width:6.32222in;height:3.07153in" alt="IMG_256" /></p>
-<p><strong>Step 6:</strong> After charging the SG50 internal battery to 3.8V with a DC power supply by M12 interface, reinstall the battery into the gateway and connect the solar panel. Then press and hold the external RST/WiFi button on the SG50 for 10 seconds, and check whether the SG50 boots up normally. Please note that the charging voltage must not exceed 4.2V.</p>
-<p><strong>Step 7:</strong> If possible, disconnect the USB‑C connection of the SG50, then use an external 12V/3A DC power supply to power the SG50 via the M12 cable. You only need to connect the positive and negative DC pins to the positive and negative terminals of the external DC power supply respectively, as shown in the figure below. The reason we carry out this troubleshooting is that the SG50 solar panel converts sunlight into electric current based on light intensity. When the light intensity is low, the voltage generated by the solar panel will drop. Voltage that is too low cannot charge the SG50 internal battery.</p>
-<p><img src="../assets/troubleshooting/Troubleshooting-the-issue-where-the-SG50-fails-to-power-up-normally-using-solar-panel/media/image11.png" style="width:5.45208in;height:3.04306in" alt="IMG_256" /></p>
-<p class="article-end"><strong>----END----</strong></p>
+</table><h1 id="description">Description</h1><p>If your SG50 fails to start up normally via the solar panel, please follow the seven steps below to troubleshoot and share the result of each step with Milesight technical support.</p><h1 id="checklist">Checklist</h1><p><strong>Step 1:</strong> Use a multimeter to measure the voltage at these two points on the SG50’s internal battery and share the reading with Milesight.</p><p><img src="../assets/troubleshooting/Troubleshooting-the-issue-where-the-SG50-fails-to-power-up-normally-using-solar-panel/media/image5.png" style="width:4.90417in;height:3.27153in" alt="IMG_256" /></p><p><strong>Step 2:</strong> Unplug and replug the M12 connector between the SG50 and the solar panel, then place the solar panel in a well-lit sunny area. Check whether the SG50 powers on automatically within 1 hours.</p><p><strong>Step 3:</strong> We suspect the solar panel of this SG50 cannot output the normal voltage under sunlight. The M12 connector on the SG50 solar panel has 4 pins. Pin 1 and Pin 2 convert solar energy into electrical power to charge the built-in battery of the SG50. Please place the solar panel in a sunny location, measure the voltage between Pin 1 and Pin 2 of its M12 connector using a multimeter, and share the reading with Milesight.</p><p><img src="../assets/troubleshooting/Troubleshooting-the-issue-where-the-SG50-fails-to-power-up-normally-using-solar-panel/media/image6.png" style="width:4.57361in;height:4.10417in" alt="IMG_256" /></p><p><strong>Step 4:</strong> If you disconnect the M12 connector between the SG50 and the solar panel, then power the SG50 using a 5V/1A Type‑C USB power supply, will the device LED light up and function normally?</p><p><img src="../assets/troubleshooting/Troubleshooting-the-issue-where-the-SG50-fails-to-power-up-normally-using-solar-panel/media/image7.png" style="width:5.53125in;height:1.92708in" alt="IMG_256" /></p><p>If you are able to power on the SG50 via USB‑C, connect the solar panel to the SG50 at this point and wait for 15 minutes, then download the gateway logs from this SG50 and send them to Milesight for analysis.</p><p><img src="../assets/troubleshooting/Troubleshooting-the-issue-where-the-SG50-fails-to-power-up-normally-using-solar-panel/media/image8.png" style="width:5.30208in;height:2.84375in" alt="IMG_256" /></p><p><strong>Step 5:</strong> While charging the mainboard with a 5V/1A USB‑C cable, please use a multimeter to check the voltage value between these two test points.</p><p><img src="../assets/troubleshooting/Troubleshooting-the-issue-where-the-SG50-fails-to-power-up-normally-using-solar-panel/media/image9.png" style="width:5.15764in;height:3.25903in" alt="IMG_256" /></p><p><img src="../assets/troubleshooting/Troubleshooting-the-issue-where-the-SG50-fails-to-power-up-normally-using-solar-panel/media/image10.png" style="width:6.32222in;height:3.07153in" alt="IMG_256" /></p><p><strong>Step 6:</strong> After charging the SG50 internal battery to 3.8V with a DC power supply by M12 interface, reinstall the battery into the gateway and connect the solar panel. Then press and hold the external RST/WiFi button on the SG50 for 10 seconds, and check whether the SG50 boots up normally. Please note that the charging voltage must not exceed 4.2V.</p><p><strong>Step 7:</strong> If possible, disconnect the USB‑C connection of the SG50, then use an external 12V/3A DC power supply to power the SG50 via the M12 cable. You only need to connect the positive and negative DC pins to the positive and negative terminals of the external DC power supply respectively, as shown in the figure below. The reason we carry out this troubleshooting is that the SG50 solar panel converts sunlight into electric current based on light intensity. When the light intensity is low, the voltage generated by the solar panel will drop. Voltage that is too low cannot charge the SG50 internal battery.</p><p><img src="../assets/troubleshooting/Troubleshooting-the-issue-where-the-SG50-fails-to-power-up-normally-using-solar-panel/media/image11.png" style="width:5.45208in;height:3.04306in" alt="IMG_256" /></p><p class="article-end"><strong>----END----</strong></p>
 
 </article>
 <footer class="site-footer">Milesight产品技术方案知识库</footer>
 </div>
 <script>
-document.querySelectorAll('article.article-body img').forEach(function(img) {
+document.querySelectorAll('article.article-body img:not(.art)').forEach(function(img) {
   img.addEventListener('click', function() {
     document.getElementById('lightbox-img').src = this.src;
     document.getElementById('lightbox').classList.add('active');

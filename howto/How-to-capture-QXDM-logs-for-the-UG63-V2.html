@@ -95,6 +95,16 @@ article.article-body { background:var(--card); border:1px solid var(--border); b
 article.article-body img { max-width:100%; height:auto !important; border:1px solid var(--border);
                            border-radius:8px; margin:8px 0; cursor:zoom-in; transition:box-shadow .15s ease; }
 article.article-body img:hover { box-shadow:0 4px 16px rgba(0,0,0,.12); }
+/* Word 封面: docx 原底图 + 按原坐标定位的文字, 还原 Word 里的封面排版 */
+figure.doc-cover { margin:0 0 26px; }
+.cover-page { position:relative; width:100%; max-width:680px; margin:0 auto; background:#fff;
+              overflow:hidden; container-type:inline-size; border:1px solid var(--border);
+              border-radius:8px; box-shadow:0 4px 18px rgba(15,23,42,.08); }
+.cover-page .art { position:absolute; display:block; max-width:none; height:auto !important;
+                   margin:0; border:0; border-radius:0; box-shadow:none; cursor:default; }
+.cover-page .art:hover { box-shadow:none; }
+.cover-page .tx { position:absolute; line-height:1; white-space:pre; margin:0; padding:0;
+                  font-family:Arial,"Segoe UI",system-ui,sans-serif; }
 article.article-body h1 { font-size:24px; margin-top:0; }
 article.article-body h2 { font-size:20px; border-bottom:1px solid var(--border); padding-bottom:6px; }
 article.article-body h3 { font-size:17px; }
@@ -166,11 +176,7 @@ footer.site-footer { text-align:center; color:var(--muted); font-size:12.5px; ma
 <div class="container">
 <div class="article-nav"><a href="../index.html">&larr; Back to Home</a> &middot; <span class="badge badge-howto">How to</span><a class="docx-download" href="../downloads/howto/How-to-capture-QXDM-logs-for-the-UG63-V2.docx" download="How to capture QXDM logs for the UG63 V2.docx" title="下载原始 Word 文档"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3v12m0 0l-4.5-4.5M12 15l4.5-4.5"/><path d="M4 20h16"/></svg><span>下载 Word 文档</span></a></div>
 <article class="article-body">
-<figure>
-<img src="../assets/howto/How-to-capture-QXDM-logs-for-the-UG63-V2/media/image4.jpeg" style="width:8.27431in;height:11.70625in" alt="C:/Users/Iris/Desktop/完整word/word模板竖版_英文.jpgword模板竖版_英文" />
-<figcaption><p>How to capture QXDM logs for the UG63 V2</p></figcaption>
-</figure>
-<table>
+<figure class="doc-cover"><div class="cover-page" style="aspect-ratio:11906/16838"><img class="art" src="../assets/howto/How-to-capture-QXDM-logs-for-the-UG63-V2/art-db5488bd.jpeg" alt="" style="left:0.017%;top:0.000%;width:100.076%"><span class="tx" style="left:17.984%;top:61.834%;font-size:3.024cqw;color:#5b9bd5">How to capture QXDM logs for the UG63 V2 </span></div></figure><table>
 <colgroup>
 <col style="width: 14%" />
 <col style="width: 19%" />
@@ -191,66 +197,15 @@ footer.site-footer { text-align:center; color:var(--muted); font-size:12.5px; ma
 <td>Charles</td>
 </tr>
 </tbody>
-</table>
-<h1 id="description">Description</h1>
-<p>This document will guide you on how to capture QXDM logs from the UG63 V2. Please note that the steps below are intended for scenarios where the UG63 V2 fails to register on the cellular network. If you are troubleshooting a different issue, you do not need to run the AT+CFUN=0 and AT+CFUN=1 commands described below.</p>
-<h1 id="configuration">Configuration</h1>
-<p><strong>Step 1</strong> : Please copy this link (https://ursalink-resource-center.oss-us-west-1.aliyuncs.com/Support/Charles/catch_log.zip) to your browser to download the necessary tools for capturing the QXDM log of the UG63 V2 cellular module.</p>
-<p><strong>Step 2:</strong> Extract and install the following three driver packages.</p>
-<p><img src="../assets/howto/How-to-capture-QXDM-logs-for-the-UG63-V2/media/image5.png" style="width:4.5in;height:1.08333in" alt="IMG_256" /></p>
-<p>After extracting and installing these three drivers, you need to connect your UG63 V2 to your computer simultaneously using a USB-C cable and a Micro USB cable. Then, you will see the following four COM ports in your computer's Device Manager, among which the DIAG Port is required for capturing QXDM logs.</p>
-<p><img src="../assets/howto/How-to-capture-QXDM-logs-for-the-UG63-V2/media/image6.png" style="width:3.5625in;height:4.08472in" alt="IMG_256" /></p>
-<p><img src="../assets/howto/How-to-capture-QXDM-logs-for-the-UG63-V2/media/image7.png" style="width:4.94167in;height:2.94444in" alt="IMG_256" /></p>
-<p><strong>Step 3:</strong> Use the PuTTY software to access the background of the UG63 V2 gateway.</p>
-<p>According to step 2, it can be known that the USB-C Port of my UG63 V2 is COM11. Therefore, I entered "COM 11" in PuTTY and then clicked "Open".</p>
-<p><img src="../assets/howto/How-to-capture-QXDM-logs-for-the-UG63-V2/media/image8.png" style="width:3.72153in;height:3.66319in" alt="IMG_256" /></p>
-<p>Since each UG63 V2 has a different backend password, for your UG63 V2 gateway with the SN code 673906376DC60008, the backend password is zB3BTw1TRpA6ztItHhCm1MM2uCM3Ud7WuJqEU0GutXA=. Therefore, after you click "Open", you need to enter "<mark>login zB3BTw1TRpA6ztItHhCm1MM2uCM3Ud7WuJqEU0GutXA=</mark>" in the current black command. This way, you can complete the backend login, as shown in the following picture. This is the UG63 V2 I used. After you successfully log in, it will display "<mark>Login Success</mark>".</p>
-<p><img src="../assets/howto/How-to-capture-QXDM-logs-for-the-UG63-V2/media/image9.png" style="width:6.08542in;height:1.92917in" alt="IMG_256" /></p>
-<p>If you successfully log in to the backend interface of UG63 V2, the interface may continuously display information shown below, preventing you from checking whether you have correctly entered the command. You can directly input "<mark>pkt_stop</mark>" ,Then press the Enter key to input in this command line. This command will stop the frequent information output.</p>
-<p><img src="../assets/howto/How-to-capture-QXDM-logs-for-the-UG63-V2/media/image10.png" style="width:4.75694in;height:2.99514in" alt="IMG_256" /></p>
-<p>Afterwards, enter the following three commands separately in the command line. For each command, press the Enter key to execute it after inputting the command. Upon successful execution of each command, you will see "output: OK" returned, as illustrated in the screenshot below.</p>
-<p><mark>AT_CMD AT$QCPCFG="logCtrl",2</mark></p>
-<p><mark><br />
-AT_CMD AT$QCPCFG="logPortSel",2</mark></p>
-<p><mark><br />
-AT_CMD AT+QCFG="usbnet",3</mark></p>
-<p><img src="../assets/howto/How-to-capture-QXDM-logs-for-the-UG63-V2/media/image11.png" style="width:6.03472in;height:3.25556in" alt="IMG_256" /></p>
-<p><strong>Step 4:</strong> Restart the UG63 V2 by webpage.</p>
-<p><strong>Step 5:</strong> Extract and open the EPAT tool</p>
-<p><img src="../assets/howto/How-to-capture-QXDM-logs-for-the-UG63-V2/media/image12.png" style="width:5.57083in;height:0.33819in" alt="IMG_256" /></p>
-<p><img src="../assets/howto/How-to-capture-QXDM-logs-for-the-UG63-V2/media/image13.png" style="width:4.99722in;height:5.73056in" alt="IMG_256" /></p>
-<p>After opening the tool, select the "Serial Device" option.</p>
-<p><img src="../assets/howto/How-to-capture-QXDM-logs-for-the-UG63-V2/media/image14.png" style="width:6.05903in;height:3.17708in" alt="IMG_256" /></p>
-<p>Configure the serial port baud rate and USB DIAG Port of the tool.</p>
-<p><img src="../assets/howto/How-to-capture-QXDM-logs-for-the-UG63-V2/media/image15.png" style="width:6.47569in;height:3.39514in" alt="IMG_256" /></p>
-<p><strong>Step 6:</strong> Extract the DBG.7z file. After extraction, the EPAT tool requires the update of the files.</p>
-<p><img src="../assets/howto/How-to-capture-QXDM-logs-for-the-UG63-V2/media/image16.png" style="width:5.77014in;height:0.25347in" alt="IMG_256" /></p>
-<p><img src="../assets/howto/How-to-capture-QXDM-logs-for-the-UG63-V2/media/image17.png" style="width:6.59931in;height:2.94653in" alt="IMG_256" /></p>
-<p><strong>Step 7:</strong> Capture the QXDM log</p>
-<p>Click the SigLogger window, and then choose the option in the options bar labeled "SigLog → Only Show Protocol Signaling".</p>
-<p><img src="../assets/howto/How-to-capture-QXDM-logs-for-the-UG63-V2/media/image18.png" style="width:6.71181in;height:3.51944in" alt="IMG_256" /></p>
-<p><img src="../assets/howto/How-to-capture-QXDM-logs-for-the-UG63-V2/media/image19.png" style="width:6.51597in;height:3.10903in" /></p>
-<p><img src="../assets/howto/How-to-capture-QXDM-logs-for-the-UG63-V2/media/image20.png" style="width:6.55486in;height:3.43681in" alt="IMG_256" /></p>
-<p>By using the pause or stop icons in the toolbar as shown in the following figure, you can pause or stop the log capture.</p>
-<p><img src="../assets/howto/How-to-capture-QXDM-logs-for-the-UG63-V2/media/image21.png" style="width:6.52361in;height:3.42083in" alt="IMG_256" /></p>
-<p>If you can see data output from NAS/AS, it means the QXDM log is currently being captured, as shown in the image below.</p>
-<p><img src="../assets/howto/How-to-capture-QXDM-logs-for-the-UG63-V2/media/image22.png" style="width:6.73056in;height:3.52917in" alt="IMG_256" /></p>
-<p>At this stage, please input the following two AT commands in order via the UG63 V2 front-end interface to initiate a restart of its cellular module.</p>
-<p><mark>AT+CFUN=0</mark></p>
-<p><mark>AT+CFUN=1</mark></p>
-<p><img src="../assets/howto/How-to-capture-QXDM-logs-for-the-UG63-V2/media/image23.png" style="width:6.17917in;height:3.04167in" alt="IMG_256" /></p>
-<p><img src="../assets/howto/How-to-capture-QXDM-logs-for-the-UG63-V2/media/image24.png" style="width:6.025in;height:2.96597in" alt="IMG_256" /></p>
-<p>After you have successfully entered the two commands above, please wait for 15 minutes. Then, pause or end the QXDM log capture</p>
-<p><img src="../assets/howto/How-to-capture-QXDM-logs-for-the-UG63-V2/media/image25.png" style="width:6.76597in;height:3.54792in" alt="IMG_256" /></p>
-<p>and click the icon below to download the captured QXDM log(<strong>.bin</strong> file) for my troubleshooting.</p>
-<p><img src="../assets/howto/How-to-capture-QXDM-logs-for-the-UG63-V2/media/image26.png" style="width:6.08333in;height:3.18958in" alt="IMG_256" /></p>
-<p class="article-end">_END_</p>
+</table><h1 id="description">Description</h1><p>This document will guide you on how to capture QXDM logs from the UG63 V2. Please note that the steps below are intended for scenarios where the UG63 V2 fails to register on the cellular network. If you are troubleshooting a different issue, you do not need to run the AT+CFUN=0 and AT+CFUN=1 commands described below.</p><h1 id="configuration">Configuration</h1><p><strong>Step 1</strong> : Please copy this link (https://ursalink-resource-center.oss-us-west-1.aliyuncs.com/Support/Charles/catch_log.zip) to your browser to download the necessary tools for capturing the QXDM log of the UG63 V2 cellular module.</p><p><strong>Step 2:</strong> Extract and install the following three driver packages.</p><p><img src="../assets/howto/How-to-capture-QXDM-logs-for-the-UG63-V2/media/image5.png" style="width:4.5in;height:1.08333in" alt="IMG_256" /></p><p>After extracting and installing these three drivers, you need to connect your UG63 V2 to your computer simultaneously using a USB-C cable and a Micro USB cable. Then, you will see the following four COM ports in your computer's Device Manager, among which the DIAG Port is required for capturing QXDM logs.</p><p><img src="../assets/howto/How-to-capture-QXDM-logs-for-the-UG63-V2/media/image6.png" style="width:3.5625in;height:4.08472in" alt="IMG_256" /></p><p><img src="../assets/howto/How-to-capture-QXDM-logs-for-the-UG63-V2/media/image7.png" style="width:4.94167in;height:2.94444in" alt="IMG_256" /></p><p><strong>Step 3:</strong> Use the PuTTY software to access the background of the UG63 V2 gateway.</p><p>According to step 2, it can be known that the USB-C Port of my UG63 V2 is COM11. Therefore, I entered "COM 11" in PuTTY and then clicked "Open".</p><p><img src="../assets/howto/How-to-capture-QXDM-logs-for-the-UG63-V2/media/image8.png" style="width:3.72153in;height:3.66319in" alt="IMG_256" /></p><p>Since each UG63 V2 has a different backend password, for your UG63 V2 gateway with the SN code 673906376DC60008, the backend password is zB3BTw1TRpA6ztItHhCm1MM2uCM3Ud7WuJqEU0GutXA=. Therefore, after you click "Open", you need to enter "<mark>login zB3BTw1TRpA6ztItHhCm1MM2uCM3Ud7WuJqEU0GutXA=</mark>" in the current black command. This way, you can complete the backend login, as shown in the following picture. This is the UG63 V2 I used. After you successfully log in, it will display "<mark>Login Success</mark>".</p><p><img src="../assets/howto/How-to-capture-QXDM-logs-for-the-UG63-V2/media/image9.png" style="width:6.08542in;height:1.92917in" alt="IMG_256" /></p><p>If you successfully log in to the backend interface of UG63 V2, the interface may continuously display information shown below, preventing you from checking whether you have correctly entered the command. You can directly input "<mark>pkt_stop</mark>" ,Then press the Enter key to input in this command line. This command will stop the frequent information output.</p><p><img src="../assets/howto/How-to-capture-QXDM-logs-for-the-UG63-V2/media/image10.png" style="width:4.75694in;height:2.99514in" alt="IMG_256" /></p><p>Afterwards, enter the following three commands separately in the command line. For each command, press the Enter key to execute it after inputting the command. Upon successful execution of each command, you will see "output: OK" returned, as illustrated in the screenshot below.</p><p><mark>AT_CMD AT$QCPCFG="logCtrl",2</mark></p><p><mark><br />
+AT_CMD AT$QCPCFG="logPortSel",2</mark></p><p><mark><br />
+AT_CMD AT+QCFG="usbnet",3</mark></p><p><img src="../assets/howto/How-to-capture-QXDM-logs-for-the-UG63-V2/media/image11.png" style="width:6.03472in;height:3.25556in" alt="IMG_256" /></p><p><strong>Step 4:</strong> Restart the UG63 V2 by webpage.</p><p><strong>Step 5:</strong> Extract and open the EPAT tool</p><p><img src="../assets/howto/How-to-capture-QXDM-logs-for-the-UG63-V2/media/image12.png" style="width:5.57083in;height:0.33819in" alt="IMG_256" /></p><p><img src="../assets/howto/How-to-capture-QXDM-logs-for-the-UG63-V2/media/image13.png" style="width:4.99722in;height:5.73056in" alt="IMG_256" /></p><p>After opening the tool, select the "Serial Device" option.</p><p><img src="../assets/howto/How-to-capture-QXDM-logs-for-the-UG63-V2/media/image14.png" style="width:6.05903in;height:3.17708in" alt="IMG_256" /></p><p>Configure the serial port baud rate and USB DIAG Port of the tool.</p><p><img src="../assets/howto/How-to-capture-QXDM-logs-for-the-UG63-V2/media/image15.png" style="width:6.47569in;height:3.39514in" alt="IMG_256" /></p><p><strong>Step 6:</strong> Extract the DBG.7z file. After extraction, the EPAT tool requires the update of the files.</p><p><img src="../assets/howto/How-to-capture-QXDM-logs-for-the-UG63-V2/media/image16.png" style="width:5.77014in;height:0.25347in" alt="IMG_256" /></p><p><img src="../assets/howto/How-to-capture-QXDM-logs-for-the-UG63-V2/media/image17.png" style="width:6.59931in;height:2.94653in" alt="IMG_256" /></p><p><strong>Step 7:</strong> Capture the QXDM log</p><p>Click the SigLogger window, and then choose the option in the options bar labeled "SigLog → Only Show Protocol Signaling".</p><p><img src="../assets/howto/How-to-capture-QXDM-logs-for-the-UG63-V2/media/image18.png" style="width:6.71181in;height:3.51944in" alt="IMG_256" /></p><p><img src="../assets/howto/How-to-capture-QXDM-logs-for-the-UG63-V2/media/image19.png" style="width:6.51597in;height:3.10903in" /></p><p><img src="../assets/howto/How-to-capture-QXDM-logs-for-the-UG63-V2/media/image20.png" style="width:6.55486in;height:3.43681in" alt="IMG_256" /></p><p>By using the pause or stop icons in the toolbar as shown in the following figure, you can pause or stop the log capture.</p><p><img src="../assets/howto/How-to-capture-QXDM-logs-for-the-UG63-V2/media/image21.png" style="width:6.52361in;height:3.42083in" alt="IMG_256" /></p><p>If you can see data output from NAS/AS, it means the QXDM log is currently being captured, as shown in the image below.</p><p><img src="../assets/howto/How-to-capture-QXDM-logs-for-the-UG63-V2/media/image22.png" style="width:6.73056in;height:3.52917in" alt="IMG_256" /></p><p>At this stage, please input the following two AT commands in order via the UG63 V2 front-end interface to initiate a restart of its cellular module.</p><p><mark>AT+CFUN=0</mark></p><p><mark>AT+CFUN=1</mark></p><p><img src="../assets/howto/How-to-capture-QXDM-logs-for-the-UG63-V2/media/image23.png" style="width:6.17917in;height:3.04167in" alt="IMG_256" /></p><p><img src="../assets/howto/How-to-capture-QXDM-logs-for-the-UG63-V2/media/image24.png" style="width:6.025in;height:2.96597in" alt="IMG_256" /></p><p>After you have successfully entered the two commands above, please wait for 15 minutes. Then, pause or end the QXDM log capture</p><p><img src="../assets/howto/How-to-capture-QXDM-logs-for-the-UG63-V2/media/image25.png" style="width:6.76597in;height:3.54792in" alt="IMG_256" /></p><p>and click the icon below to download the captured QXDM log(<strong>.bin</strong> file) for my troubleshooting.</p><p><img src="../assets/howto/How-to-capture-QXDM-logs-for-the-UG63-V2/media/image26.png" style="width:6.08333in;height:3.18958in" alt="IMG_256" /></p><p class="article-end">_END_</p>
 
 </article>
 <footer class="site-footer">Milesight产品技术方案知识库</footer>
 </div>
 <script>
-document.querySelectorAll('article.article-body img').forEach(function(img) {
+document.querySelectorAll('article.article-body img:not(.art)').forEach(function(img) {
   img.addEventListener('click', function() {
     document.getElementById('lightbox-img').src = this.src;
     document.getElementById('lightbox').classList.add('active');

@@ -95,6 +95,16 @@ article.article-body { background:var(--card); border:1px solid var(--border); b
 article.article-body img { max-width:100%; height:auto !important; border:1px solid var(--border);
                            border-radius:8px; margin:8px 0; cursor:zoom-in; transition:box-shadow .15s ease; }
 article.article-body img:hover { box-shadow:0 4px 16px rgba(0,0,0,.12); }
+/* Word 封面: docx 原底图 + 按原坐标定位的文字, 还原 Word 里的封面排版 */
+figure.doc-cover { margin:0 0 26px; }
+.cover-page { position:relative; width:100%; max-width:680px; margin:0 auto; background:#fff;
+              overflow:hidden; container-type:inline-size; border:1px solid var(--border);
+              border-radius:8px; box-shadow:0 4px 18px rgba(15,23,42,.08); }
+.cover-page .art { position:absolute; display:block; max-width:none; height:auto !important;
+                   margin:0; border:0; border-radius:0; box-shadow:none; cursor:default; }
+.cover-page .art:hover { box-shadow:none; }
+.cover-page .tx { position:absolute; line-height:1; white-space:pre; margin:0; padding:0;
+                  font-family:Arial,"Segoe UI",system-ui,sans-serif; }
 article.article-body h1 { font-size:24px; margin-top:0; }
 article.article-body h2 { font-size:20px; border-bottom:1px solid var(--border); padding-bottom:6px; }
 article.article-body h3 { font-size:17px; }
@@ -166,11 +176,7 @@ footer.site-footer { text-align:center; color:var(--muted); font-size:12.5px; ma
 <div class="container">
 <div class="article-nav"><a href="../index.html">&larr; Back to Home</a> &middot; <span class="badge badge-node-red">Node-RED</span><a class="docx-download" href="../downloads/node-red/Node-Red-and-Modbus-solution.docx" download="Node-Red and Modbus solution.docx" title="下载原始 Word 文档"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3v12m0 0l-4.5-4.5M12 15l4.5-4.5"/><path d="M4 20h16"/></svg><span>下载 Word 文档</span></a></div>
 <article class="article-body">
-<figure>
-<img src="../assets/node-red/Node-Red-and-Modbus-solution/media/image4.jpeg" style="width:8.27431in;height:11.70625in" alt="C:/Users/Iris/Desktop/完整word/word模板竖版_英文.jpgword模板竖版_英文" />
-<figcaption><p>Node-Red and Modbus solution</p></figcaption>
-</figure>
-<table>
+<figure class="doc-cover"><div class="cover-page" style="aspect-ratio:11906/16838"><img class="art" src="../assets/node-red/Node-Red-and-Modbus-solution/art-a8798f8b.jpeg" alt="" style="left:0.017%;top:0.000%;width:100.076%"><span class="tx" style="left:8.023%;top:61.539%;font-size:4.374cqw;color:#2c66a5">Node-Red and Modbus solution </span></div></figure><table>
 <colgroup>
 <col style="width: 14%" />
 <col style="width: 19%" />
@@ -191,23 +197,14 @@ footer.site-footer { text-align:center; color:var(--muted); font-size:12.5px; ma
 <td>Charles</td>
 </tr>
 </tbody>
-</table>
-<h1 id="description">Description</h1>
-<p>This article will use the Node-Red functionality of the Milesight gateway to configure the gateway as a Modbus Slave to store data from the WS523, as well as to configure the gateway as a Modbus Master to store WS523 data to another Modbus TCP Server. Therefore, the protocol used in this article is Modbus TCP.</p>
-<h1 id="requirement">Requirement</h1>
-<ul>
+</table><h1 id="description">Description</h1><p>This article will use the Node-Red functionality of the Milesight gateway to configure the gateway as a Modbus Slave to store data from the WS523, as well as to configure the gateway as a Modbus Master to store WS523 data to another Modbus TCP Server. Therefore, the protocol used in this article is Modbus TCP.</p><h1 id="requirement">Requirement</h1><ul>
 <li><p>Milesight Sensor: WS523</p></li>
 <li><p>Milesight Gateway: UG6x / UG56</p></li>
 <li><p>Modbus Master simulation software: Modbus Poll</p></li>
 <li><p>Modbus Slave simulation software: Modbus Slave</p></li>
-</ul>
-<h1 id="configuration">Configuration</h1>
-<p><strong>① Milesight gateway as Modbus Slave</strong></p>
-<ol type="1">
+</ul><h1 id="configuration">Configuration</h1><p><strong>① Milesight gateway as Modbus Slave</strong></p><ol type="1">
 <li><p>You need to connect the WS523 device to the built-in NS (Network Server) of the Milesight UG65.</p></li>
-</ol>
-<p>You need to log in to the front-end configuration webpage of the UG65 gateway, launch the Node-RED software, and import the JSON file.You can download this JSON file by clicking this icon:<a class="attachment-link" href="../assets/attachments/node-red/Node-Red-and-Modbus-solution/flows-modbus.json" download="flows-modbus.json"><span class="attachment-icon">&#128206;</span> Download flows-modbus.json</a></p>
-<ol start="2" type="1">
+</ol><p>You need to log in to the front-end configuration webpage of the UG65 gateway, launch the Node-RED software, and import the JSON file.You can download this JSON file by clicking this icon:<a class="attachment-link" href="../assets/attachments/node-red/Node-Red-and-Modbus-solution/flows-modbus.json" download="flows-modbus.json"><span class="attachment-icon">&#128206;</span> Download flows-modbus.json</a></p><ol start="2" type="1">
 <li><p>. After importing this JSON file into Node-RED, you will see the following data flow diagram. The functionality of this data flow diagram is to write the voltage value of the WS523 device into the built-in registers of the UG65 when the WS523 socket is externally powered</p>
 <p><img src="../assets/node-red/Node-Red-and-Modbus-solution/media/image6.png" style="width:5.79097in;height:2.54444in" alt="IMG_256" /></p>
 <p>The functions of each node in the diagram are as follows:</p>
@@ -219,35 +216,17 @@ footer.site-footer { text-align:center; color:var(--muted); font-size:12.5px; ma
 <p>The most notable node mentioned above is the 'Write to Modbus Slave' node. It is a function node that determines where we store the voltage data in which register and starting address. When you double-click on this node with your mouse, you will see the code inside it, as shown in the following image.</p>
 <p><img src="../assets/node-red/Node-Red-and-Modbus-solution/media/image7.png" style="width:4.34375in;height:5.90486in" alt="IMG_256" /></p>
 <p>The code in the above image is as follows:</p></li>
-</ol>
-<p>var fc = 16;</p>
-<p>var addresses = 1;</p>
-<p>var value_1 = msg.payload.voltage;</p>
-<p>var buf = Buffer.alloc(4);</p>
-<p>buf.writeFloatBE(value_1);</p>
-<p>var values_1 = [(buf[0] * 256 + buf[1]), (buf[2] * 256) + buf[3]]</p>
-<p>msg.payload = { "value": values_1,'fc': fc, 'unitid': 1, 'address': 1, 'quantity': 2 };</p>
-<p>return msg;</p>
-<p>The statement msg.payload = { "value": values_1,'fc': fc, 'unitid': 1, 'address': 1, 'quantity': 2 }; is the code what you need to modify. You don't need to modify the rest of the code. 'unitid' determines the Slave ID, and 'address' determines the starting address of the register. Therefore, you only need to modify 'unitid' and 'address' to store the voltage data in different registers. So from the above code, we can understand that I am storing the voltage value in the register with Slave ID 1 and starting address 1.</p>
-<ol start="3" type="1">
+</ol><p>var fc = 16;</p><p>var addresses = 1;</p><p>var value_1 = msg.payload.voltage;</p><p>var buf = Buffer.alloc(4);</p><p>buf.writeFloatBE(value_1);</p><p>var values_1 = [(buf[0] * 256 + buf[1]), (buf[2] * 256) + buf[3]]</p><p>msg.payload = { "value": values_1,'fc': fc, 'unitid': 1, 'address': 1, 'quantity': 2 };</p><p>return msg;</p><p>The statement msg.payload = { "value": values_1,'fc': fc, 'unitid': 1, 'address': 1, 'quantity': 2 }; is the code what you need to modify. You don't need to modify the rest of the code. 'unitid' determines the Slave ID, and 'address' determines the starting address of the register. Therefore, you only need to modify 'unitid' and 'address' to store the voltage data in different registers. So from the above code, we can understand that I am storing the voltage value in the register with Slave ID 1 and starting address 1.</p><ol start="3" type="1">
 <li><p>Reading Test From Modbus Master</p>
 <p>The voltage of my current WS523 socket is 1.8 volts. I am using Modbus Poll software as a Modbus Master to read the voltage value stored in the register with Slave ID 1 and starting address 1 in UG65.</p>
 <p>As shown in the figure below, I successfully obtained the register data of Slave ID 1 and starting address 1 in Modbus Poll, which stored the current voltage value of WS523. As shown in the figure below, I successfully obtained the register data of Slave ID 1 and starting address 1 in Modbus Poll, which stored the current voltage value of WS523.</p></li>
-</ol>
-<p><img src="../assets/node-red/Node-Red-and-Modbus-solution/media/image8.png" style="width:5.84792in;height:2.94444in" alt="IMG_256" /></p>
-<p><strong>② Milesight gateway as Modbus Master</strong></p>
-<p>Additionally, you can also configure the Milesight gateway as a Modbus Master to transmit the sensor data received by the gateway to a Modbus TCP Server. You just need to disconnect the link between the Modbus Flex Write node and the Modbus Flex Server in the aforementioned Node-Flow. Then, double-click the Modbus Flex Write node and specify the Modbus TCP Server where you want to store the data in this node, as shown in the figure below.</p>
-<p><img src="../assets/node-red/Node-Red-and-Modbus-solution/media/image9.png" style="width:5.94167in;height:2.96458in" alt="IMG_256" /></p>
-<p>In the test, I used the Modbus Slave software as the Modbus TCP Server and specified the server's IP as 192.168.45.245 and the port as 502. I stored the 2A current sensor data from the Milesight WS553 to this Modbus TCP Server. Therefore, my configuration in the Modbus Flex Write node is as shown in the figure below.</p>
-<p><img src="../assets/node-red/Node-Red-and-Modbus-solution/media/image10.png" style="width:5.81389in;height:2.90069in" alt="IMG_256" /></p>
-<p>Afterwards, you can see the 2A current value of the WS523 on the relevant Modbus Slave software.</p>
-<p><img src="../assets/node-red/Node-Red-and-Modbus-solution/media/image11.png" style="width:5.90486in;height:2.34097in" alt="IMG_256" /></p>
+</ol><p><img src="../assets/node-red/Node-Red-and-Modbus-solution/media/image8.png" style="width:5.84792in;height:2.94444in" alt="IMG_256" /></p><p><strong>② Milesight gateway as Modbus Master</strong></p><p>Additionally, you can also configure the Milesight gateway as a Modbus Master to transmit the sensor data received by the gateway to a Modbus TCP Server. You just need to disconnect the link between the Modbus Flex Write node and the Modbus Flex Server in the aforementioned Node-Flow. Then, double-click the Modbus Flex Write node and specify the Modbus TCP Server where you want to store the data in this node, as shown in the figure below.</p><p><img src="../assets/node-red/Node-Red-and-Modbus-solution/media/image9.png" style="width:5.94167in;height:2.96458in" alt="IMG_256" /></p><p>In the test, I used the Modbus Slave software as the Modbus TCP Server and specified the server's IP as 192.168.45.245 and the port as 502. I stored the 2A current sensor data from the Milesight WS553 to this Modbus TCP Server. Therefore, my configuration in the Modbus Flex Write node is as shown in the figure below.</p><p><img src="../assets/node-red/Node-Red-and-Modbus-solution/media/image10.png" style="width:5.81389in;height:2.90069in" alt="IMG_256" /></p><p>Afterwards, you can see the 2A current value of the WS523 on the relevant Modbus Slave software.</p><p><img src="../assets/node-red/Node-Red-and-Modbus-solution/media/image11.png" style="width:5.90486in;height:2.34097in" alt="IMG_256" /></p>
 
 </article>
 <footer class="site-footer">Milesight产品技术方案知识库</footer>
 </div>
 <script>
-document.querySelectorAll('article.article-body img').forEach(function(img) {
+document.querySelectorAll('article.article-body img:not(.art)').forEach(function(img) {
   img.addEventListener('click', function() {
     document.getElementById('lightbox-img').src = this.src;
     document.getElementById('lightbox').classList.add('active');

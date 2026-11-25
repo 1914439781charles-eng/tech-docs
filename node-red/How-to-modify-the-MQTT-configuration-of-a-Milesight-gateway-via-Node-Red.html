@@ -95,6 +95,16 @@ article.article-body { background:var(--card); border:1px solid var(--border); b
 article.article-body img { max-width:100%; height:auto !important; border:1px solid var(--border);
                            border-radius:8px; margin:8px 0; cursor:zoom-in; transition:box-shadow .15s ease; }
 article.article-body img:hover { box-shadow:0 4px 16px rgba(0,0,0,.12); }
+/* Word 封面: docx 原底图 + 按原坐标定位的文字, 还原 Word 里的封面排版 */
+figure.doc-cover { margin:0 0 26px; }
+.cover-page { position:relative; width:100%; max-width:680px; margin:0 auto; background:#fff;
+              overflow:hidden; container-type:inline-size; border:1px solid var(--border);
+              border-radius:8px; box-shadow:0 4px 18px rgba(15,23,42,.08); }
+.cover-page .art { position:absolute; display:block; max-width:none; height:auto !important;
+                   margin:0; border:0; border-radius:0; box-shadow:none; cursor:default; }
+.cover-page .art:hover { box-shadow:none; }
+.cover-page .tx { position:absolute; line-height:1; white-space:pre; margin:0; padding:0;
+                  font-family:Arial,"Segoe UI",system-ui,sans-serif; }
 article.article-body h1 { font-size:24px; margin-top:0; }
 article.article-body h2 { font-size:20px; border-bottom:1px solid var(--border); padding-bottom:6px; }
 article.article-body h3 { font-size:17px; }
@@ -166,11 +176,7 @@ footer.site-footer { text-align:center; color:var(--muted); font-size:12.5px; ma
 <div class="container">
 <div class="article-nav"><a href="../index.html">&larr; Back to Home</a> &middot; <span class="badge badge-node-red">Node-RED</span><a class="docx-download" href="../downloads/node-red/How-to-modify-the-MQTT-configuration-of-a-Milesight-gateway-via-Node-Red.docx" download="How to modify the MQTT configuration of a Milesight gateway via Node-Red.docx" title="下载原始 Word 文档"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3v12m0 0l-4.5-4.5M12 15l4.5-4.5"/><path d="M4 20h16"/></svg><span>下载 Word 文档</span></a></div>
 <article class="article-body">
-<figure>
-<img src="../assets/node-red/How-to-modify-the-MQTT-configuration-of-a-Milesight-gateway-via-Node-Red/media/image4.jpeg" style="width:8.27431in;height:11.70625in" alt="C:/Users/Iris/Desktop/完整word/word模板竖版_英文.jpgword模板竖版_英文" />
-<figcaption><p>How to modify the MQTT configuration of a Milesight UG6x and UG56 gateway via Node-Red</p></figcaption>
-</figure>
-<table>
+<figure class="doc-cover"><div class="cover-page" style="aspect-ratio:11906/16838"><img class="art" src="../assets/node-red/How-to-modify-the-MQTT-configuration-of-a-Milesight-gateway-via-Node-Red/art-7f37a52b.jpeg" alt="" style="left:0.017%;top:0.000%;width:100.076%"><span class="tx" style="left:8.023%;top:62.057%;font-size:4.032cqw;color:#5b9bd5">How to modify the MQTT configuration of a Milesig</span><span class="tx" style="left:16.191%;top:67.616%;font-size:4.032cqw;color:#5b9bd5">ht UG6x and UG56 gateway via Node-Red </span></div></figure><table>
 <colgroup>
 <col style="width: 14%" />
 <col style="width: 19%" />
@@ -191,29 +197,16 @@ footer.site-footer { text-align:center; color:var(--muted); font-size:12.5px; ma
 <td>Charles</td>
 </tr>
 </tbody>
-</table>
-<h1 id="description">Description</h1>
-<p>Milesight UG6x and UG56 provide relevant HTTP APIs, which make it convenient for users to configure them using HTTP API debugging tools. This article will use the modification of the MQTT configuration in the Application section of the built-in Network Server (NS) of the Milesight gateway as an example to demonstrate how to configure it via Node-Red.</p>
-<h1 id="requirement">Requirement</h1>
-<ul>
+</table><h1 id="description">Description</h1><p>Milesight UG6x and UG56 provide relevant HTTP APIs, which make it convenient for users to configure them using HTTP API debugging tools. This article will use the modification of the MQTT configuration in the Application section of the built-in Network Server (NS) of the Milesight gateway as an example to demonstrate how to configure it via Node-Red.</p><h1 id="requirement">Requirement</h1><ul>
 <li><p>Milesight Gateway: UG56/UG65/UG67</p></li>
-</ul>
-<h1 id="configuration">Configuration</h1>
-<h2 id="step-1-launch-node-red-and-import-flow-example">Step 1: Launch Node-RED and Import Flow Example</h2>
-<ol type="1">
+</ul><h1 id="configuration">Configuration</h1><h2 id="step-1-launch-node-red-and-import-flow-example">Step 1: Launch Node-RED and Import Flow Example</h2><ol type="1">
 <li><p>Go to <strong>App &gt; Node-RED</strong> page to enable Node-RED program and wait for 1 minute to load the program, click <strong>Launch</strong> button to start Node-RED web GUI.</p>
 <p><img src="../assets/node-red/How-to-modify-the-MQTT-configuration-of-a-Milesight-gateway-via-Node-Red/media/image5.png" style="width:5.76597in;height:3.75694in" /></p></li>
 <li><p>Log in the Node-RED web GUI. The account information is the same as gateway web GUI.</p>
 <p><img src="../assets/node-red/How-to-modify-the-MQTT-configuration-of-a-Milesight-gateway-via-Node-Red/media/image6.png" style="width:5.75972in;height:2.73611in" /></p></li>
 <li><p>Click <strong>Import</strong> to import the node-red flow example by pasting the content or import the json format file.</p>
 <p><img src="../assets/node-red/How-to-modify-the-MQTT-configuration-of-a-Milesight-gateway-via-Node-Red/media/image7.png" style="width:5.76458in;height:3.52431in" /></p></li>
-</ol>
-<p><img src="../assets/node-red/How-to-modify-the-MQTT-configuration-of-a-Milesight-gateway-via-Node-Red/media/image8.png" style="width:5.76667in;height:4.8875in" /></p>
-<h2 id="step-2-node-red-configuration">Step 2: Node-RED Configuration</h2>
-<h3 id="flow-structure">Flow structure:</h3>
-<p><img src="../assets/node-red/How-to-modify-the-MQTT-configuration-of-a-Milesight-gateway-via-Node-Red/media/image9.png" style="width:5.83472in;height:3.07361in" alt="IMG_256" /></p>
-<p>Content:</p>
-<table>
+</ol><p><img src="../assets/node-red/How-to-modify-the-MQTT-configuration-of-a-Milesight-gateway-via-Node-Red/media/image8.png" style="width:5.76667in;height:4.8875in" /></p><h2 id="step-2-node-red-configuration">Step 2: Node-RED Configuration</h2><h3 id="flow-structure">Flow structure:</h3><p><img src="../assets/node-red/How-to-modify-the-MQTT-configuration-of-a-Milesight-gateway-via-Node-Red/media/image9.png" style="width:5.83472in;height:3.07361in" alt="IMG_256" /></p><p>Content:</p><table>
 <colgroup>
 <col style="width: 100%" />
 </colgroup>
@@ -222,16 +215,7 @@ footer.site-footer { text-align:center; color:var(--muted); font-size:12.5px; ma
 <td>[{"id":"998ab5d3.1783f8","type":"tab","label":"demo downlink with UG65 API","disabled":false,"info":""},{"id":"50dcc748.c90b78","type":"http request","z":"998ab5d3.1783f8","name":"login &gt; token","method":"POST","ret":"txt","paytoqs":"ignore","url":"","tls":"","persist":false,"proxy":"","authType":"","x":570,"y":100,"wires":[["a0b3d785.006a3"]]},{"id":"2e28178d.a39c9","type":"inject","z":"998ab5d3.1783f8","name":"get token","props":[],"repeat":"","crontab":"","once":false,"onceDelay":0.1,"topic":"","x":180,"y":100,"wires":[["93a033dd.c73428"]]},{"id":"93a033dd.c73428","type":"function","z":"998ab5d3.1783f8","name":"prepare login &gt; token","func":"msg.url=/"https://127.0.0.1:8080/api/internal/login/";/nmsg.payload = {/"password/":/"password/",/"username/":/"apiuser/"} ;//JSON/nmsg.headers = {};/nmsg.headers['content-type'] = 'application/json';/nmsg.rejectUnauthorized=false;/nreturn msg;","outputs":1,"noerr":0,"initialize":"","finalize":"","libs":[],"x":360,"y":100,"wires":[["50dcc748.c90b78"]]},{"id":"a0b3d785.006a3","type":"json","z":"998ab5d3.1783f8","name":"","property":"payload","action":"","pretty":false,"x":770,"y":100,"wires":[["ad1fddb8.c6a4b8"]]},{"id":"ad1fddb8.c6a4b8","type":"change","z":"998ab5d3.1783f8","name":"","rules":[{"t":"set","p":"token","pt":"global","to":"payload.jwt","tot":"msg"}],"action":"","property":"","from":"","to":"","reg":false,"x":940,"y":100,"wires":[["79879bc9.ad9c3c"]]},{"id":"8ecd41de.87fb6","type":"comment","z":"998ab5d3.1783f8","name":"Send the MQTT Configuration to UG65","info":"","x":290,"y":500,"wires":[]},{"id":"79879bc9.ad9c3c","type":"debug","z":"998ab5d3.1783f8","name":"","active":true,"tosidebar":true,"console":false,"tostatus":false,"complete":"true","targetType":"full","statusVal":"","statusType":"auto","x":870,"y":220,"wires":[]},{"id":"c41b3a65.df1668","type":"comment","z":"998ab5d3.1783f8","name":"Get a Token from the UG65 API","info":"","x":230,"y":40,"wires":[]},{"id":"0d61d73f774ed388","type":"function","z":"998ab5d3.1783f8","name":"Prepare downlink","func":"msg.url=/"https://127.0.0.1:8080/api/urapplications/1/integrations/mqtt/";/nmsg.payload = {/n /"host/": /"47.243.113.251/", /n /"port/": 2572, /n /"useAuth/": true,/n /"username/": /"test1231/", /n /"password/": /"6666661/", /n /"connectTimeout/": 30, /n /"keepAliveInterval/": 60, /n /"clientID/": /"testtest/", /n /"useTLS/": false, /n ///"retransmissionEnabled/": true, /n /"mode/": 0, /n /"advanced/": false, /n /n/n/n} ;/n/nmsg.headers = {/"Authorization/":msg.token};/nmsg.headers['content-type'] = 'application/json';/nmsg.rejectUnauthorized=false;/nreturn msg;","outputs":1,"noerr":0,"initialize":"","finalize":"","libs":[],"x":510,"y":560,"wires":[["7b60f143d3b6e42b"]]},{"id":"30f14e92426d47d1","type":"inject","z":"998ab5d3.1783f8","name":"send","props":[{"p":"token","v":"token","vt":"global"}],"repeat":"","crontab":"","once":false,"onceDelay":0.1,"topic":"","x":230,"y":560,"wires":[["0d61d73f774ed388"]]},{"id":"7b60f143d3b6e42b","type":"http request","z":"998ab5d3.1783f8","name":"post downlink to UG65 API","method":"PUT","ret":"txt","paytoqs":"ignore","url":"","tls":"","persist":false,"proxy":"","insecureHTTPParser":false,"authType":"","senderr":false,"headers":[],"x":780,"y":560,"wires":[["f8d5acc907e6fcd5"]]},{"id":"f8d5acc907e6fcd5","type":"debug","z":"998ab5d3.1783f8","name":"","active":true,"tosidebar":true,"console":false,"tostatus":false,"complete":"true","targetType":"full","statusVal":"","statusType":"auto","x":990,"y":560,"wires":[]}]</td>
 </tr>
 </tbody>
-</table>
-<p>Configure the <strong>Prepare downlink</strong> node.</p>
-<p>①Double-click the Prepare downlink node to enter the configuration.</p>
-<p><img src="../assets/node-red/How-to-modify-the-MQTT-configuration-of-a-Milesight-gateway-via-Node-Red/media/image10.png" style="width:6.21944in;height:3.69167in" alt="IMG_256" /></p>
-<p>② Since my gateway’s built-in network server has an Application named test_Mqtt, and this application has already adopted MQTT protocol as its integration method, I would like to use Node-Red to modify its configuration.As shown below.</p>
-<p><img src="../assets/node-red/How-to-modify-the-MQTT-configuration-of-a-Milesight-gateway-via-Node-Red/media/image11.png" style="width:5.77014in;height:2.84028in" alt="IMG_256" /></p>
-<p>Since the ID of this Application is 2, I specified the application with ID 2 in `msg.url`. In addition, I filled in the corresponding MQTT configuration in `msg.payload`, as shown in the figure below.</p>
-<p><img src="../assets/node-red/How-to-modify-the-MQTT-configuration-of-a-Milesight-gateway-via-Node-Red/media/image12.png" style="width:6.25278in;height:3.07778in" alt="IMG_256" /></p>
-<h2 id="step-3-deploy-and-check-result">Step 3: Deploy and Check Result</h2>
-<ol type="1">
+</table><p>Configure the <strong>Prepare downlink</strong> node.</p><p>①Double-click the Prepare downlink node to enter the configuration.</p><p><img src="../assets/node-red/How-to-modify-the-MQTT-configuration-of-a-Milesight-gateway-via-Node-Red/media/image10.png" style="width:6.21944in;height:3.69167in" alt="IMG_256" /></p><p>② Since my gateway’s built-in network server has an Application named test_Mqtt, and this application has already adopted MQTT protocol as its integration method, I would like to use Node-Red to modify its configuration.As shown below.</p><p><img src="../assets/node-red/How-to-modify-the-MQTT-configuration-of-a-Milesight-gateway-via-Node-Red/media/image11.png" style="width:5.77014in;height:2.84028in" alt="IMG_256" /></p><p>Since the ID of this Application is 2, I specified the application with ID 2 in `msg.url`. In addition, I filled in the corresponding MQTT configuration in `msg.payload`, as shown in the figure below.</p><p><img src="../assets/node-red/How-to-modify-the-MQTT-configuration-of-a-Milesight-gateway-via-Node-Red/media/image12.png" style="width:6.25278in;height:3.07778in" alt="IMG_256" /></p><h2 id="step-3-deploy-and-check-result">Step 3: Deploy and Check Result</h2><ol type="1">
 <li><p>Click <strong>Deploy</strong> to save all node-red configurations.</p>
 <p><img src="../assets/node-red/How-to-modify-the-MQTT-configuration-of-a-Milesight-gateway-via-Node-Red/media/image13.png" style="width:4.35in;height:2.09167in" /></p></li>
 <li><p>Click timestamp node to get the HTTP API token.</p>
@@ -240,14 +224,13 @@ footer.site-footer { text-align:center; color:var(--muted); font-size:12.5px; ma
 <p><img src="../assets/node-red/How-to-modify-the-MQTT-configuration-of-a-Milesight-gateway-via-Node-Red/media/image15.png" style="width:6.15486in;height:1.40069in" alt="IMG_256" /></p></li>
 <li><p>Open the Application related to the built-in NS and the MQTT integration method on this gateway, and you will find that its configuration is already the same as the MQTT settings you configured in Node-Red.</p>
 <p><img src="../assets/node-red/How-to-modify-the-MQTT-configuration-of-a-Milesight-gateway-via-Node-Red/media/image16.png" style="width:6.19028in;height:3.04722in" alt="IMG_256" /></p></li>
-</ol>
-<p class="article-end"><strong>-------END-----</strong></p>
+</ol><p class="article-end"><strong>-------END-----</strong></p>
 
 </article>
 <footer class="site-footer">Milesight产品技术方案知识库</footer>
 </div>
 <script>
-document.querySelectorAll('article.article-body img').forEach(function(img) {
+document.querySelectorAll('article.article-body img:not(.art)').forEach(function(img) {
   img.addEventListener('click', function() {
     document.getElementById('lightbox-img').src = this.src;
     document.getElementById('lightbox').classList.add('active');
