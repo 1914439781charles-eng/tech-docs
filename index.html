@@ -16,7 +16,8 @@ a:hover { text-decoration:underline; }
 header.site-header { background:linear-gradient(135deg,#1e3a8a 0%,#2563eb 55%,#3b82f6 100%);
                      color:#fff; padding:44px 20px; box-shadow:0 4px 20px rgba(30,58,138,.20); }
 header.site-header .container { padding-top:0; padding-bottom:0; }
-header.site-header h1 { margin:0 0 8px; font-size:30px; letter-spacing:-.02em; }
+header.site-header h1 { margin:0 0 8px; font-size:30px; letter-spacing:-.02em; overflow-wrap:anywhere; }
+@media (max-width:520px) { header.site-header h1 { font-size:22px; } }
 header.site-header p { margin:0; opacity:.88; font-size:14px; letter-spacing:.01em; }
 .search-box { margin:26px 0 4px; position:relative; }
 .search-box input { width:100%; padding:13px 16px 13px 44px; font-size:15px; border:1px solid var(--border);
@@ -129,6 +130,22 @@ footer.site-footer { text-align:center; color:var(--muted); font-size:12.5px; ma
 .lightbox-overlay.active { display:flex; }
 .lightbox-overlay img { max-width:95vw; max-height:92vh; border-radius:6px; box-shadow:0 8px 40px rgba(0,0,0,.4); }
 @media (max-width:640px) { article.article-body { padding:20px 18px; } }
+/* World clock (home top-right) */
+.world-clock { position:fixed; top:14px; right:22px; z-index:60;
+  background:rgba(255,255,255,.94); color:#1f2a44;
+  border:1px solid rgba(31,42,68,.12); border-radius:12px;
+  padding:8px 12px; box-shadow:0 6px 20px rgba(15,23,42,.12);
+  font-size:12px; line-height:1.5; -webkit-backdrop-filter:blur(8px); backdrop-filter:blur(8px);
+  min-width:158px; }
+.world-clock .wc-title { font-size:10.5px; font-weight:700; letter-spacing:.08em;
+  text-transform:uppercase; color:#8a97b1; margin-bottom:3px; }
+.world-clock .wc-row { display:flex; justify-content:space-between; gap:14px; align-items:baseline; }
+.world-clock .wc-label { color:#5b6b8c; font-weight:600; white-space:nowrap; }
+.world-clock .wc-time { font-variant-numeric:tabular-nums; font-weight:700; letter-spacing:.4px; color:#16233f; }
+@media (max-width:720px) {
+  .world-clock { top:auto; bottom:14px; left:auto; right:14px; font-size:11px; padding:6px 10px;
+    min-width:0; max-width:calc(100vw - 28px); box-sizing:border-box; }
+}
 </style>
 </head>
 <body class="home">
@@ -180,5 +197,38 @@ function filterArticles() {
 <a class="fault-tree-link" href="https://1914439781charles-eng.github.io/fault-tree-center/" target="_blank" rel="noopener noreferrer" title="Milesight问题排查故障树" aria-label="Milesight问题排查故障树"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="9" y="3" width="6" height="4" rx="1"/><rect x="3" y="17" width="6" height="4" rx="1"/><rect x="15" y="17" width="6" height="4" rx="1"/><path d="M12 7v5M6 17v-5h12v5"/></svg><span>Milesight问题排查故障树</span></a>
 <a class="protocol-link" href="https://1914439781charles-eng.github.io/tech-docs/tools/protocol-converter.html" title="协议转换" aria-label="协议转换"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 8h13l-3-3M20 16H7l3 3"/></svg><span>协议转换</span></a>
 <a class="lorawan-link" href="https://1914439781charles-eng.github.io/tech-docs/tools/lorawan-packet-parser.html" title="LoRaWAN数据包解析" aria-label="LoRaWAN数据包解析"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 12h3l2-6 4 12 2-6h5"/></svg><span>LoRaWAN数据包解析</span></a>
+<div class="world-clock" title="美东/美中时间自动应用夏令时（EDT/CDT）；BRT 为巴西利亚时间">
+<div class="wc-title">当地时间</div>
+<div class="wc-row"><span class="wc-label">美东 EST</span><span class="wc-time" id="clock-est">--:--:--</span></div>
+<div class="wc-row"><span class="wc-label">美中 CST</span><span class="wc-time" id="clock-cst">--:--:--</span></div>
+<div class="wc-row"><span class="wc-label">巴西 BRT</span><span class="wc-time" id="clock-brt">--:--:--</span></div>
+</div>
+<script>
+(function () {
+  var zones = [
+    { id: 'clock-est', tz: 'America/New_York', fallback: -5 },
+    { id: 'clock-cst', tz: 'America/Chicago', fallback: -6 },
+    { id: 'clock-brt', tz: 'America/Sao_Paulo', fallback: -3 }
+  ];
+  var fmts = zones.map(function (z) {
+    try {
+      return new Intl.DateTimeFormat('en-GB', { timeZone: z.tz, hourCycle: 'h23', hour: '2-digit', minute: '2-digit', second: '2-digit' });
+    } catch (e) { return null; }
+  });
+  function pad(n) { return ('0' + n).slice(-2); }
+  function tick() {
+    var now = new Date();
+    zones.forEach(function (z, i) {
+      var el = document.getElementById(z.id);
+      if (!el) return;
+      if (fmts[i]) { el.textContent = fmts[i].format(now); return; }
+      var d = new Date(now.getTime() + (z.fallback * 60 + now.getTimezoneOffset()) * 60000);
+      el.textContent = pad(d.getHours()) + ':' + pad(d.getMinutes()) + ':' + pad(d.getSeconds());
+    });
+  }
+  tick();
+  setInterval(tick, 1000);
+})();
+</script>
 </body>
 </html>
