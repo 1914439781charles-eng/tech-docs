@@ -1,0 +1,272 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>How to capture QXDM logs for the UG63 V2 · Milesight产品技术方案知识库</title>
+<style>
+:root { --accent:#2563eb; --accent-soft:#eff6ff; --text:#1f2937; --muted:#6b7280;
+        --border:#e5e7eb; --bg:#f8fafc; --card:#ffffff; }
+* { box-sizing: border-box; }
+body { margin:0; font-family: "Segoe UI", system-ui, sans-serif;
+       background:var(--bg); color:var(--text); line-height:1.75; }
+a { color:var(--accent); text-decoration:none; }
+a:hover { text-decoration:underline; }
+.container { max-width:960px; margin:0 auto; padding:24px 20px 64px; }
+header.site-header { background:linear-gradient(135deg,#1e3a8a 0%,#2563eb 55%,#3b82f6 100%);
+                     color:#fff; padding:44px 20px; box-shadow:0 4px 20px rgba(30,58,138,.20); }
+header.site-header .container { padding-top:0; padding-bottom:0; }
+header.site-header h1 { margin:0 0 8px; font-size:30px; letter-spacing:-.02em; overflow-wrap:anywhere; }
+@media (max-width:520px) { header.site-header h1 { font-size:22px; } }
+header.site-header p { margin:0; opacity:.88; font-size:14px; letter-spacing:.01em; }
+.search-box { margin:26px 0 4px; position:relative; }
+.search-box input { width:100%; padding:13px 16px 13px 44px; font-size:15px; border:1px solid var(--border);
+                    border-radius:12px; outline:none; box-shadow:0 1px 3px rgba(0,0,0,.04);
+                    background-color:#fff;
+                    background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%236b7280' stroke-width='2' stroke-linecap='round'%3E%3Ccircle cx='11' cy='11' r='7'/%3E%3Cline x1='16.5' y1='16.5' x2='21' y2='21'/%3E%3C/svg%3E");
+                    background-repeat:no-repeat; background-position:14px center; background-size:18px 18px; }
+.search-box input:focus { border-color:var(--accent); box-shadow:0 0 0 4px var(--accent-soft); }
+/* Category cards — horizontal row, collapsed by default */
+.category-grid { display:grid; grid-template-columns:repeat(4,minmax(0,1fr)); gap:16px; margin-top:28px; }
+.category-card { position:relative; display:flex; flex-direction:column; align-items:flex-start;
+                 gap:9px; width:100%; text-align:left; background:var(--card); border:1px solid var(--border);
+                 border-radius:14px; padding:20px; cursor:pointer; font:inherit; color:inherit;
+                 box-shadow:0 1px 3px rgba(0,0,0,.04); overflow:hidden;
+                 transition:transform .18s ease, box-shadow .18s ease, border-color .18s ease; }
+.category-card::before { content:""; position:absolute; left:0; top:0; bottom:0; width:4px;
+                         background:var(--card-accent,var(--accent)); }
+.category-card:hover { transform:translateY(-3px); border-color:var(--card-accent,var(--accent));
+                       box-shadow:0 10px 24px rgba(0,0,0,.10); }
+.category-card.open { border-color:var(--card-accent,var(--accent));
+                      box-shadow:0 8px 20px rgba(0,0,0,.10); }
+.card-howto { --card-accent:#16a34a; }
+.card-troubleshooting { --card-accent:#dc2626; }
+.card-node-red { --card-accent:#ea580c; }
+.card-python { --card-accent:#2563eb; }
+.cat-card-top { display:flex; align-items:center; justify-content:space-between; width:100%; }
+.cat-dot { width:12px; height:12px; border-radius:50%; background:var(--card-accent,var(--accent));
+           box-shadow:0 0 0 4px color-mix(in srgb, var(--card-accent,var(--accent)) 15%, transparent); }
+.cat-name { font-size:18px; font-weight:700; line-height:1.25; }
+.cat-desc { font-size:12.5px; color:var(--muted); line-height:1.4; min-height:34px; }
+.cat-card-foot { display:flex; align-items:center; justify-content:space-between; width:100%;
+                 margin-top:2px; padding-top:10px; border-top:1px solid var(--border); }
+.chevron { font-size:13px; color:var(--muted); transition:transform .2s ease; }
+.category-card.open .chevron { transform:rotate(180deg); }
+.badge { display:inline-block; font-size:11.5px; font-weight:700; padding:3px 10px;
+         border-radius:999px; letter-spacing:.02em; }
+.badge-howto { background:#dcfce7; color:#15803d; }
+.badge-troubleshooting { background:#fee2e2; color:#b91c1c; }
+.badge-node-red { background:#ffedd5; color:#c2410c; }
+.badge-python { background:#dbeafe; color:#1d4ed8; }
+.count { color:var(--muted); font-size:12px; font-weight:600; }
+/* Article panels — hidden until their card is clicked */
+.category-panels { margin-top:22px; }
+.category-panel { display:none; margin-bottom:18px; background:var(--card); border:1px solid var(--border);
+                  border-radius:14px; padding:6px 18px 18px; box-shadow:0 2px 8px rgba(0,0,0,.04); }
+.category-panel.open { display:block; animation:panelIn .22s ease; }
+@keyframes panelIn { from { opacity:0; transform:translateY(-6px); } to { opacity:1; transform:none; } }
+.panel-title { display:flex; align-items:center; gap:10px; font-size:15px; font-weight:700;
+               padding:14px 0 12px; border-bottom:1px solid var(--border); margin-bottom:14px; }
+.panel-title .count { margin-left:auto; }
+ul.article-list { list-style:none; margin:0; padding:0; display:grid; gap:10px; }
+ul.article-list li { background:#f8fafc; border:1px solid var(--border); border-radius:10px;
+                     padding:14px 18px; transition:transform .15s ease, box-shadow .15s ease; }
+ul.article-list li:hover { transform:translateX(3px); box-shadow:0 4px 14px rgba(0,0,0,.07); }
+ul.article-list .title { font-size:15.5px; font-weight:600; }
+ul.article-list .meta { font-size:12.5px; color:var(--muted); margin-top:4px; }
+.empty { color:var(--muted); font-size:14px; padding:14px 4px; }
+@media (max-width:860px) { .category-grid { grid-template-columns:repeat(2,minmax(0,1fr)); } }
+@media (max-width:520px) { .category-grid { grid-template-columns:1fr; } .cat-desc { min-height:0; } }
+/* Article page */
+.article-nav { margin:18px 0 0; font-size:14px; padding-top:130px;
+               display:flex; align-items:center; gap:8px; flex-wrap:wrap; }
+.article-nav .docx-download { margin-left:auto; display:inline-flex; align-items:center; gap:6px;
+  padding:7px 14px; border-radius:8px; background:var(--accent); color:#fff; font-weight:600;
+  font-size:13px; line-height:1.2; box-shadow:0 2px 8px rgba(37,99,235,.28);
+  transition:background .15s ease, transform .15s ease; }
+.article-nav .docx-download:hover { background:#1d4ed8; color:#fff; text-decoration:none; transform:translateY(-1px); }
+.article-nav .docx-download svg { flex:none; }
+ul.article-list .docx-mini { display:inline-block; margin-left:8px; padding:1px 8px; border-radius:999px;
+  border:1px solid var(--border); background:#fff; font-size:11.5px; font-weight:600; color:var(--accent); }
+ul.article-list .docx-mini:hover { background:var(--accent-soft); border-color:#bfdbfe; text-decoration:none; }
+@media (max-width:520px) { .article-nav .docx-download { margin-left:0; } }
+article.article-body { background:var(--card); border:1px solid var(--border); border-radius:12px;
+                       padding:32px 40px; margin-top:16px; overflow-wrap:anywhere; }
+article.article-body img { max-width:100%; height:auto !important; border:1px solid var(--border);
+                           border-radius:8px; margin:8px 0; cursor:zoom-in; transition:box-shadow .15s ease; }
+article.article-body img:hover { box-shadow:0 4px 16px rgba(0,0,0,.12); }
+article.article-body h1 { font-size:24px; margin-top:0; }
+article.article-body h2 { font-size:20px; border-bottom:1px solid var(--border); padding-bottom:6px; }
+article.article-body h3 { font-size:17px; }
+article.article-body pre { background:#f1f5f9; padding:14px; border-radius:8px; overflow-x:auto; max-width:100%; }
+article.article-body code { background:#f1f5f9; padding:2px 6px; border-radius:4px; font-size:.92em;
+                            overflow-wrap:anywhere; word-break:break-word; }
+article.article-body pre code { background:none; padding:0; }
+article.article-body table { border-collapse:collapse; width:100%; max-width:100%; table-layout:fixed; }
+article.article-body th, article.article-body td { border:1px solid var(--border); padding:8px 12px;
+                                                   overflow-wrap:anywhere; word-break:break-word; vertical-align:top; }
+article.article-body th { background:var(--accent-soft); }
+article.article-body blockquote { border-left:4px solid var(--accent); margin-left:0;
+                                  padding:4px 16px; color:var(--muted); background:var(--accent-soft); }
+.attachment-link { display:inline-flex; align-items:center; gap:6px; padding:6px 14px; margin:4px 0;
+                   background:var(--accent-soft); border:1px solid var(--accent); border-radius:8px;
+                   font-weight:600; text-decoration:none; }
+.attachment-link:hover { background:#dbeafe; text-decoration:none; }
+/* Top-left shortcut icons: Fault Tree + Protocol Converter + LoRaWAN Parser (stacked vertically) */
+.fault-tree-link, .protocol-link, .lorawan-link { position:fixed; left:22px; top:14px; bottom:auto; z-index:900;
+                   display:inline-flex; align-items:center; gap:9px;
+                   padding:9px 14px 9px 11px; border-radius:999px;
+                   background:#fff; border:1px solid #bfdbfe; color:#1d4ed8;
+                   box-shadow:0 6px 20px rgba(30,58,138,.18);
+                   font-size:13px; font-weight:700; line-height:1; text-decoration:none;
+                   transition:transform .18s ease, box-shadow .18s ease, background .18s ease; }
+.protocol-link { top:52px; }
+.lorawan-link { top:90px; }
+/* Home page: fault tree icon aligns horizontally with the search box */
+body.home .fault-tree-link { top:224px; }
+body.home .protocol-link { top:265px; }
+body.home .lorawan-link { top:306px; }
+.fault-tree-link:hover, .protocol-link:hover, .lorawan-link:hover { transform:translateY(-2px); background:#eff6ff;
+                         box-shadow:0 10px 26px rgba(30,58,138,.25); text-decoration:none; }
+.fault-tree-link svg, .protocol-link svg, .lorawan-link svg { flex:none; }
+@media (max-width:520px) {
+  .fault-tree-link, .protocol-link, .lorawan-link { padding:10px; left:16px; }
+}
+.attachment-icon { font-size:16px; }
+.article-end { text-align:center; }
+footer.site-footer { text-align:center; color:var(--muted); font-size:12.5px; margin-top:48px; }
+/* Lightbox */
+.lightbox-overlay { display:none; position:fixed; inset:0; z-index:9999;
+                    background:rgba(0,0,0,.85); cursor:zoom-out; justify-content:center; align-items:center; }
+.lightbox-overlay.active { display:flex; }
+.lightbox-overlay img { max-width:95vw; max-height:92vh; border-radius:6px; box-shadow:0 8px 40px rgba(0,0,0,.4); }
+@media (max-width:640px) { article.article-body { padding:20px 18px; } }
+/* World clock (home top-right) */
+.world-clock { position:fixed; top:14px; right:22px; z-index:60;
+  background:rgba(255,255,255,.94); color:#1f2a44;
+  border:1px solid rgba(31,42,68,.12); border-radius:12px;
+  padding:8px 12px; box-shadow:0 6px 20px rgba(15,23,42,.12);
+  font-size:12px; line-height:1.5; -webkit-backdrop-filter:blur(8px); backdrop-filter:blur(8px);
+  min-width:158px; }
+.world-clock .wc-title { font-size:10.5px; font-weight:700; letter-spacing:.08em;
+  text-transform:uppercase; color:#8a97b1; margin-bottom:3px; }
+.world-clock .wc-row { display:flex; justify-content:space-between; gap:14px; align-items:baseline; }
+.world-clock .wc-label { color:#5b6b8c; font-weight:600; white-space:nowrap; }
+.world-clock .wc-time { font-variant-numeric:tabular-nums; font-weight:700; letter-spacing:.4px; color:#16233f; }
+@media (max-width:720px) {
+  .world-clock { top:auto; bottom:14px; left:auto; right:14px; font-size:11px; padding:6px 10px;
+    min-width:0; max-width:calc(100vw - 28px); box-sizing:border-box; }
+}
+</style>
+</head>
+<body>
+<div class="lightbox-overlay" id="lightbox" onclick="closeLightbox()">
+  <img id="lightbox-img" src="" alt="">
+</div>
+<div class="container">
+<div class="article-nav"><a href="../index.html">&larr; Back to Home</a> &middot; <span class="badge badge-howto">How to</span><a class="docx-download" href="../downloads/howto/How-to-capture-QXDM-logs-for-the-UG63-V2.docx" download="How to capture QXDM logs for the UG63 V2.docx" title="下载原始 Word 文档"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3v12m0 0l-4.5-4.5M12 15l4.5-4.5"/><path d="M4 20h16"/></svg><span>下载 Word 文档</span></a></div>
+<article class="article-body">
+<figure>
+<img src="../assets/howto/How-to-capture-QXDM-logs-for-the-UG63-V2/media/image4.jpeg" style="width:8.27431in;height:11.70625in" alt="C:/Users/Iris/Desktop/完整word/word模板竖版_英文.jpgword模板竖版_英文" />
+<figcaption><p>How to capture QXDM logs for the UG63 V2</p></figcaption>
+</figure>
+<table>
+<colgroup>
+<col style="width: 14%" />
+<col style="width: 19%" />
+<col style="width: 43%" />
+<col style="width: 22%" />
+</colgroup>
+<tbody>
+<tr>
+<td><strong>Version</strong></td>
+<td><strong>Update Time</strong></td>
+<td><strong>Description</strong></td>
+<td><strong>Author</strong></td>
+</tr>
+<tr>
+<td>1.0</td>
+<td>Nov 25, 2026</td>
+<td>Initial version</td>
+<td>Charles</td>
+</tr>
+</tbody>
+</table>
+<h1 id="description">Description</h1>
+<p>This document will guide you on how to capture QXDM logs from the UG63 V2. Please note that the steps below are intended for scenarios where the UG63 V2 fails to register on the cellular network. If you are troubleshooting a different issue, you do not need to run the AT+CFUN=0 and AT+CFUN=1 commands described below.</p>
+<h1 id="configuration">Configuration</h1>
+<p><strong>Step 1</strong> : Please click on this link (https://ursalink-resource-center.oss-us-west-1.aliyuncs.com/Support/Charles/catch_log.zip) to download the necessary tools for capturing the QXDM log of the UG63 V2 cellular module.</p>
+<p><strong>Step 2:</strong> Extract and install the following three driver packages.</p>
+<p><img src="../assets/howto/How-to-capture-QXDM-logs-for-the-UG63-V2/media/image5.png" style="width:4.5in;height:1.08333in" alt="IMG_256" /></p>
+<p>After extracting and installing these three drivers, you need to connect your UG63 V2 to your computer simultaneously using a USB-C cable and a Micro USB cable. Then, you will see the following four COM ports in your computer's Device Manager, among which the DIAG Port is required for capturing QXDM logs.</p>
+<p><img src="../assets/howto/How-to-capture-QXDM-logs-for-the-UG63-V2/media/image6.png" style="width:3.5625in;height:4.08472in" alt="IMG_256" /></p>
+<p><img src="../assets/howto/How-to-capture-QXDM-logs-for-the-UG63-V2/media/image7.png" style="width:4.94167in;height:2.94444in" alt="IMG_256" /></p>
+<p><strong>Step 3:</strong> Use the PuTTY software to access the background of the UG63 V2 gateway.</p>
+<p>According to step 2, it can be known that the USB-C Port of my UG63 V2 is COM11. Therefore, I entered "COM 11" in PuTTY and then clicked "Open".</p>
+<p><img src="../assets/howto/How-to-capture-QXDM-logs-for-the-UG63-V2/media/image8.png" style="width:3.72153in;height:3.66319in" alt="IMG_256" /></p>
+<p>Since each UG63 V2 has a different backend password, for your UG63 V2 gateway with the SN code 673906376DC60008, the backend password is zB3BTw1TRpA6ztItHhCm1MM2uCM3Ud7WuJqEU0GutXA=. Therefore, after you click "Open", you need to enter "<mark>login zB3BTw1TRpA6ztItHhCm1MM2uCM3Ud7WuJqEU0GutXA=</mark>" in the current black command. This way, you can complete the backend login, as shown in the following picture. This is the UG63 V2 I used. After you successfully log in, it will display "<mark>Login Success</mark>".</p>
+<p><img src="../assets/howto/How-to-capture-QXDM-logs-for-the-UG63-V2/media/image9.png" style="width:6.08542in;height:1.92917in" alt="IMG_256" /></p>
+<p>If you successfully log in to the backend interface of UG63 V2, the interface may continuously display information shown below, preventing you from checking whether you have correctly entered the command. You can directly input "<mark>pkt_stop</mark>" ,Then press the Enter key to input in this command line. This command will stop the frequent information output.</p>
+<p><img src="../assets/howto/How-to-capture-QXDM-logs-for-the-UG63-V2/media/image10.png" style="width:4.75694in;height:2.99514in" alt="IMG_256" /></p>
+<p>Afterwards, enter the following three commands separately in the command line. For each command, press the Enter key to execute it after inputting the command. Upon successful execution of each command, you will see "output: OK" returned, as illustrated in the screenshot below.</p>
+<p><mark>AT_CMD AT$QCPCFG="logCtrl",2</mark></p>
+<p><mark><br />
+AT_CMD AT$QCPCFG="logPortSel",2</mark></p>
+<p><mark><br />
+AT_CMD AT+QCFG="usbnet",3</mark></p>
+<p><img src="../assets/howto/How-to-capture-QXDM-logs-for-the-UG63-V2/media/image11.png" style="width:6.03472in;height:3.25556in" alt="IMG_256" /></p>
+<p><strong>Step 4:</strong> Restart the UG63 V2 by webpage.</p>
+<p><strong>Step 5:</strong> Extract and open the EPAT tool</p>
+<p><img src="../assets/howto/How-to-capture-QXDM-logs-for-the-UG63-V2/media/image12.png" style="width:5.57083in;height:0.33819in" alt="IMG_256" /></p>
+<p><img src="../assets/howto/How-to-capture-QXDM-logs-for-the-UG63-V2/media/image13.png" style="width:4.99722in;height:5.73056in" alt="IMG_256" /></p>
+<p>After opening the tool, select the "Serial Device" option.</p>
+<p><img src="../assets/howto/How-to-capture-QXDM-logs-for-the-UG63-V2/media/image14.png" style="width:6.05903in;height:3.17708in" alt="IMG_256" /></p>
+<p>Configure the serial port baud rate and USB DIAG Port of the tool.</p>
+<p><img src="../assets/howto/How-to-capture-QXDM-logs-for-the-UG63-V2/media/image15.png" style="width:6.47569in;height:3.39514in" alt="IMG_256" /></p>
+<p><strong>Step 6:</strong> Extract the DBG.7z file. After extraction, the EPAT tool requires the update of the files.</p>
+<p><img src="../assets/howto/How-to-capture-QXDM-logs-for-the-UG63-V2/media/image16.png" style="width:5.77014in;height:0.25347in" alt="IMG_256" /></p>
+<p><img src="../assets/howto/How-to-capture-QXDM-logs-for-the-UG63-V2/media/image17.png" style="width:6.59931in;height:2.94653in" alt="IMG_256" /></p>
+<p><strong>Step 7:</strong> Capture the QXDM log</p>
+<p>Click the SigLogger window, and then choose the option in the options bar labeled "SigLog → Only Show Protocol Signaling".</p>
+<p><img src="../assets/howto/How-to-capture-QXDM-logs-for-the-UG63-V2/media/image18.png" style="width:6.71181in;height:3.51944in" alt="IMG_256" /></p>
+<p><img src="../assets/howto/How-to-capture-QXDM-logs-for-the-UG63-V2/media/image19.png" style="width:6.51597in;height:3.10903in" /></p>
+<p><img src="../assets/howto/How-to-capture-QXDM-logs-for-the-UG63-V2/media/image20.png" style="width:6.55486in;height:3.43681in" alt="IMG_256" /></p>
+<p>By using the pause or stop icons in the toolbar as shown in the following figure, you can pause or stop the log capture.</p>
+<p><img src="../assets/howto/How-to-capture-QXDM-logs-for-the-UG63-V2/media/image21.png" style="width:6.52361in;height:3.42083in" alt="IMG_256" /></p>
+<p>If you can see data output from NAS/AS, it means the QXDM log is currently being captured, as shown in the image below.</p>
+<p><img src="../assets/howto/How-to-capture-QXDM-logs-for-the-UG63-V2/media/image22.png" style="width:6.73056in;height:3.52917in" alt="IMG_256" /></p>
+<p>At this stage, please input the following two AT commands in order via the UG63 V2 front-end interface to initiate a restart of its cellular module.</p>
+<p><mark>AT+CFUN=0</mark></p>
+<p><mark>AT+CFUN=1</mark></p>
+<p><img src="../assets/howto/How-to-capture-QXDM-logs-for-the-UG63-V2/media/image23.png" style="width:6.17917in;height:3.04167in" alt="IMG_256" /></p>
+<p><img src="../assets/howto/How-to-capture-QXDM-logs-for-the-UG63-V2/media/image24.png" style="width:6.025in;height:2.96597in" alt="IMG_256" /></p>
+<p>After you have successfully entered the two commands above, please wait for 15 minutes. Then, pause or end the QXDM log capture</p>
+<p><img src="../assets/howto/How-to-capture-QXDM-logs-for-the-UG63-V2/media/image25.png" style="width:6.76597in;height:3.54792in" alt="IMG_256" /></p>
+<p>and click the icon below to download the captured QXDM log(<strong>.bin</strong> file) for my troubleshooting.</p>
+<p><img src="../assets/howto/How-to-capture-QXDM-logs-for-the-UG63-V2/media/image26.png" style="width:6.08333in;height:3.18958in" alt="IMG_256" /></p>
+<p class="article-end">_END_</p>
+
+</article>
+<footer class="site-footer">Milesight产品技术方案知识库</footer>
+</div>
+<script>
+document.querySelectorAll('article.article-body img').forEach(function(img) {
+  img.addEventListener('click', function() {
+    document.getElementById('lightbox-img').src = this.src;
+    document.getElementById('lightbox').classList.add('active');
+    document.body.style.overflow = 'hidden';
+  });
+});
+function closeLightbox() {
+  document.getElementById('lightbox').classList.remove('active');
+  document.body.style.overflow = '';
+}
+document.addEventListener('keydown', function(e) {
+  if (e.key === 'Escape') closeLightbox();
+});
+</script>
+<a class="fault-tree-link" href="https://1914439781charles-eng.github.io/fault-tree-center/" target="_blank" rel="noopener noreferrer" title="Milesight问题排查故障树" aria-label="Milesight问题排查故障树"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="9" y="3" width="6" height="4" rx="1"/><rect x="3" y="17" width="6" height="4" rx="1"/><rect x="15" y="17" width="6" height="4" rx="1"/><path d="M12 7v5M6 17v-5h12v5"/></svg><span>Milesight问题排查故障树</span></a>
+<a class="protocol-link" href="https://1914439781charles-eng.github.io/tech-docs/tools/protocol-converter.html" title="协议转换" aria-label="协议转换"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 8h13l-3-3M20 16H7l3 3"/></svg><span>协议转换</span></a>
+<a class="lorawan-link" href="https://1914439781charles-eng.github.io/tech-docs/tools/lorawan-packet-parser.html" title="LoRaWAN数据包解析" aria-label="LoRaWAN数据包解析"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 12h3l2-6 4 12 2-6h5"/></svg><span>LoRaWAN数据包解析</span></a>
+</body>
+</html>
