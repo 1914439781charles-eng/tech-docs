@@ -100,15 +100,6 @@ article.article-body blockquote { border-left:4px solid var(--accent); margin-le
                    background:var(--accent-soft); border:1px solid var(--accent); border-radius:8px;
                    font-weight:600; text-decoration:none; }
 .attachment-link:hover { background:#dbeafe; text-decoration:none; }
-.attachment-icon { font-size:16px; }
-.article-end { text-align:center; }
-footer.site-footer { text-align:center; color:var(--muted); font-size:12.5px; margin-top:48px; }
-/* Lightbox */
-.lightbox-overlay { display:none; position:fixed; inset:0; z-index:9999;
-                    background:rgba(0,0,0,.85); cursor:zoom-out; justify-content:center; align-items:center; }
-.lightbox-overlay.active { display:flex; }
-.lightbox-overlay img { max-width:95vw; max-height:92vh; border-radius:6px; box-shadow:0 8px 40px rgba(0,0,0,.4); }
-@media (max-width:640px) { article.article-body { padding:20px 18px; } }
 /* Top-left shortcut icons: Fault Tree + Protocol Converter + LoRaWAN Parser (stacked vertically) */
 .fault-tree-link, .protocol-link, .lorawan-link { position:fixed; left:22px; top:14px; bottom:auto; z-index:900;
                    display:inline-flex; align-items:center; gap:9px;
@@ -129,6 +120,15 @@ body.home .lorawan-link { top:306px; }
 @media (max-width:520px) {
   .fault-tree-link, .protocol-link, .lorawan-link { padding:10px; left:16px; }
 }
+.attachment-icon { font-size:16px; }
+.article-end { text-align:center; }
+footer.site-footer { text-align:center; color:var(--muted); font-size:12.5px; margin-top:48px; }
+/* Lightbox */
+.lightbox-overlay { display:none; position:fixed; inset:0; z-index:9999;
+                    background:rgba(0,0,0,.85); cursor:zoom-out; justify-content:center; align-items:center; }
+.lightbox-overlay.active { display:flex; }
+.lightbox-overlay img { max-width:95vw; max-height:92vh; border-radius:6px; box-shadow:0 8px 40px rgba(0,0,0,.4); }
+@media (max-width:640px) { article.article-body { padding:20px 18px; } }
 </style>
 </head>
 <body>
