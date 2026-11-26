@@ -1,0 +1,734 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>ChirpStack LoRa Mesh User Guide ( new ) · Milesight产品技术方案知识库</title>
+<style>
+:root { --accent:#2563eb; --accent-soft:#eff6ff; --text:#1f2937; --muted:#6b7280;
+        --border:#e5e7eb; --bg:#f8fafc; --card:#ffffff; }
+* { box-sizing: border-box; }
+body { margin:0; font-family: "Segoe UI", system-ui, sans-serif;
+       background:var(--bg); color:var(--text); line-height:1.75; }
+a { color:var(--accent); text-decoration:none; }
+a:hover { text-decoration:underline; }
+.container { max-width:960px; margin:0 auto; padding:24px 20px 64px; }
+header.site-header { background:linear-gradient(135deg,#1e3a8a 0%,#2563eb 55%,#3b82f6 100%);
+                     color:#fff; padding:44px 20px; box-shadow:0 4px 20px rgba(30,58,138,.20); }
+header.site-header .container { padding-top:0; padding-bottom:0; }
+header.site-header h1 { margin:0 0 8px; font-size:30px; letter-spacing:-.02em; overflow-wrap:anywhere; }
+@media (max-width:520px) { header.site-header h1 { font-size:22px; } }
+header.site-header p { margin:0; opacity:.88; font-size:14px; letter-spacing:.01em; }
+.search-box { margin:26px 0 4px; position:relative; }
+.search-box input { width:100%; padding:13px 16px 13px 44px; font-size:15px; border:1px solid var(--border);
+                    border-radius:12px; outline:none; box-shadow:0 1px 3px rgba(0,0,0,.04);
+                    background-color:#fff;
+                    background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%236b7280' stroke-width='2' stroke-linecap='round'%3E%3Ccircle cx='11' cy='11' r='7'/%3E%3Cline x1='16.5' y1='16.5' x2='21' y2='21'/%3E%3C/svg%3E");
+                    background-repeat:no-repeat; background-position:14px center; background-size:18px 18px; }
+.search-box input:focus { border-color:var(--accent); box-shadow:0 0 0 4px var(--accent-soft); }
+/* Category cards — horizontal row, collapsed by default */
+.category-grid { display:grid; grid-template-columns:repeat(4,minmax(0,1fr)); gap:16px; margin-top:28px; }
+.category-card { position:relative; display:flex; flex-direction:column; align-items:flex-start;
+                 gap:9px; width:100%; text-align:left; background:var(--card); border:1px solid var(--border);
+                 border-radius:14px; padding:20px; cursor:pointer; font:inherit; color:inherit;
+                 box-shadow:0 1px 3px rgba(0,0,0,.04); overflow:hidden;
+                 transition:transform .18s ease, box-shadow .18s ease, border-color .18s ease; }
+.category-card::before { content:""; position:absolute; left:0; top:0; bottom:0; width:4px;
+                         background:var(--card-accent,var(--accent)); }
+.category-card:hover { transform:translateY(-3px); border-color:var(--card-accent,var(--accent));
+                       box-shadow:0 10px 24px rgba(0,0,0,.10); }
+.category-card.open { border-color:var(--card-accent,var(--accent));
+                      box-shadow:0 8px 20px rgba(0,0,0,.10); }
+.card-howto { --card-accent:#16a34a; }
+.card-troubleshooting { --card-accent:#dc2626; }
+.card-node-red { --card-accent:#ea580c; }
+.card-python { --card-accent:#2563eb; }
+.cat-card-top { display:flex; align-items:center; justify-content:space-between; width:100%; }
+.cat-dot { width:12px; height:12px; border-radius:50%; background:var(--card-accent,var(--accent));
+           box-shadow:0 0 0 4px color-mix(in srgb, var(--card-accent,var(--accent)) 15%, transparent); }
+.cat-name { font-size:18px; font-weight:700; line-height:1.25; }
+.cat-desc { font-size:12.5px; color:var(--muted); line-height:1.4; min-height:34px; }
+.cat-card-foot { display:flex; align-items:center; justify-content:space-between; width:100%;
+                 margin-top:2px; padding-top:10px; border-top:1px solid var(--border); }
+.chevron { font-size:13px; color:var(--muted); transition:transform .2s ease; }
+.category-card.open .chevron { transform:rotate(180deg); }
+.badge { display:inline-block; font-size:11.5px; font-weight:700; padding:3px 10px;
+         border-radius:999px; letter-spacing:.02em; }
+.badge-howto { background:#dcfce7; color:#15803d; }
+.badge-troubleshooting { background:#fee2e2; color:#b91c1c; }
+.badge-node-red { background:#ffedd5; color:#c2410c; }
+.badge-python { background:#dbeafe; color:#1d4ed8; }
+.count { color:var(--muted); font-size:12px; font-weight:600; }
+/* Article panels — hidden until their card is clicked */
+.category-panels { margin-top:22px; }
+.category-panel { display:none; margin-bottom:18px; background:var(--card); border:1px solid var(--border);
+                  border-radius:14px; padding:6px 18px 18px; box-shadow:0 2px 8px rgba(0,0,0,.04); }
+.category-panel.open { display:block; animation:panelIn .22s ease; }
+@keyframes panelIn { from { opacity:0; transform:translateY(-6px); } to { opacity:1; transform:none; } }
+.panel-title { display:flex; align-items:center; gap:10px; font-size:15px; font-weight:700;
+               padding:14px 0 12px; border-bottom:1px solid var(--border); margin-bottom:14px; }
+.panel-title .count { margin-left:auto; }
+ul.article-list { list-style:none; margin:0; padding:0; display:grid; gap:10px; }
+ul.article-list li { background:#f8fafc; border:1px solid var(--border); border-radius:10px;
+                     padding:14px 18px; transition:transform .15s ease, box-shadow .15s ease; }
+ul.article-list li:hover { transform:translateX(3px); box-shadow:0 4px 14px rgba(0,0,0,.07); }
+ul.article-list .title { font-size:15.5px; font-weight:600; }
+ul.article-list .meta { font-size:12.5px; color:var(--muted); margin-top:4px; }
+.empty { color:var(--muted); font-size:14px; padding:14px 4px; }
+@media (max-width:860px) { .category-grid { grid-template-columns:repeat(2,minmax(0,1fr)); } }
+@media (max-width:520px) { .category-grid { grid-template-columns:1fr; } .cat-desc { min-height:0; } }
+/* Article page */
+.article-nav { margin:18px 0 0; font-size:14px; padding-top:130px;
+               display:flex; align-items:center; gap:8px; flex-wrap:wrap; }
+.article-nav .docx-download { margin-left:auto; display:inline-flex; align-items:center; gap:6px;
+  padding:7px 14px; border-radius:8px; background:var(--accent); color:#fff; font-weight:600;
+  font-size:13px; line-height:1.2; box-shadow:0 2px 8px rgba(37,99,235,.28);
+  transition:background .15s ease, transform .15s ease; }
+.article-nav .docx-download:hover { background:#1d4ed8; color:#fff; text-decoration:none; transform:translateY(-1px); }
+.article-nav .docx-download svg { flex:none; }
+ul.article-list .docx-mini { display:inline-block; margin-left:8px; padding:1px 8px; border-radius:999px;
+  border:1px solid var(--border); background:#fff; font-size:11.5px; font-weight:600; color:var(--accent); }
+ul.article-list .docx-mini:hover { background:var(--accent-soft); border-color:#bfdbfe; text-decoration:none; }
+@media (max-width:520px) { .article-nav .docx-download { margin-left:0; } }
+article.article-body { background:var(--card); border:1px solid var(--border); border-radius:12px;
+                       padding:32px 40px; margin-top:16px; overflow-wrap:anywhere; }
+article.article-body img { max-width:100%; height:auto !important; border:1px solid var(--border);
+                           border-radius:8px; margin:8px 0; cursor:zoom-in; transition:box-shadow .15s ease; }
+article.article-body img:hover { box-shadow:0 4px 16px rgba(0,0,0,.12); }
+/* Word 封面: docx 原底图 + 按原坐标定位的文字, 还原 Word 里的封面排版 */
+figure.doc-cover { margin:0 0 26px; }
+.cover-page { position:relative; width:100%; max-width:680px; margin:0 auto; background:#fff;
+              overflow:hidden; container-type:inline-size; border:1px solid var(--border);
+              border-radius:8px; box-shadow:0 4px 18px rgba(15,23,42,.08); }
+.cover-page .art { position:absolute; display:block; max-width:none; height:auto !important;
+                   margin:0; border:0; border-radius:0; box-shadow:none; cursor:default; }
+.cover-page .art:hover { box-shadow:none; }
+.cover-page .tx { position:absolute; line-height:1; white-space:pre; margin:0; padding:0;
+                  font-family:Arial,"Segoe UI",system-ui,sans-serif; }
+article.article-body h1 { font-size:24px; margin-top:0; }
+article.article-body h2 { font-size:20px; border-bottom:1px solid var(--border); padding-bottom:6px; }
+article.article-body h3 { font-size:17px; }
+article.article-body pre { background:#f1f5f9; padding:14px; border-radius:8px; overflow-x:auto; max-width:100%; }
+article.article-body code { background:#f1f5f9; padding:2px 6px; border-radius:4px; font-size:.92em;
+                            overflow-wrap:anywhere; word-break:break-word; }
+article.article-body pre code { background:none; padding:0; }
+article.article-body table { border-collapse:collapse; width:100%; max-width:100%; table-layout:fixed; }
+article.article-body th, article.article-body td { border:1px solid var(--border); padding:8px 12px;
+                                                   overflow-wrap:anywhere; word-break:break-word; vertical-align:top; }
+article.article-body th { background:var(--accent-soft); }
+article.article-body blockquote { border-left:4px solid var(--accent); margin-left:0;
+                                  padding:4px 16px; color:var(--muted); background:var(--accent-soft); }
+.attachment-link { display:inline-flex; align-items:center; gap:6px; padding:6px 14px; margin:4px 0;
+                   background:var(--accent-soft); border:1px solid var(--accent); border-radius:8px;
+                   font-weight:600; text-decoration:none; }
+.attachment-link:hover { background:#dbeafe; text-decoration:none; }
+/* Top-left shortcut icons: Fault Tree + Protocol Converter + LoRaWAN Parser (stacked vertically) */
+.fault-tree-link, .protocol-link, .lorawan-link { position:fixed; left:22px; top:14px; bottom:auto; z-index:900;
+                   display:inline-flex; align-items:center; gap:9px;
+                   padding:9px 14px 9px 11px; border-radius:999px;
+                   background:#fff; border:1px solid #bfdbfe; color:#1d4ed8;
+                   box-shadow:0 6px 20px rgba(30,58,138,.18);
+                   font-size:13px; font-weight:700; line-height:1; text-decoration:none;
+                   transition:transform .18s ease, box-shadow .18s ease, background .18s ease; }
+.protocol-link { top:52px; }
+.lorawan-link { top:90px; }
+/* Home page: fault tree icon aligns horizontally with the search box */
+body.home .fault-tree-link { top:224px; }
+body.home .protocol-link { top:265px; }
+body.home .lorawan-link { top:306px; }
+.fault-tree-link:hover, .protocol-link:hover, .lorawan-link:hover { transform:translateY(-2px); background:#eff6ff;
+                         box-shadow:0 10px 26px rgba(30,58,138,.25); text-decoration:none; }
+.fault-tree-link svg, .protocol-link svg, .lorawan-link svg { flex:none; }
+@media (max-width:520px) {
+  .fault-tree-link, .protocol-link, .lorawan-link { padding:10px; left:16px; }
+}
+.attachment-icon { font-size:16px; }
+.article-end { text-align:center; }
+footer.site-footer { text-align:center; color:var(--muted); font-size:12.5px; margin-top:48px; }
+/* Lightbox */
+.lightbox-overlay { display:none; position:fixed; inset:0; z-index:9999;
+                    background:rgba(0,0,0,.85); cursor:zoom-out; justify-content:center; align-items:center; }
+.lightbox-overlay.active { display:flex; }
+.lightbox-overlay img { max-width:95vw; max-height:92vh; border-radius:6px; box-shadow:0 8px 40px rgba(0,0,0,.4); }
+@media (max-width:640px) { article.article-body { padding:20px 18px; } }
+/* World clock (home top-right) */
+.world-clock { position:fixed; top:14px; right:22px; z-index:60;
+  background:rgba(255,255,255,.94); color:#1f2a44;
+  border:1px solid rgba(31,42,68,.12); border-radius:12px;
+  padding:8px 12px; box-shadow:0 6px 20px rgba(15,23,42,.12);
+  font-size:12px; line-height:1.5; -webkit-backdrop-filter:blur(8px); backdrop-filter:blur(8px);
+  min-width:158px; }
+.world-clock .wc-title { font-size:10.5px; font-weight:700; letter-spacing:.08em;
+  text-transform:uppercase; color:#8a97b1; margin-bottom:3px; }
+.world-clock .wc-row { display:flex; justify-content:space-between; gap:14px; align-items:baseline; }
+.world-clock .wc-label { color:#5b6b8c; font-weight:600; white-space:nowrap; }
+.world-clock .wc-time { font-variant-numeric:tabular-nums; font-weight:700; letter-spacing:.4px; color:#16233f; }
+@media (max-width:720px) {
+  .world-clock { top:auto; bottom:14px; left:auto; right:14px; font-size:11px; padding:6px 10px;
+    min-width:0; max-width:calc(100vw - 28px); box-sizing:border-box; }
+}
+</style>
+</head>
+<body>
+<div class="lightbox-overlay" id="lightbox" onclick="closeLightbox()">
+  <img id="lightbox-img" src="" alt="">
+</div>
+<div class="container">
+<div class="article-nav"><a href="../index.html">&larr; Back to Home</a> &middot; <span class="badge badge-howto">How to</span><a class="docx-download" href="../downloads/howto/ChirpStack-LoRa-Mesh-User-Guide--new-.docx" download="ChirpStack LoRa Mesh User Guide ( new ).docx" title="下载原始 Word 文档"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3v12m0 0l-4.5-4.5M12 15l4.5-4.5"/><path d="M4 20h16"/></svg><span>下载 Word 文档</span></a></div>
+<article class="article-body">
+<p><strong>ChirpStack LoRa Mesh User Guide ( new )</strong></p>
+<p><strong>1. Function Introduction</strong></p>
+<p>LoRa Mesh establishes wireless relay links between gateways, extending LoRaWAN coverage to areas that a single gateway cannot reach.</p>
+<p><strong>Relay (Relay Gateway)</strong>: Receives data from terminal devices and forwards it to the Border via LoRa wireless relay</p>
+<p><strong>Border (Border Gateway)</strong>: Receives relay data and forwards it to the Network Server (NS)</p>
+<p>Border supports two forwarding protocols:</p>
+<p><strong>ChirpStack MQTT</strong>：integrated with ChirpStack v4 NS</p>
+<p><strong>Semtech UDP</strong>: Docking with TTN, built-in NS or any Semtech-compatible platform (just fill in the local address of the gateway to forward data to the built-in NS)</p>
+<p><strong>Basic topology (1 Border + 1 Relay)</strong></p>
+<table style="width:89%;">
+<colgroup>
+<col style="width: 44%" />
+<col style="width: 44%" />
+</colgroup>
+<tbody>
+<tr>
+<td style="text-align: left;"></td>
+<td style="text-align: left;"><img src="../assets/howto/ChirpStack-LoRa-Mesh-User-Guide--new-/media/image1.png" style="width:2.70833in;height:0.48958in" /></td>
+</tr>
+</tbody>
+</table>
+<p><strong>Complex topology (multi-device cross coverage + multi-hop + multi-Border)</strong></p>
+<p><img src="../assets/howto/ChirpStack-LoRa-Mesh-User-Guide--new-/media/image2.png" style="width:5.75in;height:2.80208in" /></p>
+<p>In actual deployment, data from end devices may be received by multiple Relays and Borders simultaneously (a characteristic of LoRa broadcasting). Each gateway that receives the data will forward it independently, and the NS automatically deduplicates based on the content of the data packets.</p>
+<p><strong>Border Direct Connection Mode</strong>: By default, the Border processes both Mesh relay frames and direct-connected sensor frames simultaneously. You can enable the <strong>Ignore Direct Uplinks</strong> option, at which point the Border will ignore sensor data within the direct connection range and only forward frames relayed via Relay.</p>
+<p><strong>Uplink De-duplication and Downlink Routing</strong></p>
+<p><strong>Uplink deduplication</strong>: Data from terminal devices may be received by multiple Relays and Borders simultaneously. Each gateway forwards the data independently, but the NS automatically deduplicates based on the packet content, so the data is ultimately processed only once.</p>
+<p><strong>Downlink Route</strong>: The NS selects only one Border to transmit downlink data (usually the one with the optimal signal). The context in the downlink frame points to the first-hop Relay, which is the Relay that directly receives the LoRa frame from the sensor. The Mesh downlink frame is forwarded hop by hop through intermediate Relays, and finally reaches the first-hop Relay, which then sends it directly to the end device via LoRa. Other Borders do not participate in this downlink transmission.</p>
+<p><strong>2. Precondition</strong></p>
+<table style="width:89%;">
+<colgroup>
+<col style="width: 18%" />
+<col style="width: 49%" />
+<col style="width: 20%" />
+</colgroup>
+<tbody>
+<tr>
+<td style="text-align: left;"><strong>Conditions</strong></td>
+<td style="text-align: left;"><strong>Border</strong></td>
+<td style="text-align: left;"><strong>Relay</strong></td>
+</tr>
+<tr>
+<td style="text-align: left;">Network Connectivity</td>
+<td style="text-align: left;">Can access NS (wired or cellular network is acceptable, no requirement for external network)</td>
+<td style="text-align: left;">No internet connection required</td>
+</tr>
+<tr>
+<td style="text-align: left;">frequency band</td>
+<td style="text-align: left;">Same as Relay</td>
+<td style="text-align: left;">Same as Border</td>
+</tr>
+<tr>
+<td style="text-align: left;">Frequency Band of Terminal Device</td>
+<td style="text-align: left;">Same as the gateway</td>
+<td style="text-align: left;">Same as the gateway</td>
+</tr>
+</tbody>
+</table>
+<p>All Mesh gateways (Border + Relay) must operate on the same frequency band (e. g., all 868 MHz or all 915 MHz)</p>
+<p>The frequency band of the terminal device must also match that of the gateway</p>
+<p>After Mesh is installed, the data forwarding path will change: the Mesh forwarder acts as an intermediate layer between pkt_fwd and NS (pkt_fwd continues to run). Modifying the packet forwarding frequency at the front end of the gateway will not affect Mesh operation, and the original path will be restored automatically after uninstallation.</p>
+<p><strong>3. Installation</strong></p>
+<p>After logging in to the gateway via SSH, execute the following commands:</p>
+<p>Log in to the gateway via SSH using the root account and run：</p>
+<table style="width:88%;">
+<colgroup>
+<col style="width: 88%" />
+</colgroup>
+<tbody>
+<tr>
+<td style="text-align: left;">FoxPro<br />
+wget -qO- https://ursalink-resource-center.oss-us-west-1.aliyuncs.com/kevin/mesh_deploy.sh | sh</td>
+</tr>
+</tbody>
+</table>
+<p>It is installed as Relay by default. To install as Border, add the --border parameter: The installation takes approximately 2–3 minutes and runs fully automatically. Upon completion, the terminal will display:</p>
+<table style="width:88%;">
+<colgroup>
+<col style="width: 88%" />
+</colgroup>
+<tbody>
+<tr>
+<td style="text-align: left;">Plain Text<br />
+============================================<br />
+LoRa Mesh deployed!<br />
+============================================<br />
+Role: relay<br />
+Device: UG65, Band 915MHz<br />
+EUI: 24E124FFFEFE4662<br />
+Mesh: 903.9MHz, 904.1MHz, 904.3MHz<br />
+Web UI: http://192.168.44.67:8088<br />
+============================================</td>
+</tr>
+</tbody>
+</table>
+<p>Please note down the displayed EUI and Web UI address, as they will be required for subsequent configuration. After installation, you may switch between the Border and Relay roles at any time via the Web UI without reinstallation. If the gateway has the ChirpStack NS built-in, the installation script will automatically complete the integration configuration with no manual setup needed.</p>
+<p>The Docker container is configured with --restart unless-stopped. The Mesh service will resume automatically after the gateway reboots, requiring no manual intervention.</p>
+<p><strong>4. Log in to the management interface</strong></p>
+<table style="width:44%;">
+<colgroup>
+<col style="width: 12%" />
+<col style="width: 32%" />
+</colgroup>
+<tbody>
+<tr>
+<td style="text-align: left;"><strong>method</strong></td>
+<td style="text-align: left;"><strong>Address</strong></td>
+</tr>
+<tr>
+<td style="text-align: left;">HTTP</td>
+<td style="text-align: left;">http://&lt;Gateway IP&gt;: 8088</td>
+</tr>
+</tbody>
+</table>
+<p>Log in using the gateway management account (same as the gateway's built-in Web management page): Username <strong>admin</strong>, and the password is the gateway management password.</p>
+<p>The interface consists of three tabs: <strong>Logs</strong> (real-time operation logs), <strong>Config</strong> (configuration), and <strong>Status</strong> (running status of each service). The top of the page displays the current role (Border/Relay), <strong>Gateway EUI</strong> and system status.</p>
+<p><strong>5. Configuration</strong></p>
+<p><strong>5.1 Role Settings</strong></p>
+<p><strong>Config &gt; Mesh Configuration &gt; Role</strong></p>
+<table style="width:89%;">
+<colgroup>
+<col style="width: 11%" />
+<col style="width: 76%" />
+</colgroup>
+<tbody>
+<tr>
+<td style="text-align: left;"><strong>Role</strong></td>
+<td style="text-align: left;"><strong>Description</strong></td>
+</tr>
+<tr>
+<td style="text-align: left;">Relay</td>
+<td style="text-align: left;">Relay forwarding gateway, which forwards sensor data to the Border via LoRa Mesh</td>
+</tr>
+<tr>
+<td style="text-align: left;">Border</td>
+<td style="text-align: left;">Border gateway, which receives relay data and forwards it to the NS</td>
+</tr>
+</tbody>
+</table>
+<p>After switching roles<strong>, the change takes effect immediately</strong> without the need for a restart.</p>
+<p><strong>5.2 Mesh Parameters</strong></p>
+<table style="width:89%;">
+<colgroup>
+<col style="width: 27%" />
+<col style="width: 29%" />
+<col style="width: 32%" />
+</colgroup>
+<tbody>
+<tr>
+<td style="text-align: left;"><strong>parameter</strong></td>
+<td style="text-align: left;"><strong>Description</strong></td>
+<td style="text-align: left;"><strong>Suggestions</strong></td>
+</tr>
+<tr>
+<td style="text-align: left;">Signing Key</td>
+<td style="text-align: left;">Communication Key (32-bit Hexadecimal)</td>
+<td style="text-align: left;">All Mesh gateways must be identical</td>
+</tr>
+<tr>
+<td style="text-align: left;">Mesh Frequencies</td>
+<td style="text-align: left;">Relay frequencies (Hz, comma-separated)</td>
+<td style="text-align: left;">All Mesh gateways must be identical (auto-populated during installation)</td>
+</tr>
+<tr>
+<td style="text-align: left;">Max Hop Count</td>
+<td style="text-align: left;">Maximum number of relay hops</td>
+<td style="text-align: left;">1 (increase as needed)</td>
+</tr>
+<tr>
+<td style="text-align: left;">TX Power</td>
+<td style="text-align: left;">Relay transmit power (dBm)</td>
+<td style="text-align: left;">27 (statutory maximum)</td>
+</tr>
+<tr>
+<td style="text-align: left;">Spreading Factor</td>
+<td style="text-align: left;">Relay Modulation Parameters</td>
+<td style="text-align: left;">SF7 (can be increased if the distance is long)</td>
+</tr>
+<tr>
+<td style="text-align: left;">Ignore Direct Uplinks（仅 Border）</td>
+<td style="text-align: left;">Ignore frames from directly connected sensors and only forward Mesh relay frames</td>
+<td style="text-align: left;">Disabled by default</td>
+</tr>
+</tbody>
+</table>
+<p>The Signing Key and Mesh Frequencies must be consistent across all <strong>Mesh gateways</strong>. This parameter is irrelevant to end devices (sensors).</p>
+<p><strong>Ignore Direct Uplinks</strong>: When enabled, the Border will no longer process sensor data within its direct connection range, and only forward frames relayed via Relay. When disabled by default, the Border processes both direct connection frames and Mesh relayed frames simultaneously.</p>
+<p><strong>5.3 Forwarding Protocol Configuration (Displayed only for the Border role)</strong></p>
+<p><strong>ChirpStack MQTT（对接 ChirpStack v4）</strong></p>
+<table style="width:89%;">
+<colgroup>
+<col style="width: 26%" />
+<col style="width: 29%" />
+<col style="width: 32%" />
+</colgroup>
+<tbody>
+<tr>
+<td style="text-align: left;"><strong>parameter</strong></td>
+<td style="text-align: left;"><strong>Description</strong></td>
+<td style="text-align: left;"><strong>Example</strong></td>
+</tr>
+<tr>
+<td style="text-align: left;">MQTT Server</td>
+<td style="text-align: left;">MQTT broker address of NS</td>
+<td style="text-align: left;">tcp://192.168.1.100:1883</td>
+</tr>
+<tr>
+<td style="text-align: left;">Topic Prefix</td>
+<td style="text-align: left;">Region Prefix</td>
+<td style="text-align: left;">eu868</td>
+</tr>
+<tr>
+<td style="text-align: left;">Username / Password</td>
+<td style="text-align: left;">MQTT Authentication (if applicable)</td>
+<td style="text-align: left;">-</td>
+</tr>
+</tbody>
+</table>
+<p>The MQTT port depends on the NS deployment configuration, with common values being 1883 or 1884; please refer to the actual NS environment for the exact setting. Note: If interfacing with a gateway with a built-in NS, use the Semtech UDP protocol instead of MQTT (the MQTT version of the built-in NS is incompatible with the Mesh component).</p>
+<table style="width:62%;">
+<colgroup>
+<col style="width: 17%" />
+<col style="width: 22%" />
+<col style="width: 22%" />
+</colgroup>
+<tbody>
+<tr>
+<td style="text-align: left;"><strong>parameter</strong></td>
+<td style="text-align: left;"><strong>Description</strong></td>
+<td style="text-align: left;"><strong>Example</strong></td>
+</tr>
+<tr>
+<td style="text-align: left;">UDP Server</td>
+<td style="text-align: left;">IP address of NS</td>
+<td style="text-align: left;">192.168.1.100</td>
+</tr>
+<tr>
+<td style="text-align: left;">UDP Port</td>
+<td style="text-align: left;">Port Number</td>
+<td style="text-align: left;">1700</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Semtech UDP (TTN connection / built-in NS / others)</strong></p>
+<p>Connect to the built-in NS: The installation script will automatically configure it. If you need to set it manually, fill in the LAN IP of the gateway itself for Server, and fill in 1700 for Port.</p>
+<p>Config &gt; Forwarding Protocol</p>
+<p><strong>5.4 Regarding the Original Functions of the Gateway</strong></p>
+<p>After LoRa Mesh is installed, the original packet forwarder (lora_pkt_fwd) of the gateway continues to run. The Mesh forwarder acts as an intermediate layer: it receives sensor data from pkt_fwd, the Relay encapsulates the data into a Mesh frame and forwards it via LoRa wireless relay, and the Border decapsulates the received data and forwards it to the NS through gateway-bridge. After the Mesh is uninstalled, the data path reverts to the direct forwarding from pkt_fwd to NS.</p>
+<p><strong>6. Connectivity Verification</strong></p>
+<p><strong>6.1 Check Service Status</strong></p>
+<p><strong>Status</strong> page displays the running status of each service:</p>
+<table style="width:89%;">
+<colgroup>
+<col style="width: 24%" />
+<col style="width: 25%" />
+<col style="width: 39%" />
+</colgroup>
+<tbody>
+<tr>
+<td style="text-align: left;"><strong>Service</strong></td>
+<td style="text-align: left;"><strong>Description</strong></td>
+<td style="text-align: left;"><strong>Normal state</strong></td>
+</tr>
+<tr>
+<td style="text-align: left;">mesh-forwarder</td>
+<td style="text-align: left;">Mesh protocol stack (Node. js)</td>
+<td style="text-align: left;">RUNNING</td>
+</tr>
+<tr>
+<td style="text-align: left;">web-ui</td>
+<td style="text-align: left;">Web Management Interface (Flask)</td>
+<td style="text-align: left;">RUNNING</td>
+</tr>
+<tr>
+<td style="text-align: left;">mqtt-forwarder</td>
+<td style="text-align: left;">ChirpStack MQTT Forwarder</td>
+<td style="text-align: left;">Border+MQTT: RUNNING / 其他: STOPPED</td>
+</tr>
+<tr>
+<td style="text-align: left;">semtech-udp-forwarder</td>
+<td style="text-align: left;">Semtech UDP Forwarding</td>
+<td style="text-align: left;">Border+UDP: RUNNING / 其他: STOPPED</td>
+</tr>
+</tbody>
+</table>
+<p>MQTT forwarding and UDP forwarding are mutually exclusive, and only one of them can be running at the same time. Both are in the STOPPED state in Relay mode.</p>
+<p><strong>6.2 View Logs</strong></p>
+<p><strong>Logs</strong> page to observe key logs:</p>
+<p>The following should be visible on the Relay side:</p>
+<table style="width:88%;">
+<colgroup>
+<col style="width: 88%" />
+</colgroup>
+<tbody>
+<tr>
+<td style="text-align: left;">Plain Text<br />
+[2026-08-03 01:23:07] UNWRAP relay=fefe4662 uid=2855 dev=0767ec58 hop=1 SF7BW125 freq=904.1MHz rssi=-98 snr=1 34B → bridge</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Border side</strong> shall see:</p>
+<table style="width:88%;">
+<colgroup>
+<col style="width: 88%" />
+</colgroup>
+<tbody>
+<tr>
+<td style="text-align: left;">Plain Text<br />
+Proxying LoRaWAN uplink, uplink: [uplink_id: 3230820292, freq: 902900000, rssi: -89, snr: 10.75, mod: [LORA - sf: 7, bw: 125000]]<br />
+Sending event</td>
+</tr>
+</tbody>
+</table>
+<p>Log Keywords: TX mesh (Relay relay transmission), UNWRAP (Border decapsulation and forwarding to NS), RX direct (Border direct-connected sensor), Stats (60-second statistical summary)</p>
+<p><strong>6.3 End-to-End Verification</strong></p>
+<p>Relay receives sensor data → Logs: TX mesh uid= N dev= xxx freq= xxxMHz</p>
+<p>Border <strong>received Relay frame</strong>→ Logs: UNWRAP relay=xxx uid=N dev=xxx → bridge</p>
+<p>Border forwards to NS → gateway-bridge receives the data</p>
+<p>NS receives data → NS management interface displays the device online</p>
+<p>NS receives data &gt; NS management interface: Device online</p>
+<p><strong>7. Register the Border Gateway in NS</strong></p>
+<p><strong>7.1 Obtain Gateway EUI</strong></p>
+<p>The Gateway EUI is displayed at <strong>the top of the Web UI page</strong>. It can also be viewed via SSH:</p>
+<table style="width:88%;">
+<colgroup>
+<col style="width: 88%" />
+</colgroup>
+<tbody>
+<tr>
+<td style="text-align: left;">FoxPro<br />
+docker exec chirpstack-mesh cat /opt/chirpstack/gateway_eui.txt</td>
+</tr>
+</tbody>
+</table>
+<p><strong>The Gateway EUI is displayed at the top of the Web UI page. It can also be viewed via SSH:</strong></p>
+<p>Log in to the ChirpStack v4 management interface</p>
+<p>Go to <strong>Gateways</strong> &gt; <strong>Add gateway</strong></p>
+<p>In the <strong>Gateway ID (EUI64)</strong> field, enter the EUI</p>
+<p>Enter the gateway name and select the Gateway Profile</p>
+<p>Wait for go-live after saving (the first heartbeat will occur within approximately 5 minutes)</p>
+<p><strong>7.3 Confirm Go-live</strong></p>
+<p>Gateway list displays <strong>Online</strong></p>
+<p>Click Gateway &gt; <strong>Frames</strong> to view the data frames</p>
+<p><strong>8. Uninstallation</strong></p>
+<p>Restricted admin users cannot use the pipe character (the | sh in the one-click uninstall command will be blocked), please execute the following commands line by line:</p>
+<table style="width:88%;">
+<colgroup>
+<col style="width: 88%" />
+</colgroup>
+<tbody>
+<tr>
+<td style="text-align: left;">Plain Text<br />
+docker rm -f chirpstack-mesh<br />
+reboot</td>
+</tr>
+</tbody>
+</table>
+<p>After execution, the original LoRaWAN packet forwarding function of the gateway will be automatically restored without any additional operations.</p>
+<p><strong>9. Deployment Recommendations</strong></p>
+<p><strong>9.1 Mesh Link Parameter Tuning</strong></p>
+<p>It is recommended to directly set the TX Power to <strong>the maximum value compliant with local regulations</strong>, and there is no need to adjust it according to the distance. The distance is controlled by SF:</p>
+<table style="width:89%;">
+<colgroup>
+<col style="width: 21%" />
+<col style="width: 21%" />
+<col style="width: 14%" />
+<col style="width: 30%" />
+</colgroup>
+<tbody>
+<tr>
+<td style="text-align: left;"><strong>Scenario</strong></td>
+<td style="text-align: left;"><strong>Spreading Factor</strong></td>
+<td style="text-align: left;"><strong>TX Power</strong></td>
+<td style="text-align: left;"><strong>Applicable Distance (Open Environment)</strong></td>
+</tr>
+<tr>
+<td style="text-align: left;">Short distance (&lt; 1km)</td>
+<td style="text-align: left;">SF7</td>
+<td style="text-align: left;">Regulatory Maximum</td>
+<td style="text-align: left;">High speed, low latency, maximum capacity</td>
+</tr>
+<tr>
+<td style="text-align: left;">Medium distance (1-3km)</td>
+<td style="text-align: left;">SF8</td>
+<td style="text-align: left;">Regulatory Maximum</td>
+<td style="text-align: left;">Balance speed and coverage</td>
+</tr>
+<tr>
+<td style="text-align: left;">Long distance (3-8km)</td>
+<td style="text-align: left;">SF9</td>
+<td style="text-align: left;">Regulatory Maximum</td>
+<td style="text-align: left;">Maximum coverage, with a significant reduction in capacity</td>
+</tr>
+<tr>
+<td style="text-align: left;">Extreme Distance (8km+)</td>
+<td style="text-align: left;">SF10-SF12</td>
+<td style="text-align: left;">Regulatory Maximum</td>
+<td style="text-align: left;">Not recommended (extremely low capacity)</td>
+</tr>
+</tbody>
+</table>
+<p><strong>It is not recommended to use SF10 or higher</strong>. The larger the SF, the longer the channel time occupied per frame (SF10 is about 6 times that of SF7), which leads to a sharp decrease in the number of accessible terminal devices. If SF9 still cannot meet the link quality requirements, priority should be given to adding Relay nodes to shorten the communication distance instead of increasing the SF.</p>
+<p><strong>9.2 Hop Count and Capacity</strong></p>
+<p>Each additional hop will cause the relay frame to occupy extra channel time. The following is the estimation under the conditions of BW 125kHz, 20-byte payload, and 15-minute reporting interval (1% duty cycle for EU868):</p>
+<table style="width:89%;">
+<colgroup>
+<col style="width: 9%" />
+<col style="width: 16%" />
+<col style="width: 23%" />
+<col style="width: 20%" />
+<col style="width: 9%" />
+<col style="width: 9%" />
+</colgroup>
+<tbody>
+<tr>
+<td style="text-align: left;"><strong>SF</strong></td>
+<td style="text-align: left;"><strong>Air time per frame</strong></td>
+<td style="text-align: left;"><strong>Recommended RX2 Delay per Hop</strong></td>
+<td style="text-align: left;"><strong>Number of terminals accessible in 1 hop</strong></td>
+<td style="text-align: left;"><strong>2 jumps</strong></td>
+<td style="text-align: left;"><strong>3 hops</strong></td>
+</tr>
+<tr>
+<td style="text-align: left;">SF7</td>
+<td style="text-align: left;">~62 ms</td>
+<td style="text-align: left;">3 seconds</td>
+<td style="text-align: left;">~145</td>
+<td style="text-align: left;">~70</td>
+<td style="text-align: left;">~48</td>
+</tr>
+<tr>
+<td style="text-align: left;">SF8</td>
+<td style="text-align: left;">~113 ms</td>
+<td style="text-align: left;">4 seconds</td>
+<td style="text-align: left;">~80</td>
+<td style="text-align: left;">~40</td>
+<td style="text-align: left;">~27</td>
+</tr>
+<tr>
+<td style="text-align: left;">SF9</td>
+<td style="text-align: left;">~206 ms</td>
+<td style="text-align: left;">5 seconds</td>
+<td style="text-align: left;">~44</td>
+<td style="text-align: left;">~22</td>
+<td style="text-align: left;">~15</td>
+</tr>
+<tr>
+<td style="text-align: left;">SF10</td>
+<td style="text-align: left;">~371 ms</td>
+<td style="text-align: left;">6 seconds</td>
+<td style="text-align: left;">~24</td>
+<td style="text-align: left;">~12</td>
+<td style="text-align: left;">~8</td>
+</tr>
+<tr>
+<td style="text-align: left;">SF11</td>
+<td style="text-align: left;">~679 ms</td>
+<td style="text-align: left;">7 seconds</td>
+<td style="text-align: left;">~13</td>
+<td style="text-align: left;">~7</td>
+<td style="text-align: left;">~4</td>
+</tr>
+<tr>
+<td style="text-align: left;">SF12</td>
+<td style="text-align: left;">~1228 ms</td>
+<td style="text-align: left;">8 seconds</td>
+<td style="text-align: left;">~7</td>
+<td style="text-align: left;">~4</td>
+<td style="text-align: left;">~2</td>
+</tr>
+</tbody>
+</table>
+<p>The number of terminals refers to the total number of terminal devices connected to the same set of Mesh gateways</p>
+<p>In multi-hop scenarios, the Relay needs to relay both sensor frames and Mesh frames from the previous hop simultaneously, and the capacity decreases progressively with the number of hops.</p>
+<p>SF10+ has extremely low capacity and is not recommended for multi-hop scenarios</p>
+<p>Using multiple channels enables linear capacity scaling (e. g., 8 channels deliver roughly 8x the capacity of a single channel)</p>
+<p><strong>9.3 Disable ADR</strong></p>
+<p>It is recommended to disable ADR (Adaptive Data Rate) <strong>on the terminal device</strong>.</p>
+<p>Reason: The Received Signal Strength Indicator (RSSI) that the NS receives via the Border is the signal of the <strong>Mesh relay link</strong> (Relay &gt; Border), rather than the original signal from the end device to the gateway. Making ADR decisions based on the RSSI of the Mesh link will lead to incorrect power/rate adjustments.</p>
+<p>Alternative solution: Manually set a fixed Data Rate and TX Power for the terminal device to ensure the link quality between the sensor and the nearest Relay.</p>
+<p><strong>9.4 RX2 Delay Configuration</strong></p>
+<p>Mesh relays introduce additional latency (approximately 200-500ms of processing time per hop plus transmission time). If the RX2 Delay is too small, the device will have already closed its receive window by the time the downlink frame arrives at the relay.</p>
+<table style="width:78%;">
+<colgroup>
+<col style="width: 12%" />
+<col style="width: 23%" />
+<col style="width: 41%" />
+</colgroup>
+<tbody>
+<tr>
+<td style="text-align: left;"><strong>hop count</strong></td>
+<td style="text-align: left;"><strong>Recommended RX2 Delay</strong></td>
+<td style="text-align: left;"><strong>Cause</strong></td>
+</tr>
+<tr>
+<td style="text-align: left;">1 hop</td>
+<td style="text-align: left;">3 seconds</td>
+<td style="text-align: left;">1s margin + 1s processing + 1s buffer</td>
+</tr>
+<tr>
+<td style="text-align: left;">2 jumps</td>
+<td style="text-align: left;">5 seconds</td>
+<td style="text-align: left;">Two-hop relay processing + buffering</td>
+</tr>
+<tr>
+<td style="text-align: left;">3 hops</td>
+<td style="text-align: left;">7 seconds</td>
+<td style="text-align: left;">3-hop relay processing + buffering</td>
+</tr>
+</tbody>
+</table>
+<p>Adjustment method: In ChirpStack v4 NS, set the RX2 data rate and RX delay via the device's MAC Commands settings, or send the <strong>RxParamSetupReq</strong> MAC command via the Downlink Queue.</p>
+<p>It is recommended to schedule the downlink in the <strong>RX2 window</strong> (RX2 naturally opens later than RX1, leaving more time for Mesh multi-hop transmission). RX2 can be remotely adjusted via the RxParamSetupReq MAC command without modifying the device firmware.</p>
+<p><strong>10. Frequently Asked Questions</strong></p>
+<p><strong>Is there a communication failure between Relay and Border?</strong></p>
+<p><strong>Ensure that the Signing Keys of all Mesh gateways are completely identical</strong></p>
+<p>Ensure that the <strong>Mesh Frequencies</strong> of all Mesh gateways are completely consistent</p>
+<p>Make sure all Mesh gateways have the same hardware frequency band (either all 868 or all 915)</p>
+<p>Make sure it is within the radio frequency coverage (SF7 covers approximately 1-2 km in open environments)</p>
+<p><strong>Sensor data not received by NS?</strong></p>
+<p>The Border log shows UNWRAP relay= xxx. .. → bridge → the relay data has been received and forwarded</p>
+<p>gateway-bridge process is running normally → Data has been delivered to NS</p>
+<p>If UNWRAP logs are missing → check whether the Relay has TX mesh logs and whether the Mesh Frequencies at both ends are consistent</p>
+<p><strong>Will multiple Relays receive duplicate data from the same sensor?</strong></p>
+<p>No. NS automatically deduplicates based on the packet content (PHYPayload), so multiple Relays/Border Routers forwarding the same frame will only be processed once.</p>
+<p><strong>How to select the path for downlink?</strong></p>
+<p>The NS selects only one Border to transmit downlink data (typically the one with the optimal uplink signal). The context in the downlink frame points to <strong>the first-hop Relay</strong> (the Relay that directly receives the sensor LoRa frame) rather than the last-hop Relay. Intermediate Relays only forward mesh frames (increment the hop count and rebroadcast) without unpacking them. After receiving the frame, the first-hop Relay matches the relay_id, unpacks the frame, and directly transmits it to the end device via LoRa. Other Borders do not participate in this downlink transmission.</p>
+<p><strong>Class-C device downlink failure?</strong></p>
+<p>Mesh relays do not support Class-C immediate downlink (minimum latency: 1 second). Recommendation: Class-C devices should connect directly to the Border gateway, or switch to Class-A mode instead.</p>
+<p><strong>Will the original functions of the gateway be affected after installation?</strong></p>
+<p>During Mesh operation, pkt_fwd continues to run, but the data path changes: the Mesh forwarder acts as an intermediate layer between pkt_fwd and the NS. Modifying the packet forwarding frequency at the gateway front end does not affect Mesh operation, and the original path will be automatically restored after offloading.</p>
+
+</article>
+<footer class="site-footer">Milesight产品技术方案知识库</footer>
+</div>
+<script>
+document.querySelectorAll('article.article-body img:not(.art)').forEach(function(img) {
+  img.addEventListener('click', function() {
+    document.getElementById('lightbox-img').src = this.src;
+    document.getElementById('lightbox').classList.add('active');
+    document.body.style.overflow = 'hidden';
+  });
+});
+function closeLightbox() {
+  document.getElementById('lightbox').classList.remove('active');
+  document.body.style.overflow = '';
+}
+document.addEventListener('keydown', function(e) {
+  if (e.key === 'Escape') closeLightbox();
+});
+</script>
+<a class="fault-tree-link" href="https://1914439781charles-eng.github.io/fault-tree-center/" target="_blank" rel="noopener noreferrer" title="Milesight问题排查故障树" aria-label="Milesight问题排查故障树"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="9" y="3" width="6" height="4" rx="1"/><rect x="3" y="17" width="6" height="4" rx="1"/><rect x="15" y="17" width="6" height="4" rx="1"/><path d="M12 7v5M6 17v-5h12v5"/></svg><span>Milesight问题排查故障树</span></a>
+<a class="protocol-link" href="https://1914439781charles-eng.github.io/tech-docs/tools/protocol-converter.html" title="协议转换" aria-label="协议转换"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 8h13l-3-3M20 16H7l3 3"/></svg><span>协议转换</span></a>
+<a class="lorawan-link" href="https://1914439781charles-eng.github.io/tech-docs/tools/lorawan-packet-parser.html" title="LoRaWAN数据包解析" aria-label="LoRaWAN数据包解析"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 12h3l2-6 4 12 2-6h5"/></svg><span>LoRaWAN数据包解析</span></a>
+</body>
+</html>
