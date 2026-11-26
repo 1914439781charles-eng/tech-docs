@@ -219,11 +219,12 @@ function filterArticles() {
 <a class="protocol-link" href="https://1914439781charles-eng.github.io/tech-docs/tools/protocol-converter.html" title="协议转换" aria-label="协议转换"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 8h13l-3-3M20 16H7l3 3"/></svg><span>协议转换</span></a>
 <a class="lorawan-link" href="https://1914439781charles-eng.github.io/tech-docs/tools/lorawan-packet-parser.html" title="LoRaWAN数据包解析" aria-label="LoRaWAN数据包解析"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 12h3l2-6 4 12 2-6h5"/></svg><span>LoRaWAN数据包解析</span></a>
 
-<div class="world-clock" title="太平洋/美东/美中时间自动应用夏令时（PDT/EDT/CDT）；BRT 为巴西利亚时间">
+<div class="world-clock" title="太平洋/美东/美中时间自动应用夏令时（PDT/EDT/CDT）；墨西哥城自 2022 年起取消夏令时，全年 CST(UTC-6)；BRT 为巴西利亚时间">
 <div class="wc-title">当地时间</div>
 <div class="wc-row"><span class="wc-label">太平洋 PST</span><span class="wc-time" id="clock-pst">--:--:--</span></div>
 <div class="wc-row"><span class="wc-label">美东 EST</span><span class="wc-time" id="clock-est">--:--:--</span></div>
 <div class="wc-row"><span class="wc-label">美中 CST</span><span class="wc-time" id="clock-cst">--:--:--</span></div>
+<div class="wc-row"><span class="wc-label">墨西哥城</span><span class="wc-time" id="clock-mex">--:--:--</span></div>
 <div class="wc-row"><span class="wc-label">巴西 BRT</span><span class="wc-time" id="clock-brt">--:--:--</span></div>
 </div>
 <script>
@@ -232,6 +233,7 @@ function filterArticles() {
     { id: 'clock-pst', tz: 'America/Los_Angeles', fallback: -8 },
     { id: 'clock-est', tz: 'America/New_York', fallback: -5 },
     { id: 'clock-cst', tz: 'America/Chicago', fallback: -6 },
+    { id: 'clock-mex', tz: 'America/Mexico_City', fallback: -6 },
     { id: 'clock-brt', tz: 'America/Sao_Paulo', fallback: -3 }
   ];
   var fmts = zones.map(function (z) {
